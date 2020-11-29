@@ -84,12 +84,12 @@ namespace dnSpy.Debugger.DotNet.CorDebug.Breakpoints.TextEditor {
 			output.Write(DbgTextColor.Text, string.Format(dnSpy_Debugger_DotNet_CorDebug_Resources.GlyphToolTip_NativeAddress, "0x" + location.NativeAddress.IP.ToString("X8")));
 
 			var documentViewer = textView.TextBuffer.TryGetDocumentViewer();
-			Debug.Assert(documentViewer != null);
+			Debug2.Assert(documentViewer is not null);
 			var statement = documentViewer?.GetMethodDebugService().FindByCodeOffset(new ModuleTokenId(location.Module, location.Token), location.Offset);
-			Debug.Assert((documentViewer != null) == (statement != null));
-			if (statement != null) {
+			Debug2.Assert((documentViewer is not null) == (statement is not null));
+			if (statement is not null) {
 				output.Write(DbgTextColor.Text, " ('");
-				var decompiler = (documentViewer?.DocumentTab.Content as IDecompilerTabContent)?.Decompiler ?? decompilerService.Decompiler;
+				var decompiler = (documentViewer?.DocumentTab?.Content as IDecompilerTabContent)?.Decompiler ?? decompilerService.Decompiler;
 				decompiler.Write(new DbgTextColorWriter(output), statement.Value.Method, FormatterOptions.Default);
 				output.Write(DbgTextColor.Text, "')");
 			}

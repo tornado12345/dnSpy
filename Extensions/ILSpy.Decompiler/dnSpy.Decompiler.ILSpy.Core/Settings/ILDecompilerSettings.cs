@@ -30,15 +30,15 @@ namespace dnSpy.Decompiler.ILSpy.Core.Settings {
 		readonly ILSettings ilSettings;
 
 		public override int Version => ilSettings.SettingsVersion;
-		public override event EventHandler VersionChanged;
+		public override event EventHandler? VersionChanged;
 
-		public ILDecompilerSettings(ILSettings ilSettings = null) {
+		public ILDecompilerSettings(ILSettings? ilSettings = null) {
 			this.ilSettings = ilSettings ?? new ILSettings();
 			options = CreateOptions().ToArray();
 			this.ilSettings.SettingsVersionChanged += ILSettings_SettingsVersionChanged;
 		}
 
-		void ILSettings_SettingsVersionChanged(object sender, EventArgs e) => VersionChanged?.Invoke(this, EventArgs.Empty);
+		void ILSettings_SettingsVersionChanged(object? sender, EventArgs e) => VersionChanged?.Invoke(this, EventArgs.Empty);
 
 		public override DecompilerSettingsBase Clone() => new ILDecompilerSettings(ilSettings.Clone());
 
@@ -81,9 +81,14 @@ namespace dnSpy.Decompiler.ILSpy.Core.Settings {
 				Description = dnSpy_Decompiler_ILSpy_Core_Resources.DecompilerSettings_MaxStringLength,
 				Name = DecompilerOptionConstants.MaxStringLength_NAME,
 			};
+			yield return new DecompilerOption<bool>(DecompilerOptionConstants.HexadecimalNumbers_GUID,
+						() => ilSettings.HexadecimalNumbers, a => ilSettings.HexadecimalNumbers = a) {
+				Description = dnSpy_Decompiler_ILSpy_Core_Resources.DecompilerSettings_HexadecimalNumbers,
+				Name = DecompilerOptionConstants.HexadecimalNumbers_NAME,
+			};
 		}
 
-		public override bool Equals(object obj) =>
+		public override bool Equals(object? obj) =>
 			obj is ILDecompilerSettings && ilSettings.Equals(((ILDecompilerSettings)obj).ilSettings);
 		public override int GetHashCode() => ilSettings.GetHashCode();
 	}

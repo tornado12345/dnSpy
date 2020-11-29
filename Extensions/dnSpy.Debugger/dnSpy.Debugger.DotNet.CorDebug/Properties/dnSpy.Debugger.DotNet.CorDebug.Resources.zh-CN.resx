@@ -120,9 +120,6 @@
   <data name="DbgAsm_Args" xml:space="preserve">
     <value>参数(_R)</value>
   </data>
-  <data name="DbgAsm_Assembly" xml:space="preserve">
-    <value>程序集(_A)</value>
-  </data>
   <data name="DbgAsm_BreakAt" xml:space="preserve">
     <value>中断于(_B)</value>
   </data>
@@ -218,13 +215,13 @@
     <value>本机帧 {0}</value>
   </data>
   <data name="StackFrame_AppdomainTransition" xml:space="preserve">
-    <value>Appdomain Transition</value>
+    <value>程序域转换</value>
   </data>
   <data name="StackFrame_ClassInit" xml:space="preserve">
     <value>类初始化</value>
   </data>
   <data name="StackFrame_Exception" xml:space="preserve">
-    <value>例外</value>
+    <value>异常</value>
   </data>
   <data name="StackFrame_FunctionEvaluation" xml:space="preserve">
     <value>函数求值</value>
@@ -276,5 +273,8 @@ HR: 0x{0:X8}
   </data>
   <data name="DbgAsm_UseHostExecutable" xml:space="preserve">
     <value>使用host可执行文件</value>
+  </data>
+  <data name="DbgAsm_Executable" xml:space="preserve">
+    <value>可执行程序(_X)</value>
   </data>
 </root>

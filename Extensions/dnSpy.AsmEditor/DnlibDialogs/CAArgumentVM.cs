@@ -23,6 +23,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using dnlib.DotNet;
 using dnSpy.AsmEditor.Properties;
+using dnSpy.Contracts.Decompiler;
 using dnSpy.Contracts.MVVM;
 
 namespace dnSpy.AsmEditor.DnlibDialogs {
@@ -80,7 +81,7 @@ namespace dnSpy.AsmEditor.DnlibDialogs {
 		readonly CAArgument originalArg;
 		readonly ModuleDef module;
 
-		public TypeSig StorageType {
+		public TypeSig? StorageType {
 			get => storageType;
 			set {
 				if (storageType != value) {
@@ -89,9 +90,9 @@ namespace dnSpy.AsmEditor.DnlibDialogs {
 				}
 			}
 		}
-		TypeSig storageType;
+		TypeSig? storageType;
 
-		public CAArgumentVM(ModuleDef ownerModule, CAArgument arg, TypeSigCreatorOptions options, TypeSig storageType) {
+		public CAArgumentVM(ModuleDef ownerModule, CAArgument arg, TypeSigCreatorOptions options, TypeSig? storageType) {
 			module = options.OwnerModule;
 			originalArg = arg.Clone();
 			ConstantTypeVM = new DnlibDialogs.ConstantTypeVM(ownerModule, null, ConstantTypes, true, true, options);
@@ -100,7 +101,7 @@ namespace dnSpy.AsmEditor.DnlibDialogs {
 			modified = false;
 		}
 
-		void ConstantTypeVM_PropertyChanged(object sender, PropertyChangedEventArgs e) {
+		void ConstantTypeVM_PropertyChanged(object? sender, PropertyChangedEventArgs e) {
 			if (e.PropertyName == "Modified") {
 				OnPropertyChanged("Modified");
 				modified = true;
@@ -108,12 +109,12 @@ namespace dnSpy.AsmEditor.DnlibDialogs {
 			HasErrorUpdated();
 		}
 
-		void InitializeFrom(CAArgument arg, TypeSig storageType) {
+		void InitializeFrom(CAArgument arg, TypeSig? storageType) {
 			StorageType = storageType;
 			ConstantTypeVM.Value = ConvertFromModel(arg.Type, arg.Value);
 		}
 
-		object ConvertFromModel(TypeSig valueType, object value) {
+		object? ConvertFromModel(TypeSig valueType, object? value) {
 			var type = valueType.RemovePinnedAndModifiers();
 			var et = type.GetElementType();
 			ITypeDefOrRef tdr;
@@ -136,7 +137,7 @@ namespace dnSpy.AsmEditor.DnlibDialogs {
 				break;
 
 			case ElementType.String:
-				if (value == null)
+				if (value is null)
 					return Null<string>.Instance;
 				else if (value is string)
 					return value;
@@ -148,12 +149,12 @@ namespace dnSpy.AsmEditor.DnlibDialogs {
 			case ElementType.Class:
 				tdr = ((ClassOrValueTypeSig)type).TypeDefOrRef;
 				if (tdr.IsSystemType()) {
-					if (value == null)
+					if (value is null)
 						return Null<TypeSig>.Instance;
 					return value;
 				}
 				td = tdr.ResolveTypeDef();
-				if (td != null && !td.IsEnum)
+				if (td is not null && !td.IsEnum)
 					break;
 				return new EnumInfo() {
 					EnumType = tdr,
@@ -163,7 +164,7 @@ namespace dnSpy.AsmEditor.DnlibDialogs {
 
 			case ElementType.SZArray:
 				var elemType = type.Next.RemovePinnedAndModifiers();
-				if (value == null) {
+				if (value is null) {
 					switch (elemType.GetElementType()) {
 					case ElementType.Boolean:	return Null<bool[]>.Instance;
 					case ElementType.Char:		return Null<char[]>.Instance;
@@ -185,14 +186,14 @@ namespace dnSpy.AsmEditor.DnlibDialogs {
 						if (tdr.IsSystemType())
 							return Null<Type[]>.Instance;
 						td = tdr.ResolveTypeDef();
-						if (td != null && !td.IsEnum)
+						if (td is not null && !td.IsEnum)
 							break;
 						return EnumInfo.CreateNullArray(tdr);
 					}
 					break;
 				}
 				var oldList = value as IList<CAArgument>;
-				if (oldList == null)
+				if (oldList is null)
 					break;
 
 				switch (elemType.GetElementType()) {
@@ -216,7 +217,7 @@ namespace dnSpy.AsmEditor.DnlibDialogs {
 					if (tdr.IsSystemType())
 						return ConvertArray<TypeSig>(elemType, oldList);
 					td = tdr.ResolveTypeDef();
-					if (td != null && !td.IsEnum)
+					if (td is not null && !td.IsEnum)
 						break;
 					return ConvertEnum(elemType, oldList);
 				}
@@ -229,12 +230,12 @@ namespace dnSpy.AsmEditor.DnlibDialogs {
 		}
 
 		object ConvertEnum(TypeSig elemType, IList<CAArgument> oldList) {
-			var td = elemType.ScopeType.ResolveTypeDef();
+			var td = elemType.GetScopeTypeDefOrRef().ResolveTypeDef();
 			ElementType underlyingElemType = ElementType.End;
-			if (td != null && td.IsEnum)
+			if (td is not null && td.IsEnum)
 				underlyingElemType = td.GetEnumUnderlyingType().RemovePinnedAndModifiers().GetElementType();
 			if (!(ElementType.Boolean <= underlyingElemType && underlyingElemType <= ElementType.R8)) {
-				if (oldList.Count > 0 && oldList[0].Value != null)
+				if (oldList.Count > 0 && oldList[0].Value is not null)
 					underlyingElemType = ModelUtils.GetElementType(oldList[0].Value.GetType());
 			}
 
@@ -262,7 +263,7 @@ namespace dnSpy.AsmEditor.DnlibDialogs {
 			var sigComparer = new SigComparer(SigComparerOptions.CompareAssemblyPublicKeyToken);
 			for (int i = 0; i < list.Length; i++) {
 				if (ary[i].Value is T && sigComparer.Equals(elemType, ary[i].EnumType))
-					list[i] = (T)ary[i].Value;
+					list[i] = (T)ary[i].Value!;
 			}
 
 			return new EnumInfo {
@@ -286,9 +287,9 @@ namespace dnSpy.AsmEditor.DnlibDialogs {
 				var res = ConvertFromModel(arg.Type, arg.Value);
 				if (res is T)
 					list[i] = (T)res;
-				else if (!tIsValueType && (res == null || res == Null<T>.Instance)) {
-					object n = null;
-					list[i] = (T)n;
+				else if (!tIsValueType && (res is null || res == Null<T>.Instance)) {
+					object? n = null;
+					list[i] = (T)n!;
 				}
 				else
 					return Array.Empty<T>();
@@ -303,8 +304,8 @@ namespace dnSpy.AsmEditor.DnlibDialogs {
 			return CreateCAArgument(ownerType, ConstantTypeVM.Value);
 		}
 
-		CAArgument CreateCAArgument(TypeSig ownerType, object value) {
-			if (value == null || value is Null) {
+		CAArgument CreateCAArgument(TypeSig ownerType, object? value) {
+			if (value is null || value is Null) {
 				var t = ownerType.RemovePinnedAndModifiers();
 				t = t is SZArraySig ? t.Next : t;
 				if (t.RemovePinnedAndModifiers().GetElementType() == ElementType.Object)
@@ -335,8 +336,8 @@ namespace dnSpy.AsmEditor.DnlibDialogs {
 				if (!enumInfo.IsArray)
 					return new CAArgument(enumSig, enumInfo.Value);
 				var res = CreateArray(enumSig, enumInfo.Value);
-				var list = (IList<CAArgument>)res.Value;
-				if (list != null) {
+				var list = (IList<CAArgument>?)res.Value;
+				if (list is not null) {
 					for (int i = 0; i < list.Count; i++)
 						list[i] = new CAArgument(enumSig, list[i].Value);
 				}
@@ -379,11 +380,11 @@ namespace dnSpy.AsmEditor.DnlibDialogs {
 			return new CAArgument();
 		}
 
-		CAArgument CreateArray(TypeSig elemType, object value) {
+		CAArgument CreateArray(TypeSig elemType, object? value) {
 			var aryType = new SZArraySig(elemType);
 			var list = value as System.Collections.IList;
-			Debug.Assert(list != null || value == null);
-			if (list == null)
+			Debug2.Assert(list is not null || value is null);
+			if (list is null)
 				return new CAArgument(aryType, null);
 			var ary = new List<CAArgument>(list.Count);
 

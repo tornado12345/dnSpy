@@ -19,6 +19,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 
 namespace dnSpy.Debugger.DotNet.Metadata.Impl {
 	sealed class AssemblyNameEqualityComparer : IEqualityComparer<IDmdAssemblyName> {
@@ -42,7 +43,11 @@ namespace dnSpy.Debugger.DotNet.Metadata.Impl {
 			};
 		}
 
-		public bool Equals(IDmdAssemblyName x, IDmdAssemblyName y) {
+		public bool Equals([AllowNull] IDmdAssemblyName x, [AllowNull] IDmdAssemblyName y) {
+			if ((object?)x == y)
+				return true;
+			if (x is null || y is null)
+				return false;
 			if (!StringComparer.OrdinalIgnoreCase.Equals(x.Name, y.Name))
 				return false;
 
@@ -51,13 +56,16 @@ namespace dnSpy.Debugger.DotNet.Metadata.Impl {
 			if (!StringComparer.OrdinalIgnoreCase.Equals(x.CultureName ?? string.Empty, y.CultureName ?? string.Empty))
 				return false;
 
+			if (x.ContentType != y.ContentType)
+				return false;
+
 			return ignorePublicKeyToken || PublicKeyTokenEquals(x.GetPublicKeyToken(), y.GetPublicKeyToken());
 		}
 
-		static bool PublicKeyTokenEquals(byte[] a, byte[] b) {
-			if (a == null)
+		static bool PublicKeyTokenEquals(byte[]? a, byte[]? b) {
+			if (a is null)
 				a = Array.Empty<byte>();
-			if (b == null)
+			if (b is null)
 				b = Array.Empty<byte>();
 			if (Equals(a, b))
 				return true;
@@ -65,7 +73,7 @@ namespace dnSpy.Debugger.DotNet.Metadata.Impl {
 		}
 
 		static bool IsSystemPublicKeyToken(byte[] a) {
-			if (a == null)
+			if (a is null)
 				return false;
 			foreach (var sys in systemPublicKeyTokens) {
 				if (Equals(sys, a))
@@ -77,7 +85,7 @@ namespace dnSpy.Debugger.DotNet.Metadata.Impl {
 		static bool Equals(byte[] a, byte[] b) {
 			if (a == b)
 				return true;
-			if (a == null || b == null)
+			if (a is null || b is null)
 				return false;
 			if (a.Length != b.Length)
 				return false;
@@ -88,7 +96,7 @@ namespace dnSpy.Debugger.DotNet.Metadata.Impl {
 			return true;
 		}
 
-		public int GetHashCode(IDmdAssemblyName obj) {
+		public int GetHashCode([DisallowNull] IDmdAssemblyName obj) {
 			int hc = StringComparer.OrdinalIgnoreCase.GetHashCode(obj.Name ?? string.Empty);
 			// Version number is ignored, see Equals()
 			hc ^= (obj.CultureName ?? string.Empty).GetHashCode();

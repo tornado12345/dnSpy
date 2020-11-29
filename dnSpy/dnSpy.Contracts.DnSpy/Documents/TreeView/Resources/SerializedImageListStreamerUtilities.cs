@@ -18,6 +18,7 @@
 */
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Reflection;
@@ -41,7 +42,7 @@ namespace dnSpy.Contracts.Documents.TreeView.Resources {
 		/// <param name="serializedData">Serialized data</param>
 		/// <param name="imageData">Updated with image data</param>
 		/// <returns></returns>
-		public static bool GetImageData(ModuleDef module, string typeName, byte[] serializedData, out byte[] imageData) {
+		public static bool GetImageData(ModuleDef? module, string typeName, byte[] serializedData, [NotNullWhen(true)] out byte[]? imageData) {
 			imageData = null;
 			if (!SerializedImageUtilities.CheckType(module, typeName, SystemWindowsFormsImageListStreamer))
 				return false;
@@ -50,7 +51,7 @@ namespace dnSpy.Contracts.Documents.TreeView.Resources {
 			// ImageListStreamer loops over every item looking for "Data" (case insensitive)
 			foreach (var v in dict.Values) {
 				var d = v.Value as byte[];
-				if (d == null)
+				if (d is null)
 					continue;
 				if ("Data".Equals(v.Name, StringComparison.OrdinalIgnoreCase)) {
 					imageData = d;
@@ -77,7 +78,7 @@ namespace dnSpy.Contracts.Documents.TreeView.Resources {
 
 			foreach (var imageSource in opts.ImageSources) {
 				var bitmapSource = imageSource as BitmapSource;
-				if (bitmapSource == null)
+				if (bitmapSource is null)
 					throw new InvalidOperationException("Only BitmapSources can be used");
 				var encoder = new BmpBitmapEncoder();
 				encoder.Frames.Add(BitmapFrame.Create(bitmapSource));
@@ -89,9 +90,10 @@ namespace dnSpy.Contracts.Documents.TreeView.Resources {
 			}
 
 			var obj = imgList.ImageStream;
+			var typeName = SystemWindowsFormsImageListStreamer.AssemblyQualifiedName;
 			return new ResourceElement {
 				Name = opts.Name,
-				ResourceData = new BinaryResourceData(new UserResourceType(obj.GetType().AssemblyQualifiedName, ResourceTypeCode.UserTypes), SerializationUtilities.Serialize(obj)),
+				ResourceData = new BinaryResourceData(new UserResourceType(typeName, ResourceTypeCode.UserTypes), SerializationUtilities.Serialize(obj)),
 			};
 		}
 
@@ -101,7 +103,7 @@ namespace dnSpy.Contracts.Documents.TreeView.Resources {
 		/// <param name="module">Module</param>
 		/// <param name="newResElem">New data</param>
 		/// <returns></returns>
-		public static string CheckCanUpdateData(ModuleDef module, ResourceElement newResElem) {
+		public static string CheckCanUpdateData(ModuleDef? module, ResourceElement newResElem) {
 			var binData = (BinaryResourceData)newResElem.ResourceData;
 			if (!GetImageData(module, binData.TypeName, binData.Data, out var imageData))
 				return dnSpy_Contracts_DnSpy_Resources.NewDataNotImageList;
@@ -126,6 +128,8 @@ namespace dnSpy.Contracts.Documents.TreeView.Resources {
 			var info = new SerializationInfo(typeof(ImageListStreamer), new FormatterConverter());
 			info.AddValue("Data", imageData);
 			var ctor = typeof(ImageListStreamer).GetConstructor(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance, null, new Type[] { typeof(SerializationInfo), typeof(StreamingContext) }, null);
+			if (ctor is null)
+				throw new InvalidOperationException();
 			var streamer = (ImageListStreamer)ctor.Invoke(new object[] { info, new StreamingContext(StreamingContextStates.All) });
 			imageList.ImageStream = streamer;
 

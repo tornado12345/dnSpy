@@ -28,12 +28,12 @@ namespace dnSpy.Debugger.ToolWindows.CallStack {
 
 		public CallStackControl() => InitializeComponent();
 
-		void ListView_MouseDoubleClick(object sender, MouseButtonEventArgs e) {
+		void ListView_MouseDoubleClick(object? sender, MouseButtonEventArgs e) {
 			if (!UIUtilities.IsLeftDoubleClick<ListViewItem>(listView, e))
 				return;
 			CallStackListViewDoubleClick?.Invoke(this, EventArgs.Empty);
 		}
 
-		public event EventHandler CallStackListViewDoubleClick;
+		public event EventHandler? CallStackListViewDoubleClick;
 	}
 }

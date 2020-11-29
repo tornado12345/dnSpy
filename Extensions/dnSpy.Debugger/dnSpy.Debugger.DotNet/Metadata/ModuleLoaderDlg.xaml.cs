@@ -27,10 +27,11 @@ namespace dnSpy.Debugger.DotNet.Metadata {
 			InitializeComponent();
 			DataContextChanged += (s, e) => {
 				var data = DataContext as ModuleLoaderVM;
-				if (data != null)
+				if (data is not null) {
 					data.OnCompleted += ModuleLoaderVM_OnCompleted;
-				if (data.HasCompleted)
-					OnCompleted();
+					if (data.HasCompleted)
+						OnCompleted();
+				}
 			};
 		}
 
@@ -43,7 +44,7 @@ namespace dnSpy.Debugger.DotNet.Metadata {
 			base.OnClosing(e);
 
 			var data = DataContext as ModuleLoaderVM;
-			if (data == null)
+			if (data is null)
 				return;
 			if (!data.HasCompleted)
 				data.AskCancel();
@@ -51,11 +52,11 @@ namespace dnSpy.Debugger.DotNet.Metadata {
 				e.Cancel = true;
 		}
 
-		void ModuleLoaderVM_OnCompleted(object sender, EventArgs e) => OnCompleted();
+		void ModuleLoaderVM_OnCompleted(object? sender, EventArgs e) => OnCompleted();
 
 		void OnCompleted() {
 			var data = DataContext as ModuleLoaderVM;
-			DialogResult = data != null && !data.WasCanceled;
+			DialogResult = data is not null && !data.WasCanceled;
 			Close();
 		}
 	}

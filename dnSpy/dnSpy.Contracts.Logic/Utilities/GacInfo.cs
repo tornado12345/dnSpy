@@ -137,7 +137,7 @@ namespace dnSpy.Contracts.Utilities {
 			var newWinmdPaths = new List<string>();
 
 			bool hasGAC2;
-			if (Type.GetType("Mono.Runtime") != null) {
+			if (Type.GetType("Mono.Runtime") is not null) {
 				hasGAC2 = false;
 				var dirs = new Dictionary<string, bool>(StringComparer.OrdinalIgnoreCase);
 				var extraMonoPathsList = new List<GacPathInfo>();
@@ -148,12 +148,12 @@ namespace dnSpy.Contracts.Utilities {
 					dirs[dir] = true;
 
 					if (Directory.Exists(dir)) {
-						gacDirInfosList.Add(new GacDirInfo(4, "", Path.GetDirectoryName(dir), new string[] {
+						gacDirInfosList.Add(new GacDirInfo(4, "", Path.GetDirectoryName(dir)!, new string[] {
 							Path.GetFileName(dir)
 						}));
 					}
 
-					dir = Path.GetDirectoryName(dir);
+					dir = Path.GetDirectoryName(dir)!;
 					foreach (var verDir in monoVerDirs) {
 						var dir2 = dir;
 						foreach (var d in verDir.Split(new char[] { '\\' }))
@@ -164,7 +164,7 @@ namespace dnSpy.Contracts.Utilities {
 				}
 
 				var paths = Environment.GetEnvironmentVariable("MONO_PATH");
-				if (paths != null) {
+				if (paths is not null) {
 					foreach (var tmp in paths.Split(Path.PathSeparator)) {
 						var path = tmp.Trim();
 						if (path != string.Empty && Directory.Exists(path))
@@ -214,15 +214,16 @@ namespace dnSpy.Contracts.Utilities {
 			new string[] { "GAC_32", "GAC_64", "GAC_MSIL", "GAC" } :
 			new string[] { "GAC_64", "GAC_32", "GAC_MSIL", "GAC" };
 
-		static string GetCurrentMonoPrefix() {
-			var path = typeof(object).Module.FullyQualifiedName;
+		static string? GetCurrentMonoPrefix() {
+			string? path = typeof(object).Module.FullyQualifiedName;
 			for (int i = 0; i < 4; i++)
 				path = Path.GetDirectoryName(path);
 			return path;
 		}
 
 		static IEnumerable<string> FindMonoPrefixes() {
-			yield return GetCurrentMonoPrefix();
+			if (GetCurrentMonoPrefix() is string monoPrefix)
+				yield return monoPrefix;
 
 			var prefixes = Environment.GetEnvironmentVariable("MONO_GAC_PREFIX");
 			if (!string.IsNullOrEmpty(prefixes)) {
@@ -260,12 +261,12 @@ namespace dnSpy.Contracts.Utilities {
 		}
 
 		static bool IsSubPath(string path, string filename) {
-			filename = Path.GetFullPath(Path.GetDirectoryName(filename));
+			filename = Path.GetFullPath(Path.GetDirectoryName(filename)!);
 			var root = Path.GetPathRoot(filename);
 			while (!StringComparer.OrdinalIgnoreCase.Equals(filename, root)) {
 				if (StringComparer.OrdinalIgnoreCase.Equals(path, filename))
 					return true;
-				filename = Path.GetDirectoryName(filename);
+				filename = Path.GetDirectoryName(filename)!;
 			}
 			return false;
 		}
@@ -275,7 +276,7 @@ namespace dnSpy.Contracts.Utilities {
 		/// </summary>
 		/// <param name="asm">Assembly</param>
 		/// <returns></returns>
-		public static string FindInGac(IAssembly asm) => FindInGac(asm, -1);
+		public static string? FindInGac(IAssembly asm) => FindInGac(asm, -1);
 
 		/// <summary>
 		/// Finds an assembly in the GAC
@@ -283,8 +284,8 @@ namespace dnSpy.Contracts.Utilities {
 		/// <param name="asm">Assembly</param>
 		/// <param name="version">2, 4, or -1</param>
 		/// <returns></returns>
-		public static string FindInGac(IAssembly asm, int version) {
-			if (asm == null)
+		public static string? FindInGac(IAssembly? asm, int version) {
+			if (asm is null)
 				return null;
 			var pkt = PublicKeyBase.ToPublicKeyToken(asm.PublicKeyOrToken);
 			if (PublicKeyBase.IsNullOrEmpty2(pkt))
@@ -343,7 +344,7 @@ namespace dnSpy.Contracts.Utilities {
 				var baseDir = Path.Combine(gacInfo.Path, subDir);
 				foreach (var dir in GetDirectories(baseDir)) {
 					foreach (var dir2 in GetDirectories(dir)) {
-						Version version;
+						Version? version;
 						string culture;
 						PublicKeyToken pkt;
 						if (gacInfo.Version == 2) {

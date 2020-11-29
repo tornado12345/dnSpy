@@ -42,14 +42,15 @@ namespace dnSpy.Debugger.Breakpoints.Code.CondChecker {
 
 		void IDbgManagerStartListener.OnStart(DbgManager dbgManager) => dbgManager.MessageBoundBreakpoint += DbgManager_MessageBoundBreakpoint;
 
-		void DbgManager_MessageBoundBreakpoint(object sender, DbgMessageBoundBreakpointEventArgs e) {
-			e.Pause = ShouldBreak(e.BoundBreakpoint, e.Thread);
-			if (e.Pause && e.BoundBreakpoint.Breakpoint.IsOneShot)
+		void DbgManager_MessageBoundBreakpoint(object? sender, DbgMessageBoundBreakpointEventArgs e) {
+			bool pause = ShouldBreak(e.BoundBreakpoint, e.Thread);
+			e.Pause = pause;
+			if (pause && e.BoundBreakpoint.Breakpoint.IsOneShot)
 				e.BoundBreakpoint.Breakpoint.Remove();
 		}
 
-		bool ShouldBreak(DbgBoundCodeBreakpoint boundBreakpoint, DbgThread thread) {
-			if (thread == null)
+		bool ShouldBreak(DbgBoundCodeBreakpoint boundBreakpoint, DbgThread? thread) {
+			if (thread is null)
 				return false;
 			var bp = (DbgCodeBreakpointImpl)boundBreakpoint.Breakpoint;
 			if (bp.IsClosed || boundBreakpoint.IsClosed)
@@ -66,7 +67,7 @@ namespace dnSpy.Debugger.Breakpoints.Code.CondChecker {
 
 			if (settings.Filter is DbgCodeBreakpointFilter filter) {
 				checkRes = dbgCodeBreakpointFilterChecker.Value.ShouldBreak(boundBreakpoint, thread, filter);
-				if (checkRes.ErrorMessage != null) {
+				if (checkRes.ErrorMessage is not null) {
 					boundBreakpoint.Process.DbgManager.ShowError(checkRes.ErrorMessage);
 					return true;
 				}
@@ -76,7 +77,7 @@ namespace dnSpy.Debugger.Breakpoints.Code.CondChecker {
 
 			if (settings.Condition is DbgCodeBreakpointCondition condition) {
 				checkRes = dbgCodeBreakpointConditionChecker.Value.ShouldBreak(boundBreakpoint, thread, condition);
-				if (checkRes.ErrorMessage != null) {
+				if (checkRes.ErrorMessage is not null) {
 					boundBreakpoint.Process.DbgManager.ShowError(checkRes.ErrorMessage);
 					return true;
 				}
@@ -88,7 +89,7 @@ namespace dnSpy.Debugger.Breakpoints.Code.CondChecker {
 			int currentHitCount = dbgCodeBreakpointHitCountService.Value.Hit_DbgThread(boundBreakpoint.Breakpoint);
 			if (settings.HitCount is DbgCodeBreakpointHitCount hitCount) {
 				checkRes = dbgCodeBreakpointHitCountChecker.Value.ShouldBreak(boundBreakpoint, thread, hitCount, currentHitCount);
-				if (checkRes.ErrorMessage != null) {
+				if (checkRes.ErrorMessage is not null) {
 					boundBreakpoint.Process.DbgManager.ShowError(checkRes.ErrorMessage);
 					return true;
 				}

@@ -36,30 +36,30 @@ namespace dnSpy.AsmEditor.Hex.PE {
 			this.createItem = createItem;
 		}
 
-		public T TryGet(int index) {
+		public T? TryGet(int index) {
 			Debug.Assert(0 <= index && index < list.Length);
 			if ((uint)index >= (uint)list.Length)
 				return null;
-			return (T)list[index]?.Target;
+			return (T?)list[index]?.Target;
 		}
 
 		public T this[int index] {
 			get {
-				T obj;
+				T? obj;
 				var weakRef = list[index];
-				if (weakRef == null) {
+				if (weakRef is null) {
 					list[index] = new WeakReference(obj = createItem(index));
 					return obj;
 				}
 
-				obj = (T)weakRef.Target;
-				if (obj == null)
+				obj = (T?)weakRef.Target;
+				if (obj is null)
 					weakRef.Target = obj = createItem(index);
 				return obj;
 			}
 		}
 
-		object IList.this[int index] {
+		object? IList.this[int index] {
 			get => this[index];
 			set => Debug.Fail("Method shouldn't be called");
 		}
@@ -70,13 +70,13 @@ namespace dnSpy.AsmEditor.Hex.PE {
 		bool ICollection.IsSynchronized => false;
 		object ICollection.SyncRoot => this;
 
-		int IList.Add(object value) {
+		int IList.Add(object? value) {
 			Debug.Fail("Method shouldn't be called");
 			return -1;
 		}
 
 		void IList.Clear() => Debug.Fail("Method shouldn't be called");
-		bool IList.Contains(object value) => value is IVirtualizedListItem;
+		bool IList.Contains(object? value) => value is IVirtualizedListItem;
 
 		void ICollection.CopyTo(Array array, int index) {
 			Debug.Fail("Method shouldn't be called");
@@ -88,9 +88,9 @@ namespace dnSpy.AsmEditor.Hex.PE {
 				yield return this[i];
 		}
 
-		int IList.IndexOf(object value) => (value as IVirtualizedListItem)?.Index ?? -1;
-		void IList.Insert(int index, object value) => Debug.Fail("Method shouldn't be called");
-		void IList.Remove(object value) => Debug.Fail("Method shouldn't be called");
+		int IList.IndexOf(object? value) => (value as IVirtualizedListItem)?.Index ?? -1;
+		void IList.Insert(int index, object? value) => Debug.Fail("Method shouldn't be called");
+		void IList.Remove(object? value) => Debug.Fail("Method shouldn't be called");
 		void IList.RemoveAt(int index) => Debug.Fail("Method shouldn't be called");
 	}
 }

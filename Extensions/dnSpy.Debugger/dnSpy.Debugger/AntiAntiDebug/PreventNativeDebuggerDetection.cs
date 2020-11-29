@@ -39,7 +39,7 @@ namespace dnSpy.Debugger.AntiAntiDebug {
 			}
 
 			public bool Equals(Key other) => architecture == other.architecture && operatingSystem == other.operatingSystem;
-			public override bool Equals(object obj) => obj is Key other && Equals(other);
+			public override bool Equals(object? obj) => obj is Key other && Equals(other);
 			public override int GetHashCode() => ((int)architecture << 16) ^ (int)operatingSystem;
 		}
 
@@ -78,7 +78,7 @@ namespace dnSpy.Debugger.AntiAntiDebug {
 				dbgManager.MessageProcessCreated += DbgManager_MessageProcessCreated;
 		}
 
-		void DbgManager_MessageProcessCreated(object sender, DbgMessageProcessCreatedEventArgs e) => HookFuncs(e.Process);
+		void DbgManager_MessageProcessCreated(object? sender, DbgMessageProcessCreatedEventArgs e) => HookFuncs(e.Process);
 
 		void HookFuncs(DbgProcess process) {
 			var key = new Key(process.Architecture, process.OperatingSystem);
@@ -95,14 +95,14 @@ namespace dnSpy.Debugger.AntiAntiDebug {
 					if (!lz.Value.IsEnabled(context))
 						continue;
 					hookedFuncs.Add(id);
-					string errorMessage = null;
+					string? errorMessage = null;
 					try {
 						lz.Value.Hook(context, out errorMessage);
 					}
 					catch (DbgHookException ex) {
 						errorMessage = ex.Message ?? "???";
 					}
-					if (errorMessage != null)
+					if (errorMessage is not null)
 						errors.Add($"{lz.Metadata.Dll}!{lz.Metadata.Function}: {errorMessage}");
 				}
 

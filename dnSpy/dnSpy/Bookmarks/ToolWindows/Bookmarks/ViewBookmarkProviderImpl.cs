@@ -28,14 +28,14 @@ using dnSpy.UI;
 namespace dnSpy.Bookmarks.ToolWindows.Bookmarks {
 	[Export(typeof(ViewBookmarkProvider))]
 	sealed class ViewBookmarkProviderImpl : ViewBookmarkProvider {
-		public override event EventHandler BookmarksViewOrderChanged;
+		public override event EventHandler? BookmarksViewOrderChanged;
 		public override IList<Bookmark> BookmarksViewOrder => allBookmarks;
-		public override Bookmark DefaultBookmark => allBookmarks.FirstOrDefault();
+		public override Bookmark? DefaultBookmark => allBookmarks.FirstOrDefault();
 
 		readonly UIDispatcher uiDispatcher;
 		readonly BookmarksService bookmarksService;
 		readonly Lazy<IBookmarksVM> bookmarksVM;
-		Bookmark activeBookmark;
+		Bookmark? activeBookmark;
 		Bookmark[] allBookmarks;
 
 		[ImportingConstructor]
@@ -57,11 +57,11 @@ namespace dnSpy.Bookmarks.ToolWindows.Bookmarks {
 			BookmarksVM_OnShowChanged();
 		}
 
-		void BookmarksVM_OnShowChanged(object sender, EventArgs e) => BookmarksVM_OnShowChanged();
+		void BookmarksVM_OnShowChanged(object? sender, EventArgs e) => BookmarksVM_OnShowChanged();
 		void BookmarksVM_OnShowChanged() => UpdateBookmarks_UI();
-		void BookmarksVM_AllItemsFiltered(object sender, EventArgs e) => UpdateBookmarks_UI();
+		void BookmarksVM_AllItemsFiltered(object? sender, EventArgs e) => UpdateBookmarks_UI();
 
-		void BookmarksService_BookmarksChanged(object sender, CollectionChangedEventArgs<Bookmark> e) =>
+		void BookmarksService_BookmarksChanged(object? sender, CollectionChangedEventArgs<Bookmark> e) =>
 			// Add an extra UI() so it's guaranteed to be called after BookmarksVM's handler
 			UI(() => UI(() => BookmarksService_BookmarksChanged_UI(e)));
 		void BookmarksService_BookmarksChanged_UI(CollectionChangedEventArgs<Bookmark> e) => UpdateBookmarks_UI();
@@ -86,7 +86,7 @@ namespace dnSpy.Bookmarks.ToolWindows.Bookmarks {
 			BookmarksViewOrderChanged?.Invoke(this, EventArgs.Empty);
 		}
 
-		public override void SetActiveBookmark(Bookmark bookmark) {
+		public override void SetActiveBookmark(Bookmark? bookmark) {
 			uiDispatcher.VerifyAccess();
 			if (activeBookmark == bookmark)
 				return;

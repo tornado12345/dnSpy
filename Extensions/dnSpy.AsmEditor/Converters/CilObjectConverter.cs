@@ -33,8 +33,10 @@ namespace dnSpy.AsmEditor.Converters {
 	sealed class CilObjectConverter : IValueConverter {
 		public static readonly CilObjectConverter Instance = new CilObjectConverter();
 
+#nullable disable
 		static IClassificationFormatMap classificationFormatMap;
 		static ITextElementProvider textElementProvider;
+#nullable restore
 
 		[ExportAutoLoaded]
 		sealed class Loader : IAutoLoaded {
@@ -51,10 +53,10 @@ namespace dnSpy.AsmEditor.Converters {
 			public static void FreeWriter(TextClassifierTextColorWriter writer) => writer.Clear();
 		}
 
-		public object Convert(object value, Type targetType, object parameter, CultureInfo culture) {
+		public object? Convert(object value, Type targetType, object parameter, CultureInfo culture) {
 			try {
 				var flags = WriteObjectFlags.None;
-				if (parameter != null) {
+				if (parameter is not null) {
 					foreach (var c in (string)parameter) {
 						if (c == 's')
 							flags |= WriteObjectFlags.ShortInstruction;
@@ -78,7 +80,7 @@ namespace dnSpy.AsmEditor.Converters {
 				Debug.Fail(ex.ToString());
 			}
 
-			if (value == null)
+			if (value is null)
 				return string.Empty;
 			return value.ToString();
 		}

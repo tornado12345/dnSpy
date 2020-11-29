@@ -85,12 +85,12 @@ namespace dnSpy.Contracts.Hex.Files {
 		/// <summary>
 		/// Raised after files are added
 		/// </summary>
-		public abstract event EventHandler<BufferFilesAddedEventArgs> BufferFilesAdded;
+		public abstract event EventHandler<BufferFilesAddedEventArgs>? BufferFilesAdded;
 
 		/// <summary>
 		/// Raised after files are removed
 		/// </summary>
-		public abstract event EventHandler<BufferFilesRemovedEventArgs> BufferFilesRemoved;
+		public abstract event EventHandler<BufferFilesRemovedEventArgs>? BufferFilesRemoved;
 
 		/// <summary>
 		/// Finds a file
@@ -98,7 +98,7 @@ namespace dnSpy.Contracts.Hex.Files {
 		/// <param name="position">Position</param>
 		/// <param name="checkNestedFiles">true to check nested files</param>
 		/// <returns></returns>
-		public abstract HexBufferFile GetFile(HexPosition position, bool checkNestedFiles);
+		public abstract HexBufferFile? GetFile(HexPosition position, bool checkNestedFiles);
 
 		/// <summary>
 		/// Gets a <see cref="HexBufferFile"/> and structure at <paramref name="position"/> or null if

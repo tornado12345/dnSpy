@@ -2168,10 +2168,10 @@ A maioria das opções serão re-inicializados quando essa caixa de seleção é
     <value>Aviso</value>
   </data>
   <data name="AddAssemblyReferenceToolTip" xml:space="preserve">
-    <value>Add Assembly Reference</value>
+    <value>Adicionar referência à Assembleia</value>
   </data>
   <data name="AddGacReferenceToolTip" xml:space="preserve">
-    <value>Add Assembly Reference (GAC)</value>
+    <value>Adicionar referência da Assembleia (GAC)</value>
   </data>
   <data name="Error_CouldNotAddAssemblyReferences" xml:space="preserve">
     <value>Não foi possível adicionar referências de assembly.</value>
@@ -2279,22 +2279,22 @@ A maioria das opções serão re-inicializados quando essa caixa de seleção é
     <value>Adicionar membros de class</value>
   </data>
   <data name="EditCodeAddClassMembers2" xml:space="preserve">
-    <value>Add Class Members ({0})...</value>
+    <value>Adicionar membros da classe ({0})...</value>
   </data>
   <data name="SaveModule_PreserveOtherMetadataStreams" xml:space="preserve">
-    <value>Copy Unkno_wn Metadata Streams</value>
+    <value>Copiar Streams de Metadados Desconhecidos</value>
   </data>
   <data name="RerunNgenIfGacAssembly" xml:space="preserve">
-    <value>Run NGEN.exe if this assembly is installed in the GAC</value>
+    <value>Execute NGEN.exe se esta assembleia estiver instalada no GAC</value>
   </data>
   <data name="CompilerDlgTabTitle" xml:space="preserve">
-    <value>Compiler</value>
+    <value>Compilador</value>
   </data>
   <data name="ReplaceNopsInstrCommand" xml:space="preserve">
-    <value>_Replace with NOPs</value>
+    <value>_Substituir por NOPs</value>
   </data>
   <data name="ReplaceNopsInstrsCommand" xml:space="preserve">
-    <value>_Replace with NOPs</value>
+    <value>_Substituir por NOPs</value>
   </data>
   <data name="Type_Flags_Accessibility" xml:space="preserve">
     <value>Acessibilidade</value>

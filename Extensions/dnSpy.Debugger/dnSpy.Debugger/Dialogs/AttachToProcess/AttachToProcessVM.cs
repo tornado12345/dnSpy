@@ -21,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Input;
@@ -51,9 +52,9 @@ namespace dnSpy.Debugger.Dialogs.AttachToProcess {
 		public string SearchHelpToolTip => ToolTipHelper.AddKeyboardShortcut(dnSpy_Debugger_Resources.SearchHelp_ToolTip, null);
 
 		public ICommand InfoLinkCommand => new RelayCommand(a => ShowInfoLinkPage());
-		public bool HasInfoLink => InfoLinkToolTip != null && infoLink != null;
-		public string InfoLinkToolTip { get; }
-		readonly string infoLink;
+		public bool HasInfoLink => InfoLinkToolTip is not null && infoLink is not null;
+		public string? InfoLinkToolTip { get; }
+		readonly string? infoLink;
 
 		public string Title { get; }
 
@@ -69,7 +70,7 @@ namespace dnSpy.Debugger.Dialogs.AttachToProcess {
 		}
 
 		public bool HasMessageText => !string.IsNullOrEmpty(MessageText);
-		public string MessageText { get; }
+		public string? MessageText { get; }
 
 		public string FilterText {
 			get => filterText;
@@ -88,21 +89,21 @@ namespace dnSpy.Debugger.Dialogs.AttachToProcess {
 		readonly AttachProgramOptionsAggregatorFactory attachProgramOptionsAggregatorFactory;
 		readonly AttachToProcessContext attachToProcessContext;
 		readonly Action searchHelp;
-		readonly string[] providerNames;
-		AttachProgramOptionsAggregator attachProgramOptionsAggregator;
-		ProcessProvider processProvider;
+		readonly string[]? providerNames;
+		AttachProgramOptionsAggregator? attachProgramOptionsAggregator;
+		ProcessProvider? processProvider;
 
-		public AttachToProcessVM(ShowAttachToProcessDialogOptions options, UIDispatcher uiDispatcher, DbgManager dbgManager, DebuggerSettings debuggerSettings, ProgramFormatterProvider programFormatterProvider, IClassificationFormatMapService classificationFormatMapService, ITextElementProvider textElementProvider, AttachProgramOptionsAggregatorFactory attachProgramOptionsAggregatorFactory, Action searchHelp) {
-			if (options == null) {
+		public AttachToProcessVM(ShowAttachToProcessDialogOptions? options, UIDispatcher uiDispatcher, DbgManager dbgManager, DebuggerSettings debuggerSettings, ProgramFormatterProvider programFormatterProvider, IClassificationFormatMapService classificationFormatMapService, ITextElementProvider textElementProvider, AttachProgramOptionsAggregatorFactory attachProgramOptionsAggregatorFactory, Action searchHelp) {
+			if (options is null) {
 				options = new ShowAttachToProcessDialogOptions();
 				options.InfoLink = new AttachToProcessLinkInfo {
 					ToolTipMessage = dnSpy_Debugger_Resources.AttachToProcess_MakingAnImageEasierToDebug,
-					Url = "https://github.com/0xd4d/dnSpy/wiki/Making-an-Image-Easier-to-Debug",
+					Url = "https://github.com/dnSpy/dnSpy/wiki/Making-an-Image-Easier-to-Debug",
 				};
 			}
 			Title = GetTitle(options);
 			MessageText = GetMessage(options);
-			if (options.InfoLink != null) {
+			if (options.InfoLink is not null) {
 				var l = options.InfoLink.Value;
 				if (!string.IsNullOrEmpty(l.Url)) {
 					InfoLinkToolTip = l.ToolTipMessage;
@@ -120,10 +121,9 @@ namespace dnSpy.Debugger.Dialogs.AttachToProcess {
 			this.dbgManager = dbgManager ?? throw new ArgumentNullException(nameof(dbgManager));
 			this.attachProgramOptionsAggregatorFactory = attachProgramOptionsAggregatorFactory ?? throw new ArgumentNullException(nameof(attachProgramOptionsAggregatorFactory));
 			var classificationFormatMap = classificationFormatMapService.GetClassificationFormatMap(AppearanceCategoryConstants.UIMisc);
-			attachToProcessContext = new AttachToProcessContext(classificationFormatMap, textElementProvider, new SearchMatcher(searchColumnDefinitions));
+			attachToProcessContext = new AttachToProcessContext(classificationFormatMap, textElementProvider, new SearchMatcher(searchColumnDefinitions), programFormatterProvider.Create());
 			this.searchHelp = searchHelp ?? throw new ArgumentNullException(nameof(searchHelp));
 
-			attachToProcessContext.Formatter = programFormatterProvider.Create();
 			attachToProcessContext.SyntaxHighlight = debuggerSettings.SyntaxHighlight;
 
 			Descs = new GridViewColumnDescs {
@@ -161,8 +161,8 @@ namespace dnSpy.Debugger.Dialogs.AttachToProcess {
 			return s;
 		}
 
-		static string GetMessage(ShowAttachToProcessDialogOptions options) {
-			if (options.Message != null)
+		static string? GetMessage(ShowAttachToProcessDialogOptions options) {
+			if (options.Message is not null)
 				return options.Message;
 			if (!Environment.Is64BitOperatingSystem)
 				return null;
@@ -172,7 +172,7 @@ namespace dnSpy.Debugger.Dialogs.AttachToProcess {
 		public string GetSearchHelpText() => attachToProcessContext.SearchMatcher.GetHelpText();
 
 		public bool IsRefreshing => !CanRefresh;
-		bool CanRefresh => attachProgramOptionsAggregator == null;
+		bool CanRefresh => attachProgramOptionsAggregator is null;
 		void Refresh() {
 			uiDispatcher.VerifyAccess();
 			if (!CanRefresh)
@@ -196,7 +196,7 @@ namespace dnSpy.Debugger.Dialogs.AttachToProcess {
 			uiDispatcher.VerifyAccess();
 			processProvider?.Dispose();
 			processProvider = null;
-			if (attachProgramOptionsAggregator != null) {
+			if (attachProgramOptionsAggregator is not null) {
 				attachProgramOptionsAggregator.AttachProgramOptionsAdded -= AttachProgramOptionsAggregator_AttachProgramOptionsAdded;
 				attachProgramOptionsAggregator.Completed -= AttachProgramOptionsAggregator_Completed;
 				attachProgramOptionsAggregator.Dispose();
@@ -205,14 +205,17 @@ namespace dnSpy.Debugger.Dialogs.AttachToProcess {
 			}
 		}
 
-		void AttachProgramOptionsAggregator_AttachProgramOptionsAdded(object sender, AttachProgramOptionsAddedEventArgs e) {
+		void AttachProgramOptionsAggregator_AttachProgramOptionsAdded(object? sender, AttachProgramOptionsAddedEventArgs e) {
 			uiDispatcher.VerifyAccess();
 			if (attachProgramOptionsAggregator != sender)
 				return;
+			Debug2.Assert(processProvider is not null);
 			foreach (var options in e.AttachProgramOptions) {
 				if (!dbgManager.CanDebugRuntime(options.ProcessId, options.RuntimeId))
 					continue;
-				var vm = new ProgramVM(processProvider, options, attachToProcessContext);
+				var vm = ProgramVM.Create(processProvider, options, attachToProcessContext);
+				if (vm is null)
+					continue;
 				realAllItems.Add(vm);
 				if (IsMatch(vm, filterText)) {
 					int index = GetInsertionIndex(vm, AllItems);
@@ -237,7 +240,7 @@ namespace dnSpy.Debugger.Dialogs.AttachToProcess {
 			return hi + 1;
 		}
 
-		void AttachProgramOptionsAggregator_Completed(object sender, EventArgs e) {
+		void AttachProgramOptionsAggregator_Completed(object? sender, EventArgs e) {
 			uiDispatcher.VerifyAccess();
 			if (attachProgramOptionsAggregator != sender)
 				return;
@@ -279,12 +282,18 @@ namespace dnSpy.Debugger.Dialogs.AttachToProcess {
 			return list;
 		}
 
-		public int Compare(ProgramVM x, ProgramVM y) {
+		public int Compare([AllowNull] ProgramVM x, [AllowNull] ProgramVM y) {
 			Debug.Assert(uiDispatcher.CheckAccess());
+			if ((object?)x == y)
+				return 0;
+			if (x is null)
+				return -1;
+			if (y is null)
+				return 1;
 			var (desc, dir) = Descs.SortedColumn;
 
 			int id;
-			if (desc == null || dir == GridViewSortDirection.Default) {
+			if (desc is null || dir == GridViewSortDirection.Default) {
 				id = AttachToProcessWindowColumnIds.Default_Order;
 				dir = GridViewSortDirection.Ascending;
 			}
@@ -485,7 +494,7 @@ namespace dnSpy.Debugger.Dialogs.AttachToProcess {
 		}
 
 		void ShowInfoLinkPage() {
-			if (infoLink != null)
+			if (infoLink is not null)
 				OpenWebPage(infoLink);
 		}
 

@@ -17,7 +17,6 @@
     along with dnSpy.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-using System;
 using System.Collections.Generic;
 using dnSpy.Contracts.Decompiler;
 using dnSpy.Contracts.Themes;
@@ -28,7 +27,7 @@ namespace dnSpy.Contracts.App {
 	/// </summary>
 	public interface IAppCommandLineArgs {
 		/// <summary>Settings filename</summary>
-		string SettingsFilename { get; }
+		string? SettingsFilename { get; }
 
 		/// <summary>Filenames to load</summary>
 		IEnumerable<string> Filenames { get; }
@@ -53,7 +52,7 @@ namespace dnSpy.Contracts.App {
 		bool NewTab { get; }
 
 		/// <summary>Search string or null if none</summary>
-		string SearchText { get; }
+		string? SearchText { get; }
 
 		/// <summary>Search type</summary>
 		string SearchFor { get; }
@@ -91,6 +90,9 @@ namespace dnSpy.Contracts.App {
 		/// <summary>Attach to this process name, unless it's empty. Can contain wildcards.</summary>
 		string DebugAttachProcess { get; }
 
+		/// <summary>Additional directory to check for extensions.</summary>
+		string ExtraExtensionDirectory { get; }
+
 		/// <summary>
 		/// Returns true if the argument is present
 		/// </summary>
@@ -103,12 +105,12 @@ namespace dnSpy.Contracts.App {
 		/// </summary>
 		/// <param name="argName">Argument name, eg. <c>--my-arg</c></param>
 		/// <returns></returns>
-		string GetArgumentValue(string argName);
+		string? GetArgumentValue(string argName);
 
 		/// <summary>
 		/// Gets all user arguments and values
 		/// </summary>
 		/// <returns></returns>
-		IEnumerable<Tuple<string, string>> GetArguments();
+		IEnumerable<(string argument, string value)> GetArguments();
 	}
 }

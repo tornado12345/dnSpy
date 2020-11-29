@@ -18,26 +18,30 @@
 */
 
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Windows;
 using dnSpy.Contracts.Documents;
 using dnSpy.Contracts.MVVM.Dialogs;
+using dnSpy.Documents.TreeView;
 
 namespace dnSpy.Documents {
 	sealed class DsDocumentLoader : IProgressTask, IDsDocumentLoader {
 		readonly IDsDocumentService documentService;
 		readonly Window ownerWindow;
+		readonly AssemblyExplorerMostRecentlyUsedList? mruList;
 		readonly HashSet<IDsDocument> hash;
 		readonly List<IDsDocument> loadedDocuments;
-		DocumentToLoad[] documentsToLoad;
+		DocumentToLoad[]? documentsToLoad;
 
 		public bool IsIndeterminate => false;
 		public double ProgressMinimum => 0;
 		public double ProgressMaximum { get; set; }
 
-		public DsDocumentLoader(IDsDocumentService documentService, Window ownerWindow) {
+		public DsDocumentLoader(IDsDocumentService documentService, Window ownerWindow, AssemblyExplorerMostRecentlyUsedList? mruList) {
 			this.documentService = documentService;
 			this.ownerWindow = ownerWindow;
+			this.mruList = mruList;
 			loadedDocuments = new List<IDsDocument>();
 			hash = new HashSet<IDsDocument>();
 		}
@@ -61,13 +65,18 @@ namespace dnSpy.Documents {
 			if (f.Info.Type == DocumentConstants.DOCUMENTTYPE_FILE && string.IsNullOrEmpty(f.Info.Name))
 				return;
 			var document = documentService.TryGetOrCreate(f.Info, f.IsAutoLoaded);
-			if (document != null && !hash.Contains(document)) {
+			if (document is not null && !hash.Contains(document)) {
 				loadedDocuments.Add(document);
 				hash.Add(document);
+				if (!f.IsAutoLoaded) {
+					document.IsAutoLoaded = f.IsAutoLoaded;
+					mruList?.Add(document.Filename);
+				}
 			}
 		}
 
 		public void Execute(IProgress progress) {
+			Debug2.Assert(documentsToLoad is not null);
 			for (int i = 0; i < documentsToLoad.Length; i++) {
 				progress.ThrowIfCancellationRequested();
 				var f = documentsToLoad[i];

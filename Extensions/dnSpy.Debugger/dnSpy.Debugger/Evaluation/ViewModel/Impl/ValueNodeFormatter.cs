@@ -23,8 +23,8 @@ using dnSpy.Contracts.Debugger.Text;
 
 namespace dnSpy.Debugger.Evaluation.ViewModel.Impl {
 	sealed class ValueNodeFormatter {
-		public DbgObjectIdService ObjectIdService { get; set; }
-		public DbgLanguage Language { get; set; }
+		public DbgObjectIdService? ObjectIdService { get; set; }
+		public DbgLanguage? Language { get; set; }
 
 		public void WriteExpander(IDbgTextWriter output, ValueNode vm) {
 			if (vm.TreeNode.LazyLoading)
@@ -51,25 +51,25 @@ namespace dnSpy.Debugger.Evaluation.ViewModel.Impl {
 		}
 
 		public void WriteObjectId(IDbgTextWriter output, ValueNode vm) {
-			Debug.Assert(ObjectIdService != null);
-			if (ObjectIdService == null)
+			Debug2.Assert(ObjectIdService is not null);
+			if (ObjectIdService is null)
 				return;
 			var vmImpl = (ValueNodeImpl)vm;
 			if (vmImpl.RawNode is DebuggerValueRawNode rawNode) {
 				var language = Language;
-				Debug.Assert(language != null);
-				if (language == null)
+				Debug2.Assert(language is not null);
+				if (language is null)
 					return;
 				var value = rawNode.DebuggerValueNode.Value;
-				if (value == null)
+				if (value is null)
 					return;
 				var objectId = ObjectIdService.GetObjectId(value);
-				if (objectId != null) {
+				if (objectId is not null) {
 					output.Write(DbgTextColor.Text, " ");
 					output.Write(DbgTextColor.Punctuation, "{");
 					var evalInfo = vmImpl.Context.EvaluationInfo;
-					Debug.Assert(evalInfo != null);
-					if (evalInfo == null)
+					Debug2.Assert(evalInfo is not null);
+					if (evalInfo is null)
 						output.Write(DbgTextColor.Error, "???");
 					else
 						language.Formatter.FormatObjectIdName(evalInfo.Context, output, objectId.Id);

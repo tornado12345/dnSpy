@@ -28,7 +28,7 @@ namespace dnSpy.MainApp {
 	sealed class AppCommandLineArgs : IAppCommandLineArgs {
 		const char ARG_SEP = ':';
 
-		public string SettingsFilename { get; }
+		public string? SettingsFilename { get; }
 		public IEnumerable<string> Filenames => filenames;
 		public bool SingleInstance { get; }
 		public bool Activate { get; }
@@ -36,7 +36,7 @@ namespace dnSpy.MainApp {
 		public string Culture { get; }
 		public string SelectMember { get; }
 		public bool NewTab { get; }
-		public string SearchText { get; }
+		public string? SearchText { get; }
 		public string SearchFor { get; }
 		public string SearchIn { get; }
 		public string Theme { get; }
@@ -49,6 +49,7 @@ namespace dnSpy.MainApp {
 		public uint DebugEvent { get; }
 		public ulong JitDebugInfo { get; }
 		public string DebugAttachProcess { get; }
+		public string ExtraExtensionDirectory { get; }
 
 		readonly Dictionary<string, string> userArgs = new Dictionary<string, string>();
 		readonly List<string> filenames = new List<string>();
@@ -76,6 +77,7 @@ namespace dnSpy.MainApp {
 			ShowStartupTime = false;
 			DebugAttachPid = 0;
 			DebugAttachProcess = string.Empty;
+			ExtraExtensionDirectory = string.Empty;
 
 			bool canParseCommands = true;
 			for (int i = 0; i < args.Length; i++) {
@@ -194,6 +196,11 @@ namespace dnSpy.MainApp {
 						i++;
 						break;
 
+					case "--extension-directory":
+						ExtraExtensionDirectory = GetFullPath(next);
+						i++;
+						break;
+
 					default:
 						int sepIndex = arg.IndexOf(ARG_SEP);
 						string argName, argValue;
@@ -256,11 +263,11 @@ namespace dnSpy.MainApp {
 
 		public bool HasArgument(string argName) => userArgs.ContainsKey(argName);
 
-		public string GetArgumentValue(string argName) {
-			userArgs.TryGetValue(argName, out string value);
+		public string? GetArgumentValue(string argName) {
+			userArgs.TryGetValue(argName, out var value);
 			return value;
 		}
 
-		public IEnumerable<Tuple<string, string>> GetArguments() => userArgs.Select(a => Tuple.Create(a.Key, a.Value));
+		public IEnumerable<(string argument, string value)> GetArguments() => userArgs.Select(a => (a.Key, a.Value));
 	}
 }

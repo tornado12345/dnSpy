@@ -168,6 +168,9 @@
   <data name="DecompilerSettings_FullyQualifyAmbiguousTypeNames" xml:space="preserve">
     <value>Добавить пространство имен в типы с таким же именем</value>
   </data>
+  <data name="DecompilerSettings_HexadecimalNumbers" xml:space="preserve">
+    <value>Шестнадцатеричные цифры</value>
+  </data>
   <data name="DecompilerSettings_IntroduceIncrementAndDecrement" xml:space="preserve">
     <value>Использовать операторы инкремента и декремента</value>
   </data>
@@ -199,10 +202,10 @@
     <value>Показывать скрытые типы и методы, созданные компилятором</value>
   </data>
   <data name="DecompilerSettings_ShowILComments" xml:space="preserve">
-    <value>Показать комментарии к IL инструкциям</value>
+    <value>Показать комментарии к IL-инструкциям</value>
   </data>
   <data name="DecompilerSettings_ShowILInstrBytes" xml:space="preserve">
-    <value>Показывать байты инструкций IL</value>
+    <value>Показывать байты IL-инструкций</value>
   </data>
   <data name="DecompilerSettings_ShowPdbInfo" xml:space="preserve">
     <value>Показать номера строк и имена файлов, если имеются</value>

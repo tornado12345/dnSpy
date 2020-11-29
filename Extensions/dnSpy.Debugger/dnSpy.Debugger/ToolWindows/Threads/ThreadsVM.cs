@@ -23,6 +23,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.ComponentModel.Composition;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using dnSpy.Contracts.Controls.ToolWindows;
 using dnSpy.Contracts.Debugger;
@@ -68,27 +69,27 @@ namespace dnSpy.Debugger.ToolWindows.Threads {
 		IEditValueProvider NameEditValueProvider {
 			get {
 				threadContext.UIDispatcher.VerifyAccess();
-				if (nameEditValueProvider == null)
+				if (nameEditValueProvider is null)
 					nameEditValueProvider = editValueProviderService.Create(ContentTypes.ThreadsWindowName, Array.Empty<string>());
 				return nameEditValueProvider;
 			}
 		}
-		IEditValueProvider nameEditValueProvider;
+		IEditValueProvider? nameEditValueProvider;
 
 		public object ProcessCollection => processes;
 		readonly ObservableCollection<SimpleProcessVM> processes;
 
-		public object SelectedProcess {
+		public object? SelectedProcess {
 			get => selectedProcess;
 			set {
 				if (selectedProcess != value) {
-					selectedProcess = (SimpleProcessVM)value;
+					selectedProcess = (SimpleProcessVM?)value;
 					OnPropertyChanged(nameof(SelectedProcess));
 					FilterList_UI(filterText, selectedProcess);
 				}
 			}
 		}
-		SimpleProcessVM selectedProcess;
+		SimpleProcessVM? selectedProcess;
 
 		public string FilterText {
 			get => filterText;
@@ -149,12 +150,11 @@ namespace dnSpy.Debugger.ToolWindows.Threads {
 			this.threadCategoryService = threadCategoryService;
 			this.editValueProviderService = editValueProviderService;
 			var classificationFormatMap = classificationFormatMapService.GetClassificationFormatMap(AppearanceCategoryConstants.UIMisc);
-			threadContext = new ThreadContext(uiDispatcher, classificationFormatMap, textBlockContentInfoFactory, new SearchMatcher(searchColumnDefinitions)) {
+			threadContext = new ThreadContext(uiDispatcher, classificationFormatMap, textBlockContentInfoFactory, new SearchMatcher(searchColumnDefinitions), threadFormatterProvider.Create()) {
 				SyntaxHighlight = debuggerSettings.SyntaxHighlight,
 				UseHexadecimal = debuggerSettings.UseHexadecimal,
 				DigitSeparators = debuggerSettings.UseDigitSeparators,
 				FullString = debuggerSettings.FullString,
-				Formatter = threadFormatterProvider.Create(),
 			};
 			Descs = new GridViewColumnDescs {
 				Columns = new GridViewColumnDesc[] {
@@ -290,10 +290,10 @@ namespace dnSpy.Debugger.ToolWindows.Threads {
 		}
 
 		// DbgManager thread
-		void DbgLanguageService_LanguageChanged(object sender, DbgLanguageChangedEventArgs e) => UI(() => RefreshLanguageFields_UI());
+		void DbgLanguageService_LanguageChanged(object? sender, DbgLanguageChangedEventArgs e) => UI(() => RefreshLanguageFields_UI());
 
 		// DbgManager thread
-		void DbgManager_DelayedIsRunningChanged(object sender, EventArgs e) {
+		void DbgManager_DelayedIsRunningChanged(object? sender, EventArgs e) {
 			// If all processes are running and the window is hidden, hide it now
 			if (!IsVisible)
 				UI(() => lazyToolWindowVMHelper.TryHideWindow());
@@ -344,18 +344,18 @@ namespace dnSpy.Debugger.ToolWindows.Threads {
 		}
 
 		// UI thread
-		void ClassificationFormatMap_ClassificationFormatMappingChanged(object sender, EventArgs e) {
+		void ClassificationFormatMap_ClassificationFormatMappingChanged(object? sender, EventArgs e) {
 			threadContext.UIDispatcher.VerifyAccess();
 			threadContext.UIVersion++;
 			RefreshThemeFields_UI();
 		}
 
 		// random thread
-		void DebuggerSettings_PropertyChanged(object sender, PropertyChangedEventArgs e) =>
+		void DebuggerSettings_PropertyChanged(object? sender, PropertyChangedEventArgs e) =>
 			UI(() => DebuggerSettings_PropertyChanged_UI(e.PropertyName));
 
 		// UI thread
-		void DebuggerSettings_PropertyChanged_UI(string propertyName) {
+		void DebuggerSettings_PropertyChanged_UI(string? propertyName) {
 			threadContext.UIDispatcher.VerifyAccess();
 			switch (propertyName) {
 			case nameof(DebuggerSettings.UseHexadecimal):
@@ -408,7 +408,7 @@ namespace dnSpy.Debugger.ToolWindows.Threads {
 		void UI(Action callback) => threadContext.UIDispatcher.UI(callback);
 
 		// DbgManager thread
-		void DbgManager_ProcessesChanged(object sender, DbgCollectionChangedEventArgs<DbgProcess> e) {
+		void DbgManager_ProcessesChanged(object? sender, DbgCollectionChangedEventArgs<DbgProcess> e) {
 			if (e.Added) {
 				foreach (var p in e.Objects)
 					InitializeProcess_DbgThread(p);
@@ -426,7 +426,7 @@ namespace dnSpy.Debugger.ToolWindows.Threads {
 		}
 
 		// DbgManager thread
-		void DbgProcess_RuntimesChanged(object sender, DbgCollectionChangedEventArgs<DbgRuntime> e) {
+		void DbgProcess_RuntimesChanged(object? sender, DbgCollectionChangedEventArgs<DbgRuntime> e) {
 			if (e.Added) {
 				foreach (var r in e.Objects)
 					InitializeRuntime_DbgThread(r);
@@ -438,7 +438,7 @@ namespace dnSpy.Debugger.ToolWindows.Threads {
 		}
 
 		// DbgManager thread
-		void DbgRuntime_AppDomainsChanged(object sender, DbgCollectionChangedEventArgs<DbgAppDomain> e) {
+		void DbgRuntime_AppDomainsChanged(object? sender, DbgCollectionChangedEventArgs<DbgAppDomain> e) {
 			if (e.Added) {
 				foreach (var a in e.Objects)
 					InitializeAppDomain_DbgThread(a);
@@ -450,8 +450,8 @@ namespace dnSpy.Debugger.ToolWindows.Threads {
 		}
 
 		// DbgManager thread
-		void DbgProcess_IsRunningChanged(object sender, EventArgs e) {
-			var process = (DbgProcess)sender;
+		void DbgProcess_IsRunningChanged(object? sender, EventArgs e) {
+			var process = (DbgProcess)sender!;
 			if (process.State == DbgProcessState.Terminated)
 				return;
 
@@ -470,7 +470,7 @@ namespace dnSpy.Debugger.ToolWindows.Threads {
 		}
 
 		// DbgManager thread
-		void DbgManager_CurrentThreadChanged(object sender, DbgCurrentObjectChangedEventArgs<DbgThread> e) =>
+		void DbgManager_CurrentThreadChanged(object? sender, DbgCurrentObjectChangedEventArgs<DbgThread> e) =>
 			UI(() => UpdateCurrentThread_UI());
 
 		// UI thread
@@ -492,8 +492,8 @@ namespace dnSpy.Debugger.ToolWindows.Threads {
 		}
 
 		// DbgManager thread
-		void DbgProcess_DelayedIsRunningChanged(object sender, EventArgs e) {
-			var process = (DbgProcess)sender;
+		void DbgProcess_DelayedIsRunningChanged(object? sender, EventArgs e) {
+			var process = (DbgProcess)sender!;
 			var state = process.GetOrCreateData<ProcessState>();
 			Debug.Assert(process.IsRunning);
 			state.IgnoreThreadsChangedEvent = process.IsRunning;
@@ -504,8 +504,8 @@ namespace dnSpy.Debugger.ToolWindows.Threads {
 		}
 
 		// DbgManager thread
-		void DbgProcess_ThreadsChanged(object sender, DbgCollectionChangedEventArgs<DbgThread> e) {
-			var process = (DbgProcess)sender;
+		void DbgProcess_ThreadsChanged(object? sender, DbgCollectionChangedEventArgs<DbgThread> e) {
+			var process = (DbgProcess)sender!;
 			var state = process.GetOrCreateData<ProcessState>();
 			if (state.IgnoreThreadsChangedEvent)
 				return;
@@ -524,10 +524,10 @@ namespace dnSpy.Debugger.ToolWindows.Threads {
 		}
 
 		// DbgManager thread
-		void DbgAppDomain_PropertyChanged(object sender, PropertyChangedEventArgs e) {
+		void DbgAppDomain_PropertyChanged(object? sender, PropertyChangedEventArgs e) {
 			if (e.PropertyName == nameof(DbgAppDomain.Name) || e.PropertyName == nameof(DbgAppDomain.Id)) {
 				UI(() => {
-					var appDomain = (DbgAppDomain)sender;
+					var appDomain = (DbgAppDomain)sender!;
 					foreach (var vm in realAllItems)
 						vm.RefreshAppDomainNames_UI(appDomain);
 				});
@@ -571,7 +571,7 @@ namespace dnSpy.Debugger.ToolWindows.Threads {
 		}
 
 		// UI thread
-		void FilterList_UI(string filterText, SimpleProcessVM selectedProcess) {
+		void FilterList_UI(string filterText, SimpleProcessVM? selectedProcess) {
 			threadContext.UIDispatcher.VerifyAccess();
 			if (string.IsNullOrWhiteSpace(filterText))
 				filterText = string.Empty;
@@ -603,15 +603,21 @@ namespace dnSpy.Debugger.ToolWindows.Threads {
 		}
 
 		void InitializeNothingMatched() => InitializeNothingMatched(filterText, selectedProcess);
-		void InitializeNothingMatched(string filterText, SimpleProcessVM selectedProcess) =>
-			NothingMatched = AllItems.Count == 0 && !(string.IsNullOrWhiteSpace(filterText) && selectedProcess?.Process == null);
+		void InitializeNothingMatched(string filterText, SimpleProcessVM? selectedProcess) =>
+			NothingMatched = AllItems.Count == 0 && string.IsNullOrWhiteSpace(filterText) && selectedProcess?.Process is not null;
 
-		public int Compare(ThreadVM x, ThreadVM y) {
+		public int Compare([AllowNull] ThreadVM x, [AllowNull] ThreadVM y) {
 			Debug.Assert(threadContext.UIDispatcher.CheckAccess());
+			if ((object?)x == y)
+				return 0;
+			if (x is null)
+				return -1;
+			if (y is null)
+				return 1;
 			var (desc, dir) = Descs.SortedColumn;
 
 			int id;
-			if (desc == null || dir == GridViewSortDirection.Default) {
+			if (desc is null || dir == GridViewSortDirection.Default) {
 				id = ThreadsWindowColumnIds.Default_Order;
 				dir = GridViewSortDirection.Ascending;
 			}
@@ -686,7 +692,7 @@ namespace dnSpy.Debugger.ToolWindows.Threads {
 		}
 
 		// UI thread
-		IEnumerable<ThreadVM> GetFilteredItems_UI(string filterText, SimpleProcessVM selectedProcess) {
+		IEnumerable<ThreadVM> GetFilteredItems_UI(string filterText, SimpleProcessVM? selectedProcess) {
 			threadContext.UIDispatcher.VerifyAccess();
 			foreach (var vm in realAllItems) {
 				if (IsMatch_UI(vm, filterText, selectedProcess))
@@ -695,9 +701,9 @@ namespace dnSpy.Debugger.ToolWindows.Threads {
 		}
 
 		// UI thread
-		bool IsMatch_UI(ThreadVM vm, string filterText, SimpleProcessVM selectedProcess) {
+		bool IsMatch_UI(ThreadVM vm, string filterText, SimpleProcessVM? selectedProcess) {
 			Debug.Assert(threadContext.UIDispatcher.CheckAccess());
-			if (selectedProcess?.Process != null && selectedProcess.Process != vm.Thread.Process)
+			if (selectedProcess?.Process is not null && selectedProcess.Process != vm.Thread.Process)
 				return false;
 			// Common case check, we don't need to allocate any strings
 			if (filterText == string.Empty)
@@ -857,7 +863,7 @@ namespace dnSpy.Debugger.ToolWindows.Threads {
 					break;
 				}
 			}
-			if (selectedProcess == null || selectedProcess.Process == process)
+			if (selectedProcess is null || selectedProcess.Process == process)
 				SelectedProcess = processes.FirstOrDefault();
 		}
 
@@ -884,9 +890,15 @@ namespace dnSpy.Debugger.ToolWindows.Threads {
 		sealed class SimpleProcessVMComparer : IComparer<SimpleProcessVM> {
 			public static readonly SimpleProcessVMComparer Instance = new SimpleProcessVMComparer();
 			SimpleProcessVMComparer() { }
-			public int Compare(SimpleProcessVM x, SimpleProcessVM y) {
-				bool x1 = x.Process == null;
-				bool y1 = y.Process == null;
+			public int Compare([AllowNull] SimpleProcessVM x, [AllowNull] SimpleProcessVM y) {
+				if ((object?)x == y)
+					return 0;
+				if (x is null)
+					return -1;
+				if (y is null)
+					return 1;
+				bool x1 = x.Process is null;
+				bool y1 = y.Process is null;
 				if (x1 != y1) {
 					if (x1)
 						return -1;
@@ -895,7 +907,7 @@ namespace dnSpy.Debugger.ToolWindows.Threads {
 				else if (x1)
 					return 0;
 
-				int c = StringComparer.OrdinalIgnoreCase.Compare(x.Process.Name, y.Process.Name);
+				int c = StringComparer.OrdinalIgnoreCase.Compare(x.Process!.Name, y.Process!.Name);
 				if (c != 0)
 					return c;
 				return x.Process.Id.CompareTo(y.Process.Id);

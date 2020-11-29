@@ -27,8 +27,8 @@ namespace dnSpy.Debugger.DotNet.Evaluation.Engine {
 		readonly List<(object key, T data)> list = new List<(object, T)>();
 
 		public static T GetOrCreate(DbgObject obj, object key) {
-			Debug.Assert(obj != null);
-			Debug.Assert(key != null);
+			Debug2.Assert(obj is not null);
+			Debug2.Assert(key is not null);
 			var state = obj.GetOrCreateData<StateWithKey<T>>();
 			lock (state.lockObj) {
 				var list = state.list;

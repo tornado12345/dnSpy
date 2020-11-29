@@ -22,29 +22,25 @@ using dnSpy.Debugger.DotNet.Metadata;
 
 namespace dnSpy.Roslyn.Debugger.Formatters {
 	static class NullableTypeUtils {
-		const string HasValueFieldName = "hasValue";
-		const string HasValueFieldName_Mono = "has_value";
-		const string ValueFieldName = "value";
-
-		public static (DmdFieldInfo hasValueField, DmdFieldInfo valueField) TryGetNullableFields(DmdType type) {
+		public static (DmdFieldInfo? hasValueField, DmdFieldInfo? valueField) TryGetNullableFields(DmdType type) {
 			Debug.Assert(type.IsNullable);
 
-			DmdFieldInfo hasValueField = null;
-			DmdFieldInfo valueField = null;
+			DmdFieldInfo? hasValueField = null;
+			DmdFieldInfo? valueField = null;
 			var fields = type.DeclaredFields;
 			for (int i = 0; i < fields.Count; i++) {
 				var field = fields[i];
 				if (field.IsStatic || field.IsLiteral)
 					continue;
 				switch (field.Name) {
-				case HasValueFieldName:
-				case HasValueFieldName_Mono:
-					if ((object)hasValueField != null)
+				case KnownMemberNames.Nullable_HasValue_FieldName:
+				case KnownMemberNames.Nullable_HasValue_FieldName_Mono:
+					if (hasValueField is not null)
 						return (null, null);
 					hasValueField = field;
 					break;
-				case ValueFieldName:
-					if ((object)valueField != null)
+				case KnownMemberNames.Nullable_Value_FieldName:
+					if (valueField is not null)
 						return (null, null);
 					valueField = field;
 					break;
@@ -53,7 +49,7 @@ namespace dnSpy.Roslyn.Debugger.Formatters {
 				}
 			}
 
-			if ((object)hasValueField == null || (object)valueField == null)
+			if (hasValueField is null || valueField is null)
 				return (null, null);
 			return (hasValueField, valueField);
 		}

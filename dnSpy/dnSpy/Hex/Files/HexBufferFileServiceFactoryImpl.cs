@@ -28,7 +28,7 @@ using VSUTIL = Microsoft.VisualStudio.Utilities;
 namespace dnSpy.Hex.Files {
 	[Export(typeof(HexBufferFileServiceFactory))]
 	sealed class HexBufferFileServiceFactoryImpl : HexBufferFileServiceFactory {
-		public override event EventHandler<BufferFileServiceCreatedEventArgs> BufferFileServiceCreated;
+		public override event EventHandler<BufferFileServiceCreatedEventArgs>? BufferFileServiceCreated;
 		readonly Lazy<StructureProviderFactory, VSUTIL.IOrderable>[] structureProviderFactories;
 		readonly Lazy<BufferFileHeadersProviderFactory>[] bufferFileHeadersProviderFactories;
 
@@ -39,7 +39,7 @@ namespace dnSpy.Hex.Files {
 		}
 
 		public override HexBufferFileService Create(HexBuffer buffer) {
-			if (buffer == null)
+			if (buffer is null)
 				throw new ArgumentNullException(nameof(buffer));
 			if (buffer.Properties.TryGetProperty(typeof(HexBufferFileServiceImpl), out HexBufferFileServiceImpl impl))
 				return impl;

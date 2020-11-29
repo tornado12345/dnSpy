@@ -18,6 +18,7 @@
 */
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using dnlib.DotNet;
 using dnlib.DotNet.Resources;
@@ -35,14 +36,14 @@ namespace dnSpy.Contracts.Documents.TreeView.Resources {
 		/// <param name="serializedData">Serialized data</param>
 		/// <param name="imageData">Updated with the image data</param>
 		/// <returns></returns>
-		public static bool GetImageData(ModuleDef module, string typeName, byte[] serializedData, out byte[] imageData) {
+		public static bool GetImageData(ModuleDef? module, string typeName, byte[] serializedData, [NotNullWhen(true)] out byte[]? imageData) {
 			imageData = null;
 			if (CouldBeBitmap(module, typeName)) {
 				var dict = Deserializer.Deserialize(SystemDrawingBitmap.DefinitionAssembly.FullName, SystemDrawingBitmap.ReflectionFullName, serializedData);
 				// Bitmap loops over every item looking for "Data" (case insensitive)
 				foreach (var v in dict.Values) {
 					var d = v.Value as byte[];
-					if (d == null)
+					if (d is null)
 						continue;
 					if ("Data".Equals(v.Name, StringComparison.OrdinalIgnoreCase)) {
 						imageData = d;
@@ -57,14 +58,14 @@ namespace dnSpy.Contracts.Documents.TreeView.Resources {
 				if (!dict.TryGetValue("IconData", out var info))
 					return false;
 				imageData = info.Value as byte[];
-				return imageData != null;
+				return imageData is not null;
 			}
 
 			return false;
 		}
 
-		static bool CouldBeBitmap(ModuleDef module, string name) => CheckType(module, name, SystemDrawingBitmap);
-		static bool CouldBeIcon(ModuleDef module, string name) => CheckType(module, name, SystemDrawingIcon);
+		static bool CouldBeBitmap(ModuleDef? module, string name) => CheckType(module, name, SystemDrawingBitmap);
+		static bool CouldBeIcon(ModuleDef? module, string name) => CheckType(module, name, SystemDrawingIcon);
 
 		/// <summary>
 		/// Checks whether the type matches an expected type
@@ -73,11 +74,11 @@ namespace dnSpy.Contracts.Documents.TreeView.Resources {
 		/// <param name="name">Type name</param>
 		/// <param name="expectedType">Expected type</param>
 		/// <returns></returns>
-		public static bool CheckType(ModuleDef module, string name, TypeRef expectedType) {
-			if (module == null)
+		public static bool CheckType(ModuleDef? module, string name, TypeRef expectedType) {
+			if (module is null)
 				module = new ModuleDefUser();
 			var tr = TypeNameParser.ParseReflection(module, name, null);
-			if (tr == null)
+			if (tr is null)
 				return false;
 
 			var flags = AssemblyNameComparerFlags.All & ~AssemblyNameComparerFlags.Version;
@@ -90,8 +91,8 @@ namespace dnSpy.Contracts.Documents.TreeView.Resources {
 			return true;
 		}
 		static readonly AssemblyRef SystemDrawingAsm = new AssemblyRefUser(new AssemblyNameInfo("System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a"));
-		static readonly TypeRef SystemDrawingBitmap = new TypeRefUser(null, "System.Drawing", "Bitmap", SystemDrawingAsm);
-		static readonly TypeRef SystemDrawingIcon = new TypeRefUser(null, "System.Drawing", "Icon", SystemDrawingAsm);
+		internal static readonly TypeRef SystemDrawingBitmap = new TypeRefUser(null, "System.Drawing", "Bitmap", SystemDrawingAsm);
+		internal static readonly TypeRef SystemDrawingIcon = new TypeRefUser(null, "System.Drawing", "Icon", SystemDrawingAsm);
 
 		/// <summary>
 		/// Serializes the image
@@ -103,14 +104,19 @@ namespace dnSpy.Contracts.Documents.TreeView.Resources {
 			bool isIcon = BitConverter.ToUInt32(data, 0) == 0x00010000;
 
 			object obj;
-			if (isIcon)
+			string typeName;
+			if (isIcon) {
 				obj = new System.Drawing.Icon(new MemoryStream(data));
-			else
+				typeName = SystemDrawingIcon.AssemblyQualifiedName;
+			}
+			else {
 				obj = new System.Drawing.Bitmap(new MemoryStream(data));
+				typeName = SystemDrawingBitmap.AssemblyQualifiedName;
+			}
 
 			return new ResourceElement {
 				Name = resElem.Name,
-				ResourceData = new BinaryResourceData(new UserResourceType(obj.GetType().AssemblyQualifiedName, ResourceTypeCode.UserTypes), SerializationUtilities.Serialize(obj)),
+				ResourceData = new BinaryResourceData(new UserResourceType(typeName, ResourceTypeCode.UserTypes), SerializationUtilities.Serialize(obj)),
 			};
 		}
 	}

@@ -38,11 +38,11 @@ namespace dnSpy.Debugger.AntiAntiDebug {
 			public string Filename { get; }
 			public ulong Address { get; }
 			public ulong EndAddress { get; }
-			public ExportedFunctions ExportedFunctions { get; set; }
+			public ExportedFunctions? ExportedFunctions { get; set; }
 
 			public ModuleInfo(ProcessModule module) {
-				Name = Path.GetFileName(module.FileName);
-				Filename = module.FileName;
+				Name = Path.GetFileName(module.FileName) ?? "???";
+				Filename = module.FileName ?? "???";
 				Address = (ulong)module.BaseAddress.ToInt64();
 				EndAddress = Address + (uint)module.ModuleMemorySize;
 			}
@@ -55,29 +55,30 @@ namespace dnSpy.Debugger.AntiAntiDebug {
 			toModuleInfo = new Dictionary<string, ModuleInfo>(netProcess.Modules.Count, StringComparer.OrdinalIgnoreCase);
 			hookedFuncs = new HashSet<(string dllName, string funcName)>();
 			simplePatches = new List<SimpleAPIPatch>();
-			foreach (ProcessModule module in netProcess.Modules) {
-				var info = new ModuleInfo(module);
+			foreach (ProcessModule? module in netProcess.Modules) {
+				var info = new ModuleInfo(module!);
 				toModuleInfo[info.Name] = info;
 			}
 		}
 
 		public override DbgHookedNativeFunction GetFunction(string dllName, string funcName) {
-			if (dllName == null)
+			if (dllName is null)
 				throw new ArgumentNullException(nameof(dllName));
-			if (funcName == null)
+			if (funcName is null)
 				throw new ArgumentNullException(nameof(funcName));
 			if (!toModuleInfo.TryGetValue(dllName, out var info))
 				throw new DbgHookException($"Couldn't find DLL {dllName}");
 			if (!hookedFuncs.Add((dllName, funcName)))
 				throw new DbgHookException($"Some code tried to hook the same func twice: {dllName}: {funcName}");
-			if (info.ExportedFunctions == null) {
+			if (info.ExportedFunctions is null) {
 				using (var reader = new ExportedFunctionsReader(info.Filename, info.Address))
 					info.ExportedFunctions = reader.ReadExports();
 			}
 			if (info.ExportedFunctions.TryGet(funcName, out var address)) {
 				var result = PatchAPI(address, info.Address, info.EndAddress);
-				if (result.ErrorMessage != null)
+				if (result.ErrorMessage is not null)
 					throw new DbgHookException(result.ErrorMessage);
+				Debug2.Assert(result.Block is not null);
 				simplePatches.Add(result.SimplePatch);
 				return new DbgHookedNativeFunctionImpl(result.Block, result.NewFunctionAddress, address);
 			}
@@ -85,15 +86,16 @@ namespace dnSpy.Debugger.AntiAntiDebug {
 		}
 
 		public override DbgHookedNativeFunction GetFunction(string dllName, string funcName, ulong address) {
-			if (dllName == null)
+			if (dllName is null)
 				throw new ArgumentNullException(nameof(dllName));
-			if (funcName == null)
+			if (funcName is null)
 				throw new ArgumentNullException(nameof(funcName));
 			if (!hookedFuncs.Add((dllName, funcName)))
 				throw new DbgHookException($"Some code tried to hook the same func twice: {dllName}: {funcName}");
 			var result = PatchAPI(address, address, address + 1);
-			if (result.ErrorMessage != null)
+			if (result.ErrorMessage is not null)
 				throw new DbgHookException(result.ErrorMessage);
+			Debug2.Assert(result.Block is not null);
 			simplePatches.Add(result.SimplePatch);
 			return new DbgHookedNativeFunctionImpl(result.Block, result.NewFunctionAddress, address);
 		}
@@ -112,7 +114,7 @@ namespace dnSpy.Debugger.AntiAntiDebug {
 		}
 
 		public override bool TryGetModuleAddress(string dllName, out ulong address, out ulong endAddress) {
-			if (dllName == null)
+			if (dllName is null)
 				throw new ArgumentNullException(nameof(dllName));
 			if (toModuleInfo.TryGetValue(dllName, out var info)) {
 				address = info.Address;
@@ -126,13 +128,17 @@ namespace dnSpy.Debugger.AntiAntiDebug {
 		}
 
 		public override bool TryGetFunction(string dllName, string funcName, out ulong address) {
-			if (dllName == null)
+			if (dllName is null)
 				throw new ArgumentNullException(nameof(dllName));
-			if (funcName == null)
+			if (funcName is null)
 				throw new ArgumentNullException(nameof(funcName));
 			if (!toModuleInfo.TryGetValue(dllName, out var info)) {
 				address = 0;
 				return false;
+			}
+			if (info.ExportedFunctions is null) {
+				using (var reader = new ExportedFunctionsReader(info.Filename, info.Address))
+					info.ExportedFunctions = reader.ReadExports();
 			}
 			return info.ExportedFunctions.TryGet(funcName, out address);
 		}

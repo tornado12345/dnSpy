@@ -29,9 +29,9 @@ namespace dnSpy.Debugger.DotNet.CorDebug.Impl {
 	[Export(typeof(DbgModuleMemoryRefreshedNotifier))]
 	[Export(typeof(DbgModuleMemoryRefreshedNotifier2))]
 	sealed class DbgModuleMemoryRefreshedNotifierImpl : DbgModuleMemoryRefreshedNotifier2 {
-		public override event EventHandler<ModulesRefreshedEventArgs> ModulesRefreshed;
+		public override event EventHandler<ModulesRefreshedEventArgs>? ModulesRefreshed;
 		public override void RaiseModulesRefreshed(DbgModule[] modules) {
-			if (modules == null)
+			if (modules is null)
 				throw new ArgumentNullException(nameof(modules));
 			if (modules.Length > 0)
 				ModulesRefreshed?.Invoke(this, new ModulesRefreshedEventArgs(modules));

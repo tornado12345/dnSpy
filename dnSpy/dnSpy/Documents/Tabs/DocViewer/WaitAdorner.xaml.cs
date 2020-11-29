@@ -25,13 +25,13 @@ namespace dnSpy.Documents.Tabs.DocViewer {
 	sealed partial class WaitAdorner : UserControl {
 		readonly Action onCancel;
 
-		public WaitAdorner(Action onCancel, string message) {
+		public WaitAdorner(Action onCancel, string? message) {
 			this.onCancel = onCancel;
 			InitializeComponent();
 			textBlock.Text = message;
 		}
 
-		void button_Click(object sender, RoutedEventArgs e) {
+		void button_Click(object? sender, RoutedEventArgs e) {
 			onCancel();
 			button.IsEnabled = false;
 		}

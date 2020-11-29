@@ -106,7 +106,7 @@ namespace dnSpy.Documents.Tabs.DocViewer {
 		[ImportingConstructor]
 		DocumentViewerUIElementTaggerProvider(IDocumentViewerUIElementServiceProvider documentViewerUIElementServiceProvider) => this.documentViewerUIElementServiceProvider = documentViewerUIElementServiceProvider;
 
-		public ITagger<T> CreateTagger<T>(ITextView textView, ITextBuffer buffer) where T : ITag {
+		public ITagger<T>? CreateTagger<T>(ITextView textView, ITextBuffer buffer) where T : ITag {
 			if (textView.TextBuffer != buffer)
 				return null;
 			// We can't call textView.TextBuffer.TryGetDocumentViewer() since it hasn't completely
@@ -124,7 +124,7 @@ namespace dnSpy.Documents.Tabs.DocViewer {
 	}
 
 	sealed class DocumentViewerUIElementTagger : ITagger<IntraTextAdornmentTag>, IDocumentViewerUIElementTagger {
-		public event EventHandler<SnapshotSpanEventArgs> TagsChanged;
+		public event EventHandler<SnapshotSpanEventArgs>? TagsChanged;
 
 		readonly IDocumentViewerUIElementService documentViewerUIElementService;
 
@@ -150,7 +150,7 @@ namespace dnSpy.Documents.Tabs.DocViewer {
 	}
 
 	interface IDocumentViewerUIElementService {
-		void SetData(DocumentViewerUIElementCollection collection);
+		void SetData(DocumentViewerUIElementCollection? collection);
 		void RegisterTagger(IDocumentViewerUIElementTagger tagger);
 		IEnumerable<ITagSpan<IntraTextAdornmentTag>> GetTags(NormalizedSnapshotSpanCollection spans);
 	}
@@ -159,7 +159,7 @@ namespace dnSpy.Documents.Tabs.DocViewer {
 		readonly ITextView textView;
 		readonly Dictionary<int, UIElement> cachedUIElements;
 		DocumentViewerUIElementCollection collection;
-		IDocumentViewerUIElementTagger tagger;
+		IDocumentViewerUIElementTagger? tagger;
 		int textVersionNumber;
 
 		public DocumentViewerUIElementService(ITextView textView) {
@@ -169,7 +169,7 @@ namespace dnSpy.Documents.Tabs.DocViewer {
 			textVersionNumber = -1;
 		}
 
-		public void SetData(DocumentViewerUIElementCollection collection) {
+		public void SetData(DocumentViewerUIElementCollection? collection) {
 			textVersionNumber = textView.TextSnapshot.Version.VersionNumber;
 			var newCollection = collection ?? DocumentViewerUIElementCollection.Empty;
 			if (newCollection.Count == 0)
@@ -182,7 +182,7 @@ namespace dnSpy.Documents.Tabs.DocViewer {
 		}
 
 		public void RegisterTagger(IDocumentViewerUIElementTagger tagger) {
-			if (this.tagger != null)
+			if (this.tagger is not null)
 				throw new InvalidOperationException();
 			this.tagger = tagger ?? throw new ArgumentNullException(nameof(tagger));
 		}
@@ -207,10 +207,10 @@ namespace dnSpy.Documents.Tabs.DocViewer {
 					if (!cachedUIElements.TryGetValue(index, out var uiElem)) {
 						uiElem = info.CreateElement();
 						cachedUIElements.Add(index, uiElem);
-						Debug.Assert(uiElem != null);
+						Debug2.Assert(uiElem is not null);
 						uiElem?.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
 					}
-					if (uiElem == null)
+					if (uiElem is null)
 						continue;
 
 					var textHeight = Math.Ceiling(uiElem.DesiredSize.Height);

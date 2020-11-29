@@ -19,22 +19,38 @@
 
 using System.ComponentModel.Composition;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using dnSpy.Contracts.Debugger;
 using dnSpy.Contracts.Debugger.AntiAntiDebug;
 using dnSpy.Contracts.Debugger.DotNet.CorDebug;
 
 namespace dnSpy.Debugger.DotNet.CorDebug.AntiAntiDebug {
 	static class IsDebuggerPresentConstants {
-		public const string DllName = "kernel32.dll";
+		public const string Kernel32DllName = "kernel32.dll";
+		public const string KernelBaseDllName = "kernelbase.dll";
 		public const string FuncName = "IsDebuggerPresent";
 	}
 
-	[ExportDbgNativeFunctionHook(IsDebuggerPresentConstants.DllName, IsDebuggerPresentConstants.FuncName, new DbgArchitecture[0], new[] { DbgOperatingSystem.Windows }, 0)]
-	sealed class IsDebuggerPresentHook : IDbgNativeFunctionHook {
-		readonly DebuggerSettings debuggerSettings;
-
+	[ExportDbgNativeFunctionHook(IsDebuggerPresentConstants.Kernel32DllName, IsDebuggerPresentConstants.FuncName, new DbgArchitecture[0], new[] { DbgOperatingSystem.Windows }, 0)]
+	sealed class Kernel32IsDebuggerPresentHook : IsDebuggerPresentHookBase {
 		[ImportingConstructor]
-		IsDebuggerPresentHook(DebuggerSettings debuggerSettings) => this.debuggerSettings = debuggerSettings;
+		Kernel32IsDebuggerPresentHook(DebuggerSettings debuggerSettings) : base(debuggerSettings, IsDebuggerPresentConstants.Kernel32DllName) { }
+	}
+
+	[ExportDbgNativeFunctionHook(IsDebuggerPresentConstants.KernelBaseDllName, IsDebuggerPresentConstants.FuncName, new DbgArchitecture[0], new[] { DbgOperatingSystem.Windows }, 0)]
+	sealed class KernelBaseIsDebuggerPresentHook : IsDebuggerPresentHookBase {
+		[ImportingConstructor]
+		KernelBaseIsDebuggerPresentHook(DebuggerSettings debuggerSettings) : base(debuggerSettings, IsDebuggerPresentConstants.KernelBaseDllName) { }
+	}
+
+	abstract class IsDebuggerPresentHookBase : IDbgNativeFunctionHook {
+		readonly DebuggerSettings debuggerSettings;
+		readonly string dllName;
+
+		protected IsDebuggerPresentHookBase(DebuggerSettings debuggerSettings, string dllName) {
+			this.debuggerSettings = debuggerSettings;
+			this.dllName = dllName;
+		}
 
 		public bool IsEnabled(DbgNativeFunctionHookContext context) {
 			if (!debuggerSettings.AntiIsDebuggerPresent)
@@ -43,7 +59,7 @@ namespace dnSpy.Debugger.DotNet.CorDebug.AntiAntiDebug {
 			return CorDebugUtils.TryGetInternalRuntime(context.Process, out _);
 		}
 
-		public void Hook(DbgNativeFunctionHookContext context, out string errorMessage) {
+		public void Hook(DbgNativeFunctionHookContext context, out string? errorMessage) {
 			if (!CorDebugUtils.TryGetInternalRuntime(context.Process, out var runtime)) {
 				errorMessage = "Couldn't find CorDebug runtime";
 				return;
@@ -65,10 +81,10 @@ namespace dnSpy.Debugger.DotNet.CorDebug.AntiAntiDebug {
 			}
 		}
 
-		void HookX86(DbgNativeFunctionHookContext context, DbgCorDebugInternalRuntime runtime, out string errorMessage) =>
-			new IsDebuggerPresentPatcherX86(context, runtime).TryPatchX86(out errorMessage);
+		void HookX86(DbgNativeFunctionHookContext context, DbgCorDebugInternalRuntime runtime, [NotNullWhen(false)] out string? errorMessage) =>
+			new IsDebuggerPresentPatcherX86(context, runtime).TryPatchX86(dllName, out errorMessage);
 
-		void HookX64(DbgNativeFunctionHookContext context, DbgCorDebugInternalRuntime runtime, out string errorMessage) =>
-			new IsDebuggerPresentPatcherX86(context, runtime).TryPatchX64(out errorMessage);
+		void HookX64(DbgNativeFunctionHookContext context, DbgCorDebugInternalRuntime runtime, [NotNullWhen(false)] out string? errorMessage) =>
+			new IsDebuggerPresentPatcherX86(context, runtime).TryPatchX64(dllName, out errorMessage);
 	}
 }

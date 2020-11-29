@@ -39,9 +39,9 @@ namespace dnSpy.Debugger.ToolWindows.CallStack {
 
 	[Export(typeof(ICallStackContent))]
 	sealed class CallStackContent : ICallStackContent {
-		public object UIObject => callStackControl;
-		public IInputElement FocusedElement => callStackControl.ListView;
-		public FrameworkElement ZoomElement => callStackControl;
+		public object? UIObject => callStackControl;
+		public IInputElement? FocusedElement => callStackControl.ListView;
+		public FrameworkElement? ZoomElement => callStackControl;
 		public ListView ListView => callStackControl.ListView;
 		public CallStackOperations Operations { get; }
 
@@ -70,7 +70,7 @@ namespace dnSpy.Debugger.ToolWindows.CallStack {
 			wpfCommandService.Add(ControlConstants.GUID_DEBUGGER_CALLSTACK_LISTVIEW, callStackControl.ListView);
 		}
 
-		void CallStackControl_CallStackListViewDoubleClick(object sender, EventArgs e) {
+		void CallStackControl_CallStackListViewDoubleClick(object? sender, EventArgs e) {
 			bool newTab = Keyboard.Modifiers == ModifierKeys.Shift || Keyboard.Modifiers == ModifierKeys.Control;
 			if (Operations.CanSwitchToFrame)
 				Operations.SwitchToFrame(newTab);

@@ -20,6 +20,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Formatting;
@@ -42,15 +43,15 @@ namespace dnSpy.Text.Formatting {
 			tagAggregator.TagsChanged += TagAggregator_TagsChanged;
 		}
 
-		public event EventHandler<TextAndAdornmentSequenceChangedEventArgs> SequenceChanged;
+		public event EventHandler<TextAndAdornmentSequenceChangedEventArgs>? SequenceChanged;
 
-		void TagAggregator_TagsChanged(object sender, TagsChangedEventArgs e) =>
+		void TagAggregator_TagsChanged(object? sender, TagsChangedEventArgs e) =>
 			SequenceChanged?.Invoke(this, new TextAndAdornmentSequenceChangedEventArgs(e.Span));
 
 		public ITextAndAdornmentCollection CreateTextAndAdornmentCollection(ITextSnapshotLine topLine, ITextSnapshot sourceTextSnapshot) {
-			if (topLine == null)
+			if (topLine is null)
 				throw new ArgumentNullException(nameof(topLine));
-			if (sourceTextSnapshot == null)
+			if (sourceTextSnapshot is null)
 				throw new ArgumentNullException(nameof(sourceTextSnapshot));
 			if (topLine.Snapshot.TextBuffer != TopBuffer)
 				throw new InvalidOperationException();
@@ -63,9 +64,9 @@ namespace dnSpy.Text.Formatting {
 		}
 
 		public ITextAndAdornmentCollection CreateTextAndAdornmentCollection(SnapshotSpan topSpan, ITextSnapshot sourceTextSnapshot) {
-			if (topSpan.Snapshot == null)
+			if (topSpan.Snapshot is null)
 				throw new ArgumentException();
-			if (sourceTextSnapshot == null)
+			if (sourceTextSnapshot is null)
 				throw new ArgumentNullException(nameof(sourceTextSnapshot));
 			if (topSpan.Snapshot.TextBuffer != TopBuffer)
 				throw new InvalidOperationException();
@@ -75,9 +76,9 @@ namespace dnSpy.Text.Formatting {
 			if (SourceBuffer != TopBuffer)
 				throw new NotSupportedException();
 
-			List<AdornmentElementAndSpan> adornmentList = null;
+			List<AdornmentElementAndSpan>? adornmentList = null;
 			foreach (var tagSpan in tagAggregator.GetTags(topSpan)) {
-				if (adornmentList == null)
+				if (adornmentList is null)
 					adornmentList = new List<AdornmentElementAndSpan>();
 				var spans = tagSpan.Span.GetSpans(sourceTextSnapshot);
 				Debug.Assert(spans.Count == 1);
@@ -87,7 +88,7 @@ namespace dnSpy.Text.Formatting {
 			}
 
 			// Common case
-			if (adornmentList == null) {
+			if (adornmentList is null) {
 				var elem = new TextSequenceElement(BufferGraph.CreateMappingSpan(topSpan, SpanTrackingMode.EdgeExclusive));
 				return new TextAndAdornmentCollection(this, new[] { elem });
 			}
@@ -110,7 +111,7 @@ namespace dnSpy.Text.Formatting {
 					sequenceList.Add(new TextSequenceElement(BufferGraph.CreateMappingSpan(textSpan, SpanTrackingMode.EdgeExclusive)));
 				if (info.Span.Start != end || (info.Span.Length == 0 && info.AdornmentElement.Affinity == PositionAffinity.Predecessor)) {
 					bool canAppend = true;
-					if (lastAddedAdornment != null && lastAddedAdornment.Value.Span.End > info.Span.Start)
+					if (lastAddedAdornment is not null && lastAddedAdornment.Value.Span.End > info.Span.Start)
 						canAppend = false;
 					if (canAppend) {
 						sequenceList.Add(info.AdornmentElement);
@@ -130,7 +131,7 @@ namespace dnSpy.Text.Formatting {
 
 		sealed class AdornmentElementAndSpanComparer : IComparer<AdornmentElementAndSpan> {
 			public static readonly AdornmentElementAndSpanComparer Instance = new AdornmentElementAndSpanComparer();
-			public int Compare(AdornmentElementAndSpan x, AdornmentElementAndSpan y) {
+			public int Compare([AllowNull] AdornmentElementAndSpan x, [AllowNull] AdornmentElementAndSpan y) {
 				int c = x.Span.Start - y.Span.Start;
 				if (c != 0)
 					return c;
@@ -167,7 +168,7 @@ namespace dnSpy.Text.Formatting {
 			public AdornmentElement(IMappingTagSpan<SpaceNegotiatingAdornmentTag> tagSpan) => this.tagSpan = tagSpan ?? throw new ArgumentNullException(nameof(tagSpan));
 		}
 
-		void TextView_Closed(object sender, EventArgs e) {
+		void TextView_Closed(object? sender, EventArgs e) {
 			Debug.Assert(textView.Properties.ContainsProperty(typeof(ITextAndAdornmentSequencer)));
 			textView.Properties.RemoveProperty(typeof(ITextAndAdornmentSequencer));
 			textView.Closed -= TextView_Closed;

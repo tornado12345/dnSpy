@@ -2,7 +2,7 @@ dnSpy credits:
 
 	0xd4d
 	Ki
-
+	And all other contributors: https://github.com/dnSpy/dnSpy/graphs/contributors
 
 ILSpy decompiler and analyzer credits:
 
@@ -78,3 +78,30 @@ Persian:
 
 	RezaHNA
 	Rex Prog
+
+Turkish:
+
+	Erol Yağız AYDIN
+	smngn
+	comanchero
+	Yüksel Güzel
+	URKMVC TMGD
+	Bilgehan Zeki ÖZAYTAÇ
+	Enes Taha SELEK
+	rifatx
+	python dede
+	meertcevik
+
+Czech:
+
+	Matyho videa (matousporizek)
+	MirekVales
+
+Portuguese, Brazilian:
+
+	Marcelo Fabiano Kachimarck (marcelofabiano)
+	Marco Giovanni (mgpx)
+	Night (reffinS)
+	Marcos De Noni Buturri (marcosdenoni)
+	Bruno Silva (irbein.tepes)
+	EduardooViip

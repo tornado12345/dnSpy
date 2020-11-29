@@ -23,6 +23,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.ComponentModel.Composition;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using dnSpy.Contracts.Controls.ToolWindows;
 using dnSpy.Contracts.Debugger;
 using dnSpy.Contracts.Debugger.Breakpoints.Modules;
@@ -91,42 +92,42 @@ namespace dnSpy.Debugger.ToolWindows.ModuleBreakpoints {
 		IEditValueProvider ModuleNameEditValueProvider {
 			get {
 				moduleBreakpointContext.UIDispatcher.VerifyAccess();
-				if (moduleNameEditValueProvider == null)
+				if (moduleNameEditValueProvider is null)
 					moduleNameEditValueProvider = editValueProviderService.Create(ContentTypes.ModuleBreakpointsWindowModuleName, Array.Empty<string>());
 				return moduleNameEditValueProvider;
 			}
 		}
-		IEditValueProvider moduleNameEditValueProvider;
+		IEditValueProvider? moduleNameEditValueProvider;
 
 		IEditValueProvider OrderEditValueProvider {
 			get {
 				moduleBreakpointContext.UIDispatcher.VerifyAccess();
-				if (orderEditValueProvider == null)
+				if (orderEditValueProvider is null)
 					orderEditValueProvider = editValueProviderService.Create(ContentTypes.ModuleBreakpointsWindowOrder, Array.Empty<string>());
 				return orderEditValueProvider;
 			}
 		}
-		IEditValueProvider orderEditValueProvider;
+		IEditValueProvider? orderEditValueProvider;
 
 		IEditValueProvider ProcessNameEditValueProvider {
 			get {
 				moduleBreakpointContext.UIDispatcher.VerifyAccess();
-				if (processNameEditValueProvider == null)
+				if (processNameEditValueProvider is null)
 					processNameEditValueProvider = editValueProviderService.Create(ContentTypes.ModuleBreakpointsWindowProcessName, Array.Empty<string>());
 				return processNameEditValueProvider;
 			}
 		}
-		IEditValueProvider processNameEditValueProvider;
+		IEditValueProvider? processNameEditValueProvider;
 
 		IEditValueProvider AppDomainNameEditValueProvider {
 			get {
 				moduleBreakpointContext.UIDispatcher.VerifyAccess();
-				if (appDomainNameEditValueProvider == null)
+				if (appDomainNameEditValueProvider is null)
 					appDomainNameEditValueProvider = editValueProviderService.Create(ContentTypes.ModuleBreakpointsWindowAppDomainName, Array.Empty<string>());
 				return appDomainNameEditValueProvider;
 			}
 		}
-		IEditValueProvider appDomainNameEditValueProvider;
+		IEditValueProvider? appDomainNameEditValueProvider;
 
 		readonly Lazy<DbgManager> dbgManager;
 		readonly ModuleBreakpointContext moduleBreakpointContext;
@@ -153,9 +154,8 @@ namespace dnSpy.Debugger.ToolWindows.ModuleBreakpoints {
 			this.editValueProviderService = editValueProviderService;
 			this.dbgModuleBreakpointsService = dbgModuleBreakpointsService;
 			var classificationFormatMap = classificationFormatMapService.GetClassificationFormatMap(AppearanceCategoryConstants.UIMisc);
-			moduleBreakpointContext = new ModuleBreakpointContext(uiDispatcher, classificationFormatMap, textElementProvider, new SearchMatcher(searchColumnDefinitions)) {
+			moduleBreakpointContext = new ModuleBreakpointContext(uiDispatcher, classificationFormatMap, textElementProvider, new SearchMatcher(searchColumnDefinitions), moduleBreakpointFormatterProvider.Create()) {
 				SyntaxHighlight = debuggerSettings.SyntaxHighlight,
-				Formatter = moduleBreakpointFormatterProvider.Create(),
 			};
 			Descs = new GridViewColumnDescs {
 				Columns = new GridViewColumnDesc[] {
@@ -163,6 +163,7 @@ namespace dnSpy.Debugger.ToolWindows.ModuleBreakpoints {
 					new GridViewColumnDesc(ModuleBreakpointsWindowColumnIds.Name, dnSpy_Debugger_Resources.Column_Name),
 					new GridViewColumnDesc(ModuleBreakpointsWindowColumnIds.DynamicModule, dnSpy_Debugger_Resources.Column_DynamicModule),
 					new GridViewColumnDesc(ModuleBreakpointsWindowColumnIds.InMemoryModule, dnSpy_Debugger_Resources.Column_InMemoryModule),
+					new GridViewColumnDesc(ModuleBreakpointsWindowColumnIds.LoadModule, dnSpy_Debugger_Resources.Column_LoadModule),
 					new GridViewColumnDesc(ModuleBreakpointsWindowColumnIds.Order, dnSpy_Debugger_Resources.Column_Order),
 					new GridViewColumnDesc(ModuleBreakpointsWindowColumnIds.Process, dnSpy_Debugger_Resources.Column_Process),
 					new GridViewColumnDesc(ModuleBreakpointsWindowColumnIds.AppDomain, dnSpy_Debugger_Resources.Column_AppDomain),
@@ -235,17 +236,17 @@ namespace dnSpy.Debugger.ToolWindows.ModuleBreakpoints {
 		}
 
 		// UI thread
-		void ClassificationFormatMap_ClassificationFormatMappingChanged(object sender, EventArgs e) {
+		void ClassificationFormatMap_ClassificationFormatMappingChanged(object? sender, EventArgs e) {
 			moduleBreakpointContext.UIDispatcher.VerifyAccess();
 			RefreshThemeFields_UI();
 		}
 
 		// random thread
-		void DebuggerSettings_PropertyChanged(object sender, PropertyChangedEventArgs e) =>
+		void DebuggerSettings_PropertyChanged(object? sender, PropertyChangedEventArgs e) =>
 			UI(() => DebuggerSettings_PropertyChanged_UI(e.PropertyName));
 
 		// UI thread
-		void DebuggerSettings_PropertyChanged_UI(string propertyName) {
+		void DebuggerSettings_PropertyChanged_UI(string? propertyName) {
 			moduleBreakpointContext.UIDispatcher.VerifyAccess();
 			if (propertyName == nameof(DebuggerSettings.SyntaxHighlight)) {
 				moduleBreakpointContext.SyntaxHighlight = debuggerSettings.SyntaxHighlight;
@@ -270,7 +271,7 @@ namespace dnSpy.Debugger.ToolWindows.ModuleBreakpoints {
 		void UI(Action callback) => moduleBreakpointContext.UIDispatcher.UI(callback);
 
 		// DbgManager thread
-		void DbgModuleBreakpointsService_BreakpointsChanged(object sender, DbgCollectionChangedEventArgs<DbgModuleBreakpoint> e) {
+		void DbgModuleBreakpointsService_BreakpointsChanged(object? sender, DbgCollectionChangedEventArgs<DbgModuleBreakpoint> e) {
 			dbgManager.Value.Dispatcher.VerifyAccess();
 			if (e.Added)
 				UI(() => AddItems_UI(e.Objects));
@@ -287,14 +288,14 @@ namespace dnSpy.Debugger.ToolWindows.ModuleBreakpoints {
 		}
 
 		// DbgManager thread
-		void DbgModuleBreakpointsService_BreakpointsModified(object sender, DbgBreakpointsModifiedEventArgs e) {
+		void DbgModuleBreakpointsService_BreakpointsModified(object? sender, DbgBreakpointsModifiedEventArgs e) {
 			dbgManager.Value.Dispatcher.VerifyAccess();
 			UI(() => {
 				foreach (var info in e.Breakpoints) {
 					bool b = bpToVM.TryGetValue(info.Breakpoint, out var vm);
 					Debug.Assert(b);
 					if (b)
-						vm.UpdateSettings_UI(info.Breakpoint.Settings);
+						vm!.UpdateSettings_UI(info.Breakpoint.Settings);
 				}
 			});
 		}
@@ -371,12 +372,18 @@ namespace dnSpy.Debugger.ToolWindows.ModuleBreakpoints {
 		void InitializeNothingMatched(string filterText) =>
 			NothingMatched = AllItems.Count == 0 && !string.IsNullOrWhiteSpace(filterText);
 
-		public int Compare(ModuleBreakpointVM x, ModuleBreakpointVM y) {
+		public int Compare([AllowNull] ModuleBreakpointVM x, [AllowNull] ModuleBreakpointVM y) {
 			Debug.Assert(moduleBreakpointContext.UIDispatcher.CheckAccess());
+			if ((object?)x == y)
+				return 0;
+			if (x is null)
+				return -1;
+			if (y is null)
+				return 1;
 			var (desc, dir) = Descs.SortedColumn;
 
 			int id;
-			if (desc == null || dir == GridViewSortDirection.Default) {
+			if (desc is null || dir == GridViewSortDirection.Default) {
 				id = ModuleBreakpointsWindowColumnIds.Default_Order;
 				dir = GridViewSortDirection.Ascending;
 			}
@@ -403,6 +410,10 @@ namespace dnSpy.Debugger.ToolWindows.ModuleBreakpoints {
 
 			case ModuleBreakpointsWindowColumnIds.InMemoryModule:
 				diff = Comparer<bool?>.Default.Compare(x.IsInMemory, y.IsInMemory);
+				break;
+
+			case ModuleBreakpointsWindowColumnIds.LoadModule:
+				diff = Comparer<bool?>.Default.Compare(x.IsLoaded, y.IsLoaded);
 				break;
 
 			case ModuleBreakpointsWindowColumnIds.Order:

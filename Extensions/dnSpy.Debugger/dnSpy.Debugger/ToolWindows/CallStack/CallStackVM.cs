@@ -88,9 +88,8 @@ namespace dnSpy.Debugger.ToolWindows.CallStack {
 			this.debuggerSettings = debuggerSettings;
 			lazyToolWindowVMHelper = new DebuggerLazyToolWindowVMHelper(this, uiDispatcher, dbgManager);
 			var classificationFormatMap = classificationFormatMapService.GetClassificationFormatMap(AppearanceCategoryConstants.UIMisc);
-			callStackContext = new CallStackContext(uiDispatcher, classificationFormatMap, textBlockContentInfoFactory) {
+			callStackContext = new CallStackContext(uiDispatcher, classificationFormatMap, textBlockContentInfoFactory, callStackFormatterProvider.Create()) {
 				SyntaxHighlight = debuggerSettings.SyntaxHighlight,
-				Formatter = callStackFormatterProvider.Create(),
 				StackFrameFormatterOptions = GetStackFrameFormatterOptions(),
 				ValueFormatterOptions = GetValueFormatterOptions(),
 			};
@@ -167,21 +166,21 @@ namespace dnSpy.Debugger.ToolWindows.CallStack {
 		}
 
 		// DbgManager thread
-		void DbgLanguageService_LanguageChanged(object sender, DbgLanguageChangedEventArgs e) => UI(() => RefreshLanguage_UI());
+		void DbgLanguageService_LanguageChanged(object? sender, DbgLanguageChangedEventArgs e) => UI(() => RefreshLanguage_UI());
 
 		// UI thread
-		void ClassificationFormatMap_ClassificationFormatMappingChanged(object sender, EventArgs e) {
+		void ClassificationFormatMap_ClassificationFormatMappingChanged(object? sender, EventArgs e) {
 			callStackContext.UIDispatcher.VerifyAccess();
 			callStackContext.UIVersion++;
 			RefreshThemeFields_UI();
 		}
 
 		// random thread
-		void DebuggerSettings_PropertyChanged(object sender, PropertyChangedEventArgs e) =>
+		void DebuggerSettings_PropertyChanged(object? sender, PropertyChangedEventArgs e) =>
 			UI(() => DebuggerSettings_PropertyChanged_UI(e.PropertyName));
 
 		// UI thread
-		void DebuggerSettings_PropertyChanged_UI(string propertyName) {
+		void DebuggerSettings_PropertyChanged_UI(string? propertyName) {
 			callStackContext.UIDispatcher.VerifyAccess();
 			switch (propertyName) {
 			case nameof(DebuggerSettings.UseHexadecimal):
@@ -212,11 +211,11 @@ namespace dnSpy.Debugger.ToolWindows.CallStack {
 		}
 
 		// random thread
-		void CallStackDisplaySettings_PropertyChanged(object sender, PropertyChangedEventArgs e) =>
+		void CallStackDisplaySettings_PropertyChanged(object? sender, PropertyChangedEventArgs e) =>
 			UI(() => CallStackDisplaySettings_PropertyChanged_UI(e.PropertyName));
 
 		// UI thread
-		void CallStackDisplaySettings_PropertyChanged_UI(string propertyName) {
+		void CallStackDisplaySettings_PropertyChanged_UI(string? propertyName) {
 			callStackContext.UIDispatcher.VerifyAccess();
 			switch (propertyName) {
 			case nameof(CallStackDisplaySettings.ShowReturnTypes):
@@ -291,7 +290,7 @@ namespace dnSpy.Debugger.ToolWindows.CallStack {
 		void UI(Action callback) => callStackContext.UIDispatcher.UI(callback);
 
 		// DbgManager thread
-		void DbgCallStackService_FramesChanged(object sender, FramesChangedEventArgs e) {
+		void DbgCallStackService_FramesChanged(object? sender, FramesChangedEventArgs e) {
 			var framesInfo = dbgCallStackService.Value.Frames;
 			var thread = dbgCallStackService.Value.Thread;
 			if (e.FramesChanged)
@@ -308,23 +307,23 @@ namespace dnSpy.Debugger.ToolWindows.CallStack {
 		}
 
 		// DbgManager thread
-		void DbgManager_DelayedIsRunningChanged(object sender, EventArgs e) => UI(() => {
+		void DbgManager_DelayedIsRunningChanged(object? sender, EventArgs e) => UI(() => {
 			// If all processes are running and the window is hidden, hide it now
 			if (!IsVisible)
 				lazyToolWindowVMHelper.TryHideWindow();
 		});
 
 		// DbgManager thread
-		void DbgCodeBreakpointsService_BreakpointsModified(object sender, DbgBreakpointsModifiedEventArgs e) =>
+		void DbgCodeBreakpointsService_BreakpointsModified(object? sender, DbgBreakpointsModifiedEventArgs e) =>
 			UI(() => RefreshBreakpoints_UI(e.Breakpoints.Select(a => a.Breakpoint)));
 
 		// DbgManager thread
-		void DbgCodeBreakpointsService_BreakpointsChanged(object sender, DbgCollectionChangedEventArgs<DbgCodeBreakpoint> e) =>
+		void DbgCodeBreakpointsService_BreakpointsChanged(object? sender, DbgCollectionChangedEventArgs<DbgCodeBreakpoint> e) =>
 			UI(() => RefreshBreakpoints_UI(e));
 
 		// DbgManager thread
-		void DbgCodeBreakpoint_BoundBreakpointsMessageChanged(object sender, EventArgs e) =>
-			UI(() => RefreshBreakpoints_UI(new[] { (DbgCodeBreakpoint)sender }));
+		void DbgCodeBreakpoint_BoundBreakpointsMessageChanged(object? sender, EventArgs e) =>
+			UI(() => RefreshBreakpoints_UI(new[] { (DbgCodeBreakpoint)sender! }));
 
 		// UI thread
 		void RefreshBreakpoints_UI(DbgCollectionChangedEventArgs<DbgCodeBreakpoint> e) {
@@ -368,13 +367,13 @@ namespace dnSpy.Debugger.ToolWindows.CallStack {
 		// UI thread
 		void RefreshLanguage_UI() {
 			callStackContext.UIDispatcher.VerifyAccess();
-			var language = framesThread == null ? null : dbgLanguageService.Value.GetCurrentLanguage(framesThread.Runtime.RuntimeKindGuid);
+			var language = framesThread is null ? null : dbgLanguageService.Value.GetCurrentLanguage(framesThread.Runtime.RuntimeKindGuid);
 			foreach (var vm in AllItems)
 				(vm as NormalStackFrameVM)?.SetLanguage_UI(language);
 		}
 
 		// UI thread
-		void UpdateFrames_UI(DbgCallStackFramesInfo framesInfo, DbgThread thread) {
+		void UpdateFrames_UI(DbgCallStackFramesInfo framesInfo, DbgThread? thread) {
 			callStackContext.UIDispatcher.VerifyAccess();
 
 			ClearUsedBreakpoints_UI();
@@ -396,7 +395,7 @@ namespace dnSpy.Debugger.ToolWindows.CallStack {
 				ClearAllItems_UI();
 			}
 
-			var language = framesThread == null ? null : dbgLanguageService.Value.GetCurrentLanguage(framesThread.Runtime.RuntimeKindGuid);
+			var language = framesThread is null ? null : dbgLanguageService.Value.GetCurrentLanguage(framesThread.Runtime.RuntimeKindGuid);
 
 			int activeFrameIndex = framesInfo.ActiveFrameIndex;
 			if (framesToAdd > 0) {
@@ -438,7 +437,7 @@ namespace dnSpy.Debugger.ToolWindows.CallStack {
 			else if (!oldFramesTruncated && framesInfo.FramesTruncated)
 				AllItems.Add(new MessageStackFrameVM(dnSpy_Debugger_Resources.CallStack_MaxFramesExceeded, callStackContext, newFrames.Count));
 		}
-		DbgThread framesThread;
+		DbgThread? framesThread;
 
 		// UI thread
 		BreakpointKind? GetBreakpointKind_UI(NormalStackFrameVM vm) {
@@ -446,8 +445,8 @@ namespace dnSpy.Debugger.ToolWindows.CallStack {
 			if ((vm.Frame.Flags & DbgStackFrameFlags.LocationIsNextStatement) == 0)
 				return null;
 			var location = vm.Frame.Location;
-			var breakpoint = location == null ? null : dbgCodeBreakpointsService.Value.TryGetBreakpoint(location);
-			if (breakpoint == null || breakpoint.IsHidden)
+			var breakpoint = location is null ? null : dbgCodeBreakpointsService.Value.TryGetBreakpoint(location);
+			if (breakpoint is null || breakpoint.IsHidden)
 				return null;
 			if (!usedBreakpoints.TryGetValue(breakpoint, out var hash)) {
 				usedBreakpoints.Add(breakpoint, hash = new HashSet<NormalStackFrameVM>());

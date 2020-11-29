@@ -28,7 +28,7 @@ namespace dnSpy.Tabs {
 				return;
 			}
 
-			if (obj != null) {
+			if (obj is not null) {
 				elem.SetResourceReference(FrameworkElement.StyleProperty, obj);
 				return;
 			}

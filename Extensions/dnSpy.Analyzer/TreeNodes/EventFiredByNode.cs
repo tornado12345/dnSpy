@@ -29,18 +29,20 @@ using dnSpy.Contracts.Text;
 
 namespace dnSpy.Analyzer.TreeNodes {
 	sealed class EventFiredByNode : SearchNode {
-		readonly EventDef analyzedEvent;
-		readonly FieldDef eventBackingField;
-		readonly MethodDef eventFiringMethod;
+		readonly List<TypeDef> analyzedTypes;
+		readonly FieldDef? eventBackingField;
+		readonly MethodDef? eventFiringMethod;
 
-		ConcurrentDictionary<MethodDef, int> foundMethods;
+		ConcurrentDictionary<MethodDef, int>? foundMethods;
 
 		public EventFiredByNode(EventDef analyzedEvent) {
-			this.analyzedEvent = analyzedEvent ?? throw new ArgumentNullException(nameof(analyzedEvent));
+			if (analyzedEvent is null)
+				throw new ArgumentNullException(nameof(analyzedEvent));
+			analyzedTypes = new List<TypeDef> { analyzedEvent.DeclaringType };
 
 			eventBackingField = GetBackingField(analyzedEvent);
 			var eventType = analyzedEvent.EventType.ResolveTypeDef();
-			if (eventType != null)
+			if (eventType is not null)
 				eventFiringMethod = eventType.Methods.First(md => md.Name == "Invoke");
 		}
 
@@ -50,8 +52,10 @@ namespace dnSpy.Analyzer.TreeNodes {
 		protected override IEnumerable<AnalyzerTreeNodeData> FetchChildren(CancellationToken ct) {
 			foundMethods = new ConcurrentDictionary<MethodDef, int>();
 
-			foreach (var child in FindReferencesInType(analyzedEvent.DeclaringType)) {
-				yield return child;
+			AddTypeEquivalentTypes(Context.DocumentService, analyzedTypes[0], analyzedTypes);
+			foreach (var declType in analyzedTypes) {
+				foreach (var child in FindReferencesInType(declType))
+					yield return child;
 			}
 
 			foundMethods = null;
@@ -66,24 +70,23 @@ namespace dnSpy.Analyzer.TreeNodes {
 				bool readBackingField = false;
 				if (!method.HasBody)
 					continue;
-				Instruction foundInstr = null;
+				Instruction? foundInstr = null;
 				foreach (Instruction instr in method.Body.Instructions) {
 					Code code = instr.OpCode.Code;
-					if (code == Code.Ldfld || code == Code.Ldflda) {
-						IField fr = instr.Operand as IField;
-						if (fr.ResolveFieldDef() == eventBackingField) {
+					if ((code == Code.Ldfld || code == Code.Ldflda || code == Code.Ldtoken) && instr.Operand is IField fr && fr.IsField) {
+						if (CheckEquals(fr.ResolveFieldDef(), eventBackingField)) {
 							readBackingField = true;
 						}
 					}
 					if (readBackingField && (code == Code.Callvirt || code == Code.Call)) {
-						if (instr.Operand is IMethod mr && eventFiringMethod != null && mr.Name == eventFiringMethod.Name && mr.ResolveMethodDef() == eventFiringMethod) {
+						if (instr.Operand is IMethod mr && eventFiringMethod is not null && mr.Name == eventFiringMethod.Name && CheckEquals(mr.ResolveMethodDef(), eventFiringMethod)) {
 							foundInstr = instr;
 							break;
 						}
 					}
 				}
 
-				if (foundInstr != null) {
+				if (foundInstr is not null) {
 					if (GetOriginalCodeLocation(method) is MethodDef codeLocation && !HasAlreadyBeenFound(codeLocation)) {
 						var node = new MethodNode(codeLocation) { Context = Context };
 						if (codeLocation == method)
@@ -94,14 +97,14 @@ namespace dnSpy.Analyzer.TreeNodes {
 			}
 		}
 
-		bool HasAlreadyBeenFound(MethodDef method) => !foundMethods.TryAdd(method, 0);
+		bool HasAlreadyBeenFound(MethodDef method) => !foundMethods!.TryAdd(method, 0);
 
 		// HACK: we should probably examine add/remove methods to determine this
-		static FieldDef GetBackingField(EventDef ev) {
+		static FieldDef? GetBackingField(EventDef ev) {
 			var fieldName = ev.Name;
 			var vbStyleFieldName = fieldName + "Event";
 			var fieldType = ev.EventType;
-			if (fieldType == null)
+			if (fieldType is null)
 				return null;
 
 			foreach (var fd in ev.DeclaringType.Fields) {
@@ -114,6 +117,6 @@ namespace dnSpy.Analyzer.TreeNodes {
 		}
 
 
-		public static bool CanShow(EventDef ev) => GetBackingField(ev) != null;
+		public static bool CanShow(EventDef ev) => GetBackingField(ev) is not null;
 	}
 }

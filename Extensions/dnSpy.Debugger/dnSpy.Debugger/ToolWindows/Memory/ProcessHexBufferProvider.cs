@@ -42,10 +42,10 @@ namespace dnSpy.Debugger.ToolWindows.Memory {
 		/// <summary>
 		/// Raised when the underlying stream has changed
 		/// </summary>
-		event EventHandler UnderlyingStreamChanged;
+		event EventHandler? UnderlyingStreamChanged;
 
-		DbgProcess Process { get; }
-		event EventHandler UnderlyingProcessChanged;
+		DbgProcess? Process { get; }
+		event EventHandler? UnderlyingProcessChanged;
 	}
 
 	readonly struct HexBufferInfoCreatedEventArgs {
@@ -71,7 +71,7 @@ namespace dnSpy.Debugger.ToolWindows.Memory {
 		/// <summary>
 		/// Raised when a new buffer has been created
 		/// </summary>
-		public abstract event EventHandler<HexBufferInfoCreatedEventArgs> HexBufferInfoCreated;
+		public abstract event EventHandler<HexBufferInfoCreatedEventArgs>? HexBufferInfoCreated;
 
 		/// <summary>
 		/// Checks whether <paramref name="buffer"/> is a buffer created by this class
@@ -123,7 +123,7 @@ namespace dnSpy.Debugger.ToolWindows.Memory {
 		readonly List<ProcessInfo> processInfos;
 		readonly List<BufferState> bufferStates;
 
-		public override event EventHandler<HexBufferInfoCreatedEventArgs> HexBufferInfoCreated;
+		public override event EventHandler<HexBufferInfoCreatedEventArgs>? HexBufferInfoCreated;
 
 		sealed class ProcessInfo {
 			public DbgProcess Process { get; }
@@ -144,16 +144,16 @@ namespace dnSpy.Debugger.ToolWindows.Memory {
 		sealed class BufferState : IHexBufferInfo {
 			public HexBuffer Buffer { get; }
 			DebuggerHexBufferStream DebuggerHexBufferStream { get; }
-			public DbgProcess Process { get; private set; }
-			public event EventHandler UnderlyingStreamChanged;
-			public event EventHandler UnderlyingProcessChanged;
+			public DbgProcess? Process { get; private set; }
+			public event EventHandler? UnderlyingStreamChanged;
+			public event EventHandler? UnderlyingProcessChanged;
 
 			public BufferState(HexBuffer buffer, DebuggerHexBufferStream debuggerHexBufferStream) {
 				Buffer = buffer ?? throw new ArgumentNullException(nameof(buffer));
 				DebuggerHexBufferStream = debuggerHexBufferStream ?? throw new ArgumentNullException(nameof(debuggerHexBufferStream));
 			}
 
-			public void SetUnderlyingStream(HexBufferStream stream, DbgProcess process) {
+			public void SetUnderlyingStream(HexBufferStream? stream, DbgProcess? process) {
 				if (Process == process && DebuggerHexBufferStream.UnderlyingStream == stream)
 					return;
 				Process = process;
@@ -187,7 +187,7 @@ namespace dnSpy.Debugger.ToolWindows.Memory {
 		void UI(Action callback) => uiDispatcher.UI(callback);
 
 		// DbgManager thread
-		void DbgManager_ProcessesChanged(object sender, DbgCollectionChangedEventArgs<DbgProcess> e) =>
+		void DbgManager_ProcessesChanged(object? sender, DbgCollectionChangedEventArgs<DbgProcess> e) =>
 			InitializeProcesses_DbgManager(e.Objects, e.Added);
 
 		// DbgManager thread
@@ -209,8 +209,8 @@ namespace dnSpy.Debugger.ToolWindows.Memory {
 			else {
 				foreach (var p in processes) {
 					var info = TryGetProcessInfo_UI(p.Id);
-					Debug.Assert(info != null);
-					if (info == null)
+					Debug2.Assert(info is not null);
+					if (info is null)
 						continue;
 					ClearProcessStream_UI(info);
 					processInfos.Remove(info);
@@ -230,12 +230,12 @@ namespace dnSpy.Debugger.ToolWindows.Memory {
 		}
 
 		// UI thread
-		void InitializeNonInitializedBuffers_UI(ProcessInfo info) {
+		void InitializeNonInitializedBuffers_UI(ProcessInfo? info) {
 			uiDispatcher.VerifyAccess();
-			if (info == null)
+			if (info is null)
 				return;
 			foreach (var bufferState in bufferStates) {
-				if (bufferState.Process == null)
+				if (bufferState.Process is null)
 					bufferState.SetUnderlyingStream(info.Stream, info.Process);
 			}
 		}
@@ -248,7 +248,7 @@ namespace dnSpy.Debugger.ToolWindows.Memory {
 		}
 
 		// UI thread
-		ProcessInfo TryGetProcessInfo_UI(int pid) {
+		ProcessInfo? TryGetProcessInfo_UI(int pid) {
 			uiDispatcher.VerifyAccess();
 			foreach (var info in processInfos) {
 				if (info.Process.Id == pid)
@@ -258,7 +258,7 @@ namespace dnSpy.Debugger.ToolWindows.Memory {
 		}
 
 		// UI thread
-		BufferState TryGetBufferState_UI(HexBuffer buffer) {
+		BufferState? TryGetBufferState_UI(HexBuffer buffer) {
 			uiDispatcher.VerifyAccess();
 			foreach (var bufferState in bufferStates) {
 				if (bufferState.Buffer == buffer)
@@ -283,58 +283,58 @@ namespace dnSpy.Debugger.ToolWindows.Memory {
 		}
 
 		// UI thread
-		void Buffer_ChangedLowPriority(object sender, HexContentChangedEventArgs e) {
+		void Buffer_ChangedLowPriority(object? sender, HexContentChangedEventArgs e) {
 			uiDispatcher.VerifyAccess();
-			var callerState = TryGetBufferState_UI((HexBuffer)sender);
+			var callerState = TryGetBufferState_UI((HexBuffer)sender!);
 			foreach (var bufferState in bufferStates) {
 				if (bufferState == callerState)
 					continue;
-				if (bufferState.Process == null)
+				if (bufferState.Process is null)
 					continue;
-				if (bufferState.Process != callerState.Process)
+				if (bufferState.Process != callerState?.Process)
 					continue;
 				bufferState.InvalidateSpan(e.Changes);
 			}
 		}
 
 		// UI thread
-		void Buffer_Disposed(object sender, EventArgs e) {
+		void Buffer_Disposed(object? sender, EventArgs e) {
 			uiDispatcher.VerifyAccess();
-			var buffer = (HexBuffer)sender;
+			var buffer = (HexBuffer)sender!;
 			buffer.Disposed -= Buffer_Disposed;
 			buffer.ChangedLowPriority -= Buffer_ChangedLowPriority;
 			var bufferState = TryGetBufferState_UI(buffer);
-			bool b = bufferStates.Remove(bufferState);
+			bool b = bufferStates.Remove(bufferState!);
 			Debug.Assert(b);
 		}
 
 		// UI thread
 		public override bool IsValidBuffer(HexBuffer buffer) {
 			uiDispatcher.VerifyAccess();
-			return TryGetBufferState_UI(buffer) != null;
+			return TryGetBufferState_UI(buffer) is not null;
 		}
 
 		// UI thread
 		public override void SetProcessStream(HexBuffer buffer, int pid) {
-			if (buffer == null)
+			if (buffer is null)
 				throw new ArgumentNullException(nameof(buffer));
 			uiDispatcher.VerifyAccess();
 			var bufferState = TryGetBufferState_UI(buffer);
-			if (bufferState == null)
+			if (bufferState is null)
 				throw new ArgumentOutOfRangeException(nameof(buffer));
 			var info = TryGetProcessInfo_UI(pid);
-			if (info == null)
+			if (info is null)
 				info = processInfos.FirstOrDefault();
 			bufferState.SetUnderlyingStream(info?.Stream, info?.Process);
 		}
 
 		// UI thread
 		public override int? GetProcessId(HexBuffer buffer) {
-			if (buffer == null)
+			if (buffer is null)
 				throw new ArgumentNullException(nameof(buffer));
 			uiDispatcher.VerifyAccess();
 			var bufferState = TryGetBufferState_UI(buffer);
-			if (bufferState == null)
+			if (bufferState is null)
 				throw new ArgumentOutOfRangeException(nameof(buffer));
 			return bufferState.Process?.Id;
 		}

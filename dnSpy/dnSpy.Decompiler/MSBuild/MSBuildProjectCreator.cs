@@ -36,13 +36,19 @@ namespace dnSpy.Decompiler.MSBuild {
 		int totalProgress;
 
 		public IEnumerable<string> ProjectFilenames => projects.Select(a => a.Filename);
-		public string SolutionFilename => Path.Combine(options.Directory, options.SolutionFilename);
+
+		public string SolutionFilename {
+			get {
+				Debug2.Assert(options.SolutionFilename is not null);
+				return Path.Combine(options.Directory, options.SolutionFilename);
+			}
+		}
 
 		sealed class MyLogger : IMSBuildProjectWriterLogger {
 			readonly MSBuildProjectCreator owner;
 			readonly IMSBuildProjectWriterLogger logger;
 
-			public MyLogger(MSBuildProjectCreator owner, IMSBuildProjectWriterLogger logger) {
+			public MyLogger(MSBuildProjectCreator owner, IMSBuildProjectWriterLogger? logger) {
 				this.owner = owner;
 				this.logger = logger ?? NoMSBuildProjectWriterLogger.Instance;
 			}
@@ -61,7 +67,7 @@ namespace dnSpy.Decompiler.MSBuild {
 		}
 
 		public void Create() {
-			SatelliteAssemblyFinder satelliteAssemblyFinder = null;
+			SatelliteAssemblyFinder? satelliteAssemblyFinder = null;
 			try {
 				var opts = new ParallelOptions {
 					CancellationToken = options.CancellationToken,
@@ -136,7 +142,7 @@ namespace dnSpy.Decompiler.MSBuild {
 				progressListener.SetProgress(maxProgress);
 			}
 			finally {
-				if (satelliteAssemblyFinder != null)
+				if (satelliteAssemblyFinder is not null)
 					satelliteAssemblyFinder.Dispose();
 			}
 		}

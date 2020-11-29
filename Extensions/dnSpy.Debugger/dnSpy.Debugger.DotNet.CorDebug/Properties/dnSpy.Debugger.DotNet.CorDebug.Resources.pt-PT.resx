@@ -120,9 +120,6 @@
   <data name="DbgAsm_Args" xml:space="preserve">
     <value>Argumentos</value>
   </data>
-  <data name="DbgAsm_Assembly" xml:space="preserve">
-    <value>Assembly</value>
-  </data>
   <data name="DbgAsm_BreakAt" xml:space="preserve">
     <value>Parar em</value>
   </data>
@@ -195,10 +192,10 @@ Erro: {1}</value>
     <value>WaitSleepJoin</value>
   </data>
   <data name="UseDnSpy64ExeToDebug32" xml:space="preserve">
-    <value>Use 32-bit dnSpy to debug 32-bit applications.</value>
+    <value>Use a versão 32 bits do dnSpy para fazer debug de aplicações de 32 bits.</value>
   </data>
   <data name="UseDnSpyExeToDebug64" xml:space="preserve">
-    <value>Use 64-bit dnSpy to debug 64-bit applications.</value>
+    <value>Use a versão 64 bits do dnSpy para fazer debug de aplicações de 64 bits.</value>
   </data>
   <data name="ExceptionMessageIsNull" xml:space="preserve">
     <value>"&lt;Nenhuma mensagem de exceção&gt;"</value>
@@ -275,6 +272,9 @@ HR: 0x{0:X8}
 Erro: 0x{1:X8}</value>
   </data>
   <data name="DbgAsm_UseHostExecutable" xml:space="preserve">
-    <value>Use host executable</value>
+    <value>Usar executável do host</value>
+  </data>
+  <data name="DbgAsm_Executable" xml:space="preserve">
+    <value>E_xecutable</value>
   </data>
 </root>

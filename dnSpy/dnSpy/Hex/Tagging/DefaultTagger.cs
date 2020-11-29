@@ -54,12 +54,12 @@ namespace dnSpy.Hex.Tagging {
 		[ImportingConstructor]
 		DefaultTaggerProvider(HexClassificationTags hexClassificationTags) => this.hexClassificationTags = hexClassificationTags;
 
-		public override IHexTagger<T> CreateTagger<T>(HexBuffer buffer) =>
+		public override IHexTagger<T>? CreateTagger<T>(HexBuffer buffer) =>
 			new DefaultTagger(hexClassificationTags) as IHexTagger<T>;
 	}
 
 	sealed class DefaultTagger : HexTagger<HexClassificationTag> {
-		public override event EventHandler<HexBufferSpanEventArgs> TagsChanged {
+		public override event EventHandler<HexBufferSpanEventArgs>? TagsChanged {
 			add { }
 			remove { }
 		}
@@ -117,7 +117,7 @@ namespace dnSpy.Hex.Tagging {
 			}
 
 			var allValid = context.Line.HexBytes.AllValid;
-			if (allValid == null) {
+			if (allValid is null) {
 				foreach (var cell in context.Line.ValueCells.GetVisibleCells()) {
 					if (!IsValid(cell, context.Line))
 						yield return new HexTextTagSpan<HexClassificationTag>(cell.FullSpan, hexClassificationTags.HexErrorTag);

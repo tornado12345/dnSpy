@@ -19,6 +19,7 @@
 
 using System;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using dnSpy.Contracts.Debugger.StartDebugging;
 
@@ -36,9 +37,9 @@ namespace dnSpy.Debugger.DbgUI {
 			return true;
 		}
 
-		public override bool TryStart(string filename, out string error) {
+		public override bool TryStart(string filename, [NotNullWhen(false)] out string? error) {
 			var startInfo = new ProcessStartInfo(filename);
-			startInfo.WorkingDirectory = Path.GetDirectoryName(filename);
+			startInfo.WorkingDirectory = Path.GetDirectoryName(filename)!;
 			startInfo.UseShellExecute = false;
 			Process.Start(startInfo);
 			error = null;

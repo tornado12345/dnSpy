@@ -42,12 +42,12 @@ namespace dnSpy.Bookmarks.ToolWindows.Bookmarks {
 			this.bookmarksSettings = bookmarksSettings;
 		}
 
-		public ITagger<T> CreateTagger<T>(ITextBuffer buffer) where T : ITag =>
+		public ITagger<T>? CreateTagger<T>(ITextBuffer buffer) where T : ITag =>
 			new BookmarkTagger(nameClassificationTag, bookmarksSettings) as ITagger<T>;
 	}
 
 	sealed class BookmarkTagger : ITagger<IClassificationTag> {
-		public event EventHandler<SnapshotSpanEventArgs> TagsChanged { add { } remove { } }
+		public event EventHandler<SnapshotSpanEventArgs>? TagsChanged { add { } remove { } }
 		readonly IClassificationTag nameClassificationTag;
 		readonly BookmarksSettings bookmarksSettings;
 

@@ -42,9 +42,9 @@ namespace dnSpy.MainApp {
 		public IAppStatusBar StatusBar => statusBar;
 		readonly AppStatusBar statusBar;
 
-		Window IAppWindow.MainWindow => mainWindow;
-		internal MainWindow MainWindow => mainWindow;
-		MainWindow mainWindow;
+		Window IAppWindow.MainWindow => mainWindow!;
+		internal MainWindow MainWindow => mainWindow!;
+		MainWindow? mainWindow;
 
 		public IWpfCommands MainWindowCommands => mainWindowCommands;
 		readonly IWpfCommands mainWindowCommands;
@@ -54,7 +54,11 @@ namespace dnSpy.MainApp {
 		public string AssemblyInformationalVersion => assemblyInformationalVersion;
 		readonly string assemblyInformationalVersion;
 
-		public IAppCommandLineArgs CommandLineArgs { get; set; }
+		public IAppCommandLineArgs CommandLineArgs {
+			get => commandLineArgs!;
+			set => commandLineArgs = value;
+		}
+		IAppCommandLineArgs? commandLineArgs;
 
 		sealed class UISettings {
 			static readonly Guid SETTINGS_GUID = new Guid("33E1988B-8EFF-4F4C-A064-FA99A7D0C64D");
@@ -66,7 +70,11 @@ namespace dnSpy.MainApp {
 			public SavedWindowState SavedWindowState;
 			public MainWindowControlState MainWindowControlState;
 
-			public UISettings(ISettingsService settingsService) => this.settingsService = settingsService;
+			public UISettings(ISettingsService settingsService) {
+				this.settingsService = settingsService;
+				SavedWindowState = null!;
+				MainWindowControlState = null!;
+			}
 
 			public void Read() {
 				var sect = settingsService.GetOrCreateSection(SETTINGS_GUID);
@@ -106,10 +114,10 @@ namespace dnSpy.MainApp {
 		static string CalculateAssemblyInformationalVersion(Assembly asm) {
 			var attrs = asm.GetCustomAttributes(typeof(AssemblyInformationalVersionAttribute), false);
 			var attr = attrs.Length == 0 ? null : attrs[0] as AssemblyInformationalVersionAttribute;
-			Debug.Assert(attr != null);
-			if (attr != null)
+			Debug2.Assert(attr is not null);
+			if (attr is not null)
 				return attr.InformationalVersion;
-			return asm.GetName().Version.ToString();
+			return asm.GetName().Version!.ToString();
 		}
 
 		static readonly Rect DefaultWindowLocation = new Rect(10, 10, 1300, 730);
@@ -120,8 +128,12 @@ namespace dnSpy.MainApp {
 			sc.AddChild(statusBar, StackedContentChildInfo.CreateVertical(new GridLength(0, GridUnitType.Auto)));
 			mainWindow = new MainWindow(sc.UIObject);
 			AddTitleInfo(IntPtr.Size == 4 ? "32-bit" : "64-bit");
-#if NETCOREAPP
-			AddTitleInfo(".NET Core");
+#if NETFRAMEWORK
+			AddTitleInfo(".NET Framework");
+#elif NET
+			AddTitleInfo(".NET");
+#else
+#error Unknown target framework
 #endif
 #if DEBUG
 			AddTitleInfo("Debug Build");
@@ -153,22 +165,22 @@ namespace dnSpy.MainApp {
 			mainWindowControl.Initialize(StackedContentChildImpl.GetOrCreate(documentTabService.TabGroupService, documentTabService.TabGroupService.UIObject), uiSettings.MainWindowControlState);
 		}
 
-		void MainWindow_Closing(object sender, CancelEventArgs e) {
+		void MainWindow_Closing(object? sender, CancelEventArgs e) {
 			mainWindowClosing.Raise(this, e);
 			if (e.Cancel)
 				return;
 
-			uiSettings.SavedWindowState = new SavedWindowState(mainWindow);
+			uiSettings.SavedWindowState = new SavedWindowState(mainWindow!);
 			uiSettings.MainWindowControlState = mainWindowControl.CreateState();
 			uiSettings.Write();
 		}
 
-		void MainWindow_Closed(object sender, EventArgs e) => mainWindowClosed.Raise(this, e);
+		void MainWindow_Closed(object? sender, EventArgs e) => mainWindowClosed.Raise(this, e);
 
-		void MainWindow_GotKeyboardFocus(object sender, KeyboardFocusChangedEventArgs e) {
+		void MainWindow_GotKeyboardFocus(object? sender, KeyboardFocusChangedEventArgs e) {
 			if (e.NewFocus == MainWindow) {
 				var g = documentTabService.TabGroupService.ActiveTabGroup;
-				if (g != null && g.ActiveTabContent != null) {
+				if (g is not null && g.ActiveTabContent is not null) {
 					g.SetFocus(g.ActiveTabContent);
 					e.Handled = true;
 					return;
@@ -189,11 +201,11 @@ namespace dnSpy.MainApp {
 		readonly WeakEventList<EventArgs> mainWindowClosed;
 
 		public void RefreshToolBar() {
-			if (mainWindow != null)
+			if (mainWindow is not null)
 				appToolBar.Initialize(mainWindow);
 		}
 
-		void UpdateTitle() => mainWindow.Title = GetDefaultTitle();
+		void UpdateTitle() => mainWindow!.Title = GetDefaultTitle();
 
 		string GetDefaultTitle() => $"{Constants.DnSpy} {AssemblyInformationalVersion} ({string.Join(", ", titleInfos.ToArray())})";
 		readonly List<string> titleInfos = new List<string>();

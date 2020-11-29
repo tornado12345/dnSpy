@@ -1,40 +1,38 @@
-# dnSpy
+# dnSpy - [Latest release](https://github.com/dnSpy/dnSpy/releases)
 
-dnSpy is a debugger and .NET assembly editor. You can use it to edit and debug assemblies even if you don't have any source code available.
+dnSpy is a debugger and .NET assembly editor. You can use it to edit and debug assemblies even if you don't have any source code available. Main features:
 
-Want to say thanks? Click the star at the top of the page. Or fork dnSpy and send a PR!
+- Debug .NET and Unity assemblies
+- Edit .NET and Unity assemblies
+- Light and dark themes
 
-The following pictures show dnSpy in action. It shows dnSpy editing and debugging a .NET EXE file, not source code.
+See below for more features
 
 ![debug-animated](images/debug-animated.gif)
 
 ![edit-code-animated](images/edit-code-animated.gif)
 
-# Features (see below for more detail)
+## Binaries
 
-- Debug .NET Framework, .NET Core and Unity game assemblies, no source code required
-- Edit assemblies in C# or Visual Basic or IL, and edit all metadata
-- Light and dark themes
-- Extensible, write your own extension
-- High DPI support (per-monitor DPI aware)
-- And much more, see below
+https://github.com/dnSpy/dnSpy/releases
 
-dnSpy uses the ILSpy decompiler engine and the Roslyn (C# / Visual Basic) compiler and many other open source libraries, see below for more info.
+## Building
 
-# Binaries
+```PS
+git clone --recursive https://github.com/dnSpy/dnSpy.git
+cd dnSpy
+# or dotnet build
+./build.ps1 -NoMsbuild
+```
 
-[Latest release](https://github.com/0xd4d/dnSpy/releases) (Note: Required .NET Runtime version is [.NET Framework 4.7.2](https://dotnet.microsoft.com/download/thank-you/net472))
-
-Latest build: [![Build status](https://ci.appveyor.com/api/projects/status/3utl4e1qkx7pamko/branch/master?svg=true)](https://ci.appveyor.com/project/0xd4d/dnspy/branch/master/artifacts)
-
-Or build it from source, see the [Wiki](https://github.com/0xd4d/dnSpy/wiki/Building-dnSpy).
+To debug Unity games, you need this repo too: https://github.com/dnSpy/dnSpy-Unity-mono (or get the binaries from https://github.com/dnSpy/dnSpy/releases/unity)
 
 # Debugger
 
-- Debug .NET Framework, .NET Core and Unity game assemblies, no source code required
+- Debug .NET Framework, .NET and Unity game assemblies, no source code required
 - Set breakpoints and step into any assembly
 - Locals, watch, autos windows
-- Variables windows supports saving variables (eg. decrypted byte arrays) to disk or view them in the hex editor (memory window)
+- Variables windows support saving variables (eg. decrypted byte arrays) to disk or view them in the hex editor (memory window)
 - Object IDs
 - Multiple processes can be debugged at the same time
 - Break on module load
@@ -53,15 +51,15 @@ Or build it from source, see the [Wiki](https://github.com/0xd4d/dnSpy/wiki/Buil
 - All metadata can be edited
 - Edit methods and classes in C# or Visual Basic with IntelliSense, no source code required
 - Add new methods, classes or members in C# or Visual Basic
-- IL editor for low level IL method body editing
-- Low level metadata tables can be edited. This uses the hex editor internally.
+- IL editor for low-level IL method body editing
+- Low-level metadata tables can be edited. This uses the hex editor internally.
 
 # Hex Editor
 
 - Click on an address in the decompiled code to go to its IL code in the hex editor
-- Reverse of above, press F12 in an IL body in the hex editor to go to the decompiled code or other high level representation of the bits. It's great to find out which statement a patch modified.
+- The reverse of the above, press F12 in an IL body in the hex editor to go to the decompiled code or other high-level representation of the bits. It's great to find out which statement a patch modified.
 - Highlights .NET metadata structures and PE structures
-- Tooltips shows more info about the selected .NET metadata / PE field
+- Tooltips show more info about the selected .NET metadata / PE field
 - Go to position, file, RVA
 - Go to .NET metadata token, method body, #Blob / #Strings / #US heap offset or #GUID heap index
 - Follow references (Ctrl+F12)
@@ -72,22 +70,23 @@ Or build it from source, see the [Wiki](https://github.com/0xd4d/dnSpy/wiki/Buil
 - Blue, light and dark themes (and a dark high contrast theme)
 - Bookmarks
 - C# Interactive window can be used to script dnSpy
-- Search assemblies for classes, methods, strings etc
-- Analyze class and method usage, find callers etc
+- Search assemblies for classes, methods, strings, etc
+- Analyze class and method usage, find callers, etc
 - Multiple tabs and tab groups
-- References are highlighted, use Tab / Shift+Tab to move to next reference
-- Go to entry point and module initializer commands
+- References are highlighted, use Tab / Shift+Tab to move to the next reference
+- Go to the entry point and module initializer commands
 - Go to metadata token or metadata row commands
 - Code tooltips (C# and Visual Basic)
 - Export to project
 
 # List of other open source libraries used by dnSpy
 
-- ILSpy decompiler engine (C# and Visual Basic decompilers)
-- Roslyn (C# and Visual Basic compilers)
-- dnlib (.NET metadata reader/writer which can also read obfuscated assemblies)
-- VS MEF (Faster MEF equals faster startup)
-- ClrMD (Access to lower level debugging info not provided by the CorDebug API)
+- [ILSpy decompiler engine](https://github.com/icsharpcode/ILSpy) (C# and Visual Basic decompilers)
+- [Roslyn](https://github.com/dotnet/roslyn) (C# and Visual Basic compilers)
+- [dnlib](https://github.com/0xd4d/dnlib) (.NET metadata reader/writer which can also read obfuscated assemblies)
+- [VS MEF](https://github.com/microsoft/vs-mef) (Faster MEF equals faster startup)
+- [ClrMD](https://github.com/microsoft/clrmd) (Access to lower level debugging info not provided by the CorDebug API)
+- [Iced](https://github.com/0xd4d/iced) (x86/x64 disassembler)
 
 # Translating dnSpy
 
@@ -95,7 +94,7 @@ Or build it from source, see the [Wiki](https://github.com/0xd4d/dnSpy/wiki/Buil
 
 # Wiki
 
-See the [Wiki](https://github.com/0xd4d/dnSpy/wiki) for build instructions and other documentation.
+See the [Wiki](https://github.com/dnSpy/dnSpy/wiki) for build instructions and other documentation.
 
 # License
 

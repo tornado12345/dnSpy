@@ -27,13 +27,13 @@ using Microsoft.VisualStudio.Text.Editor;
 namespace dnSpy.Documents.Tabs.DocViewer {
 	[ExportDocumentViewerReferenceEnablerProvider(PredefinedSpanReferenceIds.HighlightRelatedKeywords)]
 	sealed class HighlightRelatedKeywordsDocumentViewerReferenceEnablerProvider : IDocumentViewerReferenceEnablerProvider {
-		public IDocumentViewerReferenceEnabler Create(IDocumentViewer documentViewer) =>
+		public IDocumentViewerReferenceEnabler? Create(IDocumentViewer documentViewer) =>
 			new HighlightRelatedKeywordsDocumentViewerReferenceEnabler(documentViewer);
 	}
 
 	sealed class HighlightRelatedKeywordsDocumentViewerReferenceEnabler : IDocumentViewerReferenceEnabler {
 		public bool IsEnabled { get; private set; }
-		public event EventHandler IsEnabledChanged;
+		public event EventHandler? IsEnabledChanged;
 
 		readonly IDocumentViewer documentViewer;
 
@@ -43,7 +43,7 @@ namespace dnSpy.Documents.Tabs.DocViewer {
 			documentViewer.TextView.Options.OptionChanged += Options_OptionChanged;
 		}
 
-		void Options_OptionChanged(object sender, EditorOptionChangedEventArgs e) {
+		void Options_OptionChanged(object? sender, EditorOptionChangedEventArgs e) {
 			if (e.OptionId == DefaultDsTextViewOptions.HighlightRelatedKeywordsName) {
 				IsEnabled = documentViewer.TextView.Options.IsHighlightRelatedKeywordsEnabled();
 				IsEnabledChanged?.Invoke(this, EventArgs.Empty);

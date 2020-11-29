@@ -34,13 +34,13 @@ namespace dnSpy.Debugger.ToolWindows.ModuleBreakpoints {
 		internal static ModuleBreakpointFormatter Create_DONT_USE() => new ModuleBreakpointFormatter();
 
 		void WriteInt32Decimal(IDbgTextWriter output, int? value) {
-			if (value == null)
+			if (value is null)
 				return;
 			output.Write(DbgTextColor.Number, value.Value.ToString());
 		}
 
 		void WriteBoolean(IDbgTextWriter output, bool? value) {
-			if (value == null)
+			if (value is null)
 				return;
 			output.WriteYesNo(value.Value);
 		}
@@ -49,6 +49,7 @@ namespace dnSpy.Debugger.ToolWindows.ModuleBreakpoints {
 		internal void WriteModuleName(IDbgTextWriter output, DbgModuleBreakpoint bp) => output.Write(DbgTextColor.String, bp.ModuleName ?? string.Empty);
 		internal void WriteDynamic(IDbgTextWriter output, DbgModuleBreakpoint bp) => WriteBoolean(output, bp.IsDynamic);
 		internal void WriteInMemory(IDbgTextWriter output, DbgModuleBreakpoint bp) => WriteBoolean(output, bp.IsInMemory);
+		internal void WriteLoadModule(IDbgTextWriter output, DbgModuleBreakpoint bp) => WriteBoolean(output, bp.IsLoaded);
 		internal void WriteOrder(IDbgTextWriter output, DbgModuleBreakpoint bp) => WriteInt32Decimal(output, bp.Order);
 		internal void WriteProcessName(IDbgTextWriter output, DbgModuleBreakpoint bp) => output.Write(DbgTextColor.String, bp.ProcessName ?? string.Empty);
 		internal void WriteAppDomainName(IDbgTextWriter output, DbgModuleBreakpoint bp) => output.Write(DbgTextColor.String, bp.AppDomainName ?? string.Empty);

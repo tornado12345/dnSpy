@@ -58,8 +58,8 @@ namespace dnSpy.Tabs {
 			public bool IsActive => impl.IsActive;
 			internal void IsActiveChanged() => OnPropertyChanged(nameof(IsActive));
 
-			public object ToolTip => impl.tabContent.ToolTip;
-			public string Header => impl.tabContent.Title;
+			public object? ToolTip => impl.tabContent.ToolTip;
+			public string? Header => impl.tabContent.Title;
 			public ICommand CloseCommand => new RelayCommand(a => impl.Close(), a => impl.CanClose);
 
 			public TheHeader(TabItemImpl impl) {
@@ -67,7 +67,7 @@ namespace dnSpy.Tabs {
 				isSelected = impl.IsSelected;
 			}
 
-			internal void TabContentPropertyChanged(string propName) {
+			internal void TabContentPropertyChanged(string? propName) {
 				if (propName == nameof(ITabContent.ToolTip))
 					OnPropertyChanged(nameof(ToolTip));
 				else if (propName == nameof(ITabContent.Title))
@@ -83,7 +83,7 @@ namespace dnSpy.Tabs {
 
 		readonly TheHeader theHeader;
 
-		public TabItemImpl(TabGroup tabGroup, ITabContent tabContent, object objStyle) {
+		public TabItemImpl(TabGroup tabGroup, ITabContent tabContent, object? objStyle) {
 			this.tabGroup = tabGroup;
 			this.tabContent = tabContent;
 			Content = tabContent.UIObject;
@@ -109,10 +109,10 @@ namespace dnSpy.Tabs {
 			}
 		}
 
-		void GotKeyboardFocus2(object sender, KeyboardFocusChangedEventArgs e) =>
+		void GotKeyboardFocus2(object? sender, KeyboardFocusChangedEventArgs e) =>
 			tabContent.OnVisibilityChanged(TabContentVisibilityEvent.GotKeyboardFocus);
 
-		void LostKeyboardFocus2(object sender, KeyboardFocusChangedEventArgs e) =>
+		void LostKeyboardFocus2(object? sender, KeyboardFocusChangedEventArgs e) =>
 			tabContent.OnVisibilityChanged(TabContentVisibilityEvent.LostKeyboardFocus);
 
 		protected override void OnSelected(RoutedEventArgs e) {
@@ -145,7 +145,7 @@ namespace dnSpy.Tabs {
 				npc.PropertyChanged -= TabContent_PropertyChanged;
 		}
 
-		void TabContent_PropertyChanged(object sender, PropertyChangedEventArgs e) {
+		void TabContent_PropertyChanged(object? sender, PropertyChangedEventArgs e) {
 			theHeader.TabContentPropertyChanged(e.PropertyName);
 			if (e.PropertyName == nameof(tabContent.UIObject))
 				Content = tabContent.UIObject;

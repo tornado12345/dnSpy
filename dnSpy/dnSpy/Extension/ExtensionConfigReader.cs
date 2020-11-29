@@ -40,7 +40,7 @@ namespace dnSpy.Extension {
 				return config;
 			var doc = XDocument.Load(filename, LoadOptions.None);
 			var root = doc.Root;
-			if (root.Name == XML_ROOT_NAME)
+			if (root?.Name == XML_ROOT_NAME)
 				Read(root, config);
 			return config;
 		}
@@ -51,7 +51,7 @@ namespace dnSpy.Extension {
 			config.AppVersion = ReadVersion(root, APP_VERSION_SECT);
 		}
 
-		static Version ReadVersion(XElement elem, string name) {
+		static Version? ReadVersion(XElement elem, string name) {
 			var fn = elem.Element(name)?.FirstNode;
 			if (fn?.NodeType != XmlNodeType.Text)
 				return null;

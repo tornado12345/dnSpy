@@ -19,6 +19,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using dnSpy.Contracts.Hex;
 
@@ -29,25 +30,25 @@ namespace dnSpy.Hex {
 		public override HexSpan Span => stream.Span;
 		public override string Name => stream.Name;
 		public override HexVersion Version => currentHexVersion;
-		public override event EventHandler<HexContentChangingEventArgs> Changing;
-		public override event EventHandler<HexContentChangedEventArgs> ChangedHighPriority;
-		public override event EventHandler<HexContentChangedEventArgs> Changed;
-		public override event EventHandler<HexContentChangedEventArgs> ChangedLowPriority;
-		public override event EventHandler PostChanged;
+		public override event EventHandler<HexContentChangingEventArgs>? Changing;
+		public override event EventHandler<HexContentChangedEventArgs>? ChangedHighPriority;
+		public override event EventHandler<HexContentChangedEventArgs>? Changed;
+		public override event EventHandler<HexContentChangedEventArgs>? ChangedLowPriority;
+		public override event EventHandler? PostChanged;
 
-		public override event EventHandler<HexBufferSpanInvalidatedEventArgs> BufferSpanInvalidated {
+		public override event EventHandler<HexBufferSpanInvalidatedEventArgs>? BufferSpanInvalidated {
 			add {
-				if (bufferSpanInvalidated == null)
+				if (bufferSpanInvalidated is null)
 					stream.BufferStreamSpanInvalidated += HexBufferStream_BufferStreamSpanInvalidated;
 				bufferSpanInvalidated += value;
 			}
 			remove {
 				bufferSpanInvalidated -= value;
-				if (bufferSpanInvalidated == null)
+				if (bufferSpanInvalidated is null)
 					stream.BufferStreamSpanInvalidated -= HexBufferStream_BufferStreamSpanInvalidated;
 			}
 		}
-		EventHandler<HexBufferSpanInvalidatedEventArgs> bufferSpanInvalidated;
+		EventHandler<HexBufferSpanInvalidatedEventArgs>? bufferSpanInvalidated;
 
 		HexBufferStream stream;
 		HexVersionImpl currentHexVersion;
@@ -68,25 +69,25 @@ namespace dnSpy.Hex {
 			}
 		}
 
-		void HexBufferStream_BufferStreamSpanInvalidated(object sender, HexBufferStreamSpanInvalidatedEventArgs e) =>
+		void HexBufferStream_BufferStreamSpanInvalidated(object? sender, HexBufferStreamSpanInvalidatedEventArgs e) =>
 			bufferSpanInvalidated?.Invoke(this, new HexBufferSpanInvalidatedEventArgs(e.Span));
 
 		void CreateNewVersion(IList<HexChange> changes, int? reiteratedVersionNumber = null) =>
 			currentHexVersion = currentHexVersion.SetChanges(changes, reiteratedVersionNumber);
 
-		Thread ownerThread;
-		bool CheckAccess() => ownerThread == null || ownerThread == Thread.CurrentThread;
+		Thread? ownerThread;
+		bool CheckAccess() => ownerThread is null || ownerThread == Thread.CurrentThread;
 		void VerifyAccess() {
 			if (!CheckAccess())
 				throw new InvalidOperationException();
 		}
 
-		HexEditImpl hexEditInProgress;
-		public override bool EditInProgress => hexEditInProgress != null;
+		HexEditImpl? hexEditInProgress;
+		public override bool EditInProgress => hexEditInProgress is not null;
 		public override bool CheckEditAccess() => CheckAccess();
 
 		public override void TakeThreadOwnership() {
-			if (ownerThread != null && ownerThread != Thread.CurrentThread)
+			if (ownerThread is not null && ownerThread != Thread.CurrentThread)
 				throw new InvalidOperationException();
 			ownerThread = Thread.CurrentThread;
 		}
@@ -98,7 +99,7 @@ namespace dnSpy.Hex {
 		}
 
 		public override HexEdit CreateEdit() => CreateEdit(null, null);
-		public override HexEdit CreateEdit(int? reiteratedVersionNumber, object editTag) {
+		public override HexEdit CreateEdit(int? reiteratedVersionNumber, object? editTag) {
 			VerifyAccess();
 			if (EditInProgress)
 				throw new InvalidOperationException("An edit operation is in progress");
@@ -113,12 +114,12 @@ namespace dnSpy.Hex {
 			PostChanged?.Invoke(this, EventArgs.Empty);
 		}
 
-		bool RaiseChangingGetIsCanceled(object editTag) {
+		bool RaiseChangingGetIsCanceled(object? editTag) {
 			var c = Changing;
-			if (c == null)
+			if (c is null)
 				return false;
 
-			Action<HexContentChangingEventArgs> cancelAction = null;
+			Action<HexContentChangingEventArgs>? cancelAction = null;
 			var args = new HexContentChangingEventArgs(Version, editTag, cancelAction);
 			foreach (EventHandler<HexContentChangingEventArgs> handler in c.GetInvocationList()) {
 				handler(this, args);
@@ -128,7 +129,7 @@ namespace dnSpy.Hex {
 			return args.Canceled;
 		}
 
-		internal void ApplyChanges(HexEditImpl hexEdit, List<HexChange> changes, int? reiteratedVersionNumber, object editTag) {
+		internal void ApplyChanges(HexEditImpl hexEdit, List<HexChange> changes, int? reiteratedVersionNumber, object? editTag) {
 			VerifyAccess();
 			if (hexEdit != hexEditInProgress)
 				throw new InvalidOperationException();
@@ -154,19 +155,27 @@ namespace dnSpy.Hex {
 				CreateNewVersion(changes, reiteratedVersionNumber);
 				var afterVersion = Version;
 
-				HexContentChangedEventArgs args = null;
+				HexContentChangedEventArgs? args = null;
 				//TODO: The event handlers are allowed to modify the buffer, but the new events must only be
 				//		raised after all of these three events have been raised.
-				ChangedHighPriority?.Invoke(this, args ?? (args = new HexContentChangedEventArgs(beforeVersion, afterVersion, editTag)));
-				Changed?.Invoke(this, args ?? (args = new HexContentChangedEventArgs(beforeVersion, afterVersion, editTag)));
-				ChangedLowPriority?.Invoke(this, args ?? (args = new HexContentChangedEventArgs(beforeVersion, afterVersion, editTag)));
+				ChangedHighPriority?.Invoke(this, args ??= new HexContentChangedEventArgs(beforeVersion, afterVersion, editTag));
+				Changed?.Invoke(this, args ??= new HexContentChangedEventArgs(beforeVersion, afterVersion, editTag));
+				ChangedLowPriority?.Invoke(this, args ??= new HexContentChangedEventArgs(beforeVersion, afterVersion, editTag));
 			}
 			PostChanged?.Invoke(this, EventArgs.Empty);
 		}
 
 		sealed class ReverseOldPositionSorter : IComparer<HexChange> {
 			public static readonly ReverseOldPositionSorter Instance = new ReverseOldPositionSorter();
-			public int Compare(HexChange x, HexChange y) => y.OldPosition.CompareTo(x.OldPosition);
+			public int Compare([AllowNull] HexChange x, [AllowNull] HexChange y) {
+				if ((object?)x == y)
+					return 0;
+				if (x is null)
+					return -1;
+				if (y is null)
+					return 1;
+				return y.OldPosition.CompareTo(x.OldPosition);
+			}
 		}
 
 		public override int TryReadByte(HexPosition position) => stream.TryReadByte(position);
@@ -203,7 +212,7 @@ namespace dnSpy.Hex {
 		protected override void DisposeCore() {
 			if (disposeStream)
 				stream?.Dispose();
-			stream = null;
+			stream = null!;
 		}
 	}
 }

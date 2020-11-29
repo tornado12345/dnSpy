@@ -127,19 +127,13 @@
     <value>已应用到</value>
   </data>
   <data name="AssignedByTreeNode" xml:space="preserve">
-    <value>被赋值于</value>
+    <value>赋值于</value>
   </data>
   <data name="CopyCommand" xml:space="preserve">
     <value>复制(_Y)</value>
   </data>
   <data name="DoubleClick" xml:space="preserve">
     <value>双击</value>
-  </data>
-  <data name="EventAdderTreeNodeName" xml:space="preserve">
-    <value>添加</value>
-  </data>
-  <data name="EventRemoverTreeNodeName" xml:space="preserve">
-    <value>去除</value>
   </data>
   <data name="ExposedByTreeNode" xml:space="preserve">
     <value>被公开于</value>
@@ -148,13 +142,13 @@
     <value>扩展方法</value>
   </data>
   <data name="GoToReferenceCommand" xml:space="preserve">
-    <value>转到引用(_G)</value>
+    <value>转到引用</value>
   </data>
   <data name="GoToReferenceInCodeCommand" xml:space="preserve">
     <value>显示方法内的引用</value>
   </data>
   <data name="GoToReferenceInCodeNewTabCommand" xml:space="preserve">
-    <value>显示方法内引用（新标签页）(_T)</value>
+    <value>显示方法内的引用（新标签页）(_T)</value>
   </data>
   <data name="GoToReferenceNewTabCommand" xml:space="preserve">
     <value>转到引用（新标签页）(_B)</value>
@@ -163,25 +157,19 @@
     <value>隐藏</value>
   </data>
   <data name="ImplementedByTreeNode" xml:space="preserve">
-    <value>被实现</value>
+    <value>实现于</value>
   </data>
   <data name="InstantiatedByTreeNode" xml:space="preserve">
-    <value>被实例化</value>
+    <value>实例化于</value>
   </data>
   <data name="OverriddenByTreeNode" xml:space="preserve">
-    <value>被重写</value>
+    <value>重写于</value>
   </data>
   <data name="OverridesTreeNode" xml:space="preserve">
-    <value>重载</value>
+    <value>重写</value>
   </data>
   <data name="Plugin_ShortDescription" xml:space="preserve">
     <value>分析程序集</value>
-  </data>
-  <data name="PropertyGetterTreeNode" xml:space="preserve">
-    <value>get</value>
-  </data>
-  <data name="PropertySetterTreeNode" xml:space="preserve">
-    <value>set</value>
   </data>
   <data name="RaisedByTreeNode" xml:space="preserve">
     <value>被触发于</value>
@@ -190,7 +178,7 @@
     <value>读取于</value>
   </data>
   <data name="RemoveCommand" xml:space="preserve">
-    <value>去除(_R)</value>
+    <value>移除(_R)</value>
   </data>
   <data name="Searching" xml:space="preserve">
     <value>搜索中…</value>
@@ -209,6 +197,9 @@
   </data>
   <data name="ShowMetadataTokensCommand" xml:space="preserve">
     <value>显示标记</value>
+  </data>
+  <data name="SingleClickExpandNodes" xml:space="preserve">
+    <value>单击展开节点</value>
   </data>
   <data name="SyntaxHighlightCommand" xml:space="preserve">
     <value>语法高亮</value>

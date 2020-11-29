@@ -44,7 +44,7 @@ namespace dnSpy.Hex.Intellisense {
 				var list = new List<HexIntellisenseController>(intellisenseControllerProviders.Length);
 				foreach (var provider in intellisenseControllerProviders) {
 					var controller = provider.Value.TryCreateIntellisenseController(hexView);
-					if (controller != null)
+					if (controller is not null)
 						list.Add(controller);
 				}
 				intellisenseControllers = list.ToArray();
@@ -52,7 +52,7 @@ namespace dnSpy.Hex.Intellisense {
 					hexView.Closed += HexView_Closed;
 			}
 
-			void HexView_Closed(object sender, EventArgs e) {
+			void HexView_Closed(object? sender, EventArgs e) {
 				hexView.Closed -= HexView_Closed;
 				foreach (var controller in intellisenseControllers)
 					controller.Detach(hexView);

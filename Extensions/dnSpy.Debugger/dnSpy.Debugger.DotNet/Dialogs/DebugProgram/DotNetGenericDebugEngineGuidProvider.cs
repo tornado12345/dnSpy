@@ -24,7 +24,7 @@ using dnlib.PE;
 using dnSpy.Contracts.Debugger.StartDebugging;
 
 namespace dnSpy.Debugger.DotNet.Dialogs.DebugProgram {
-	[ExportGenericDebugEngineGuidProvider(PredefinedGenericDebugEngineGuidProviderOrders.DotNet)]
+	[ExportGenericDebugEngineGuidProvider(PredefinedGenericDebugEngineGuidProviderOrders.DotNetAny)]
 	sealed class DotNetGenericDebugEngineGuidProvider : GenericDebugEngineGuidProvider {
 		public override Guid? GetEngineGuid(string filename) {
 			if (!File.Exists(filename))
@@ -41,17 +41,17 @@ namespace dnSpy.Debugger.DotNet.Dialogs.DebugProgram {
 
 					using (var mod = ModuleDefMD.Load(peImage, new ModuleCreationOptions())) {
 						var asm = mod.Assembly;
-						if (asm == null)
+						if (asm is null)
 							return null;
 
 						var defaultGuid = PredefinedGenericDebugEngineGuids.DotNetFramework;
 						var ca = asm.CustomAttributes.Find("System.Runtime.Versioning.TargetFrameworkAttribute");
-						if (ca == null)
+						if (ca is null)
 							return defaultGuid;
 						if (ca.ConstructorArguments.Count != 1)
 							return defaultGuid;
 						string s = ca.ConstructorArguments[0].Value as UTF8String;
-						if (s == null)
+						if (s is null)
 							return defaultGuid;
 
 						// See corclr/src/mscorlib/src/System/Runtime/Versioning/BinaryCompatibility.cs
@@ -59,7 +59,7 @@ namespace dnSpy.Debugger.DotNet.Dialogs.DebugProgram {
 						if (values.Length >= 2 && values.Length <= 3) {
 							var framework = values[0].Trim();
 							if (framework == ".NETCoreApp")
-								return PredefinedGenericDebugEngineGuids.DotNetCore;
+								return PredefinedGenericDebugEngineGuids.DotNet;
 						}
 
 						return defaultGuid;

@@ -21,10 +21,12 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Text;
 using System.Windows.Threading;
 using dnlib.DotNet;
 using dnlib.DotNet.Emit;
 using dnlib.DotNet.Resources;
+using dnSpy.Contracts.Decompiler;
 using dnSpy.Contracts.Documents;
 using dnSpy.Contracts.Documents.TreeView;
 using dnSpy.Contracts.Documents.TreeView.Resources;
@@ -40,7 +42,7 @@ namespace dnSpy.Search {
 
 		public FilterSearcher(FilterSearcherOptions options) => this.options = options;
 
-		bool IsMatch(string text, object obj) => options.SearchComparer.IsMatch(text, obj);
+		bool IsMatch(string? text, object? obj) => options.SearchComparer.IsMatch(text, obj);
 
 		public void SearchAssemblies(IEnumerable<DsDocumentNode> fileNodes) {
 			foreach (var fileNode in fileNodes) {
@@ -55,18 +57,18 @@ namespace dnSpy.Search {
 		public void SearchTypes(IEnumerable<SearchTypeInfo> types) {
 			foreach (var info in types) {
 				options.CancellationToken.ThrowIfCancellationRequested();
-				if (info.Type.DeclaringType == null)
+				if (info.Type.DeclaringType is null)
 					Search(info.Document, info.Type.Namespace, info.Type);
 				else
 					Search(info.Document, info.Type);
 			}
 		}
 
-		void CheckCustomAttributes(IDsDocument file, IHasCustomAttribute hca, object parent) {
+		void CheckCustomAttributes(IDsDocument file, IHasCustomAttribute hca, object? parent) {
 			var res = options.Filter.GetResultAttributes(hca);
 			if (!res.IsMatch)
 				return;
-			foreach (var ca in hca.CustomAttributes) {
+			foreach (var ca in hca.GetCustomAttributes()) {
 				options.CancellationToken.ThrowIfCancellationRequested();
 				foreach (var o in ca.ConstructorArguments) {
 					options.CancellationToken.ThrowIfCancellationRequested();
@@ -81,10 +83,10 @@ namespace dnSpy.Search {
 			}
 		}
 
-		bool CheckCA(IDsDocument file, IHasCustomAttribute hca, object parent, CAArgument o) {
+		bool CheckCA(IDsDocument file, IHasCustomAttribute hca, object? parent, CAArgument o) {
 			var value = o.Value;
 			var u = value as UTF8String;
-			if (!ReferenceEquals(u, null))
+			if (u is not null)
 				value = u.String;
 			if (!IsMatch(null, value))
 				return false;
@@ -93,14 +95,14 @@ namespace dnSpy.Search {
 				Object = hca,
 				NameObject = hca,
 				ObjectImageReference = GetImageReference(hca),
-				LocationObject = parent is string ? new NamespaceSearchResult((string)parent) : parent,
+				LocationObject = parent is string s ? new NamespaceSearchResult(s) : parent,
 				LocationImageReference = GetImageReference(parent),
 				Document = file,
 			});
 			return true;
 		}
 
-		ImageReference GetImageReference(object obj) {
+		ImageReference GetImageReference(object? obj) {
 			if (obj is ModuleDef)
 				return options.DotNetImageService.GetImageReference((ModuleDef)obj);
 			if (obj is AssemblyDef)
@@ -126,11 +128,11 @@ namespace dnSpy.Search {
 		}
 
 		void SearchAssemblyInternal(AssemblyDocumentNode asmNode) {
-			if (asmNode == null)
+			if (asmNode is null)
 				return;
 			var asm = asmNode.Document.AssemblyDef;
-			Debug.Assert(asm != null);
-			if (asm == null)
+			Debug2.Assert(asm is not null);
+			if (asm is null)
 				return;
 			var res = options.Filter.GetResult(asm);
 			if (res.FilterType == FilterType.Hide)
@@ -142,7 +144,7 @@ namespace dnSpy.Search {
 					Context = options.Context,
 					Object = asm,
 					NameObject = asm,
-					ObjectImageReference = options.DotNetImageService.GetImageReference(asmNode.Document.ModuleDef),
+					ObjectImageReference = options.DotNetImageService.GetImageReference(asmNode.Document.ModuleDef!),
 					LocationObject = null,
 					LocationImageReference = new ImageReference(),
 					Document = asmNode.Document,
@@ -164,10 +166,10 @@ namespace dnSpy.Search {
 		}
 
 		void SearchModule(IDsDocument module) {
-			if (module == null)
+			if (module is null)
 				return;
 			var mod = module.ModuleDef;
-			if (mod == null) {
+			if (mod is null) {
 				SearchNonNetFile(module);
 				return;
 			}
@@ -184,7 +186,7 @@ namespace dnSpy.Search {
 					NameObject = mod,
 					ObjectImageReference = options.DotNetImageService.GetImageReference(mod),
 					LocationObject = mod.Assembly,
-					LocationImageReference = mod.Assembly != null ? options.DotNetImageService.GetImageReference(mod.Assembly.ManifestModule) : new ImageReference(),
+					LocationImageReference = mod.Assembly is not null ? options.DotNetImageService.GetImageReference(mod.Assembly.ManifestModule) : new ImageReference(),
 					Document = module,
 				});
 			}
@@ -199,11 +201,11 @@ namespace dnSpy.Search {
 		}
 
 		void SearchModAsmReferences(IDsDocument module) {
-			var res = options.Filter.GetResult((ReferencesFolderNode)null);
+			var res = options.Filter.GetResult((ReferencesFolderNode?)null);
 			if (res.FilterType == FilterType.Hide)
 				return;
 
-			foreach (var asmRef in module.ModuleDef.GetAssemblyRefs()) {
+			foreach (var asmRef in module.ModuleDef!.GetAssemblyRefs()) {
 				options.CancellationToken.ThrowIfCancellationRequested();
 				res = options.Filter.GetResult(asmRef);
 				if (res.FilterType == FilterType.Hide)
@@ -243,22 +245,22 @@ namespace dnSpy.Search {
 		}
 
 		void SearchResources(IDsDocument module) {
-			var res = options.Filter.GetResult((ResourcesFolderNode)null);
+			var res = options.Filter.GetResult((ResourcesFolderNode?)null);
 			if (res.FilterType == FilterType.Hide)
 				return;
 
-			res = options.Filter.GetResult((ResourceNode)null);
+			res = options.Filter.GetResult((ResourceNode?)null);
 			if (res.FilterType == FilterType.Hide)
 				return;
 
 			var resNodes = new List<ResourceNode>();
 			options.Dispatcher.Invoke(DispatcherPriority.Normal, new Action(() => {
 				var modNode = options.DocumentTreeView.FindNode(module.ModuleDef);
-				if (modNode == null)
+				if (modNode is null)
 					return;
 				modNode.TreeNode.EnsureChildrenLoaded();
 				var resFolder = modNode.TreeNode.Children.FirstOrDefault(a => a.Data is ResourcesFolderNode);
-				if (resFolder != null) {
+				if (resFolder is not null) {
 					resFolder.EnsureChildrenLoaded();
 					resNodes.AddRange(resFolder.DataChildren.OfType<ResourceNode>());
 				}
@@ -270,7 +272,7 @@ namespace dnSpy.Search {
 			}
 		}
 
-		string ToString(IResourceDataProvider resource) {
+		string? ToString(IResourceNode resource) {
 			try {
 				return resource.ToString(options.CancellationToken, options.SearchDecompiledData);
 			}
@@ -294,12 +296,12 @@ namespace dnSpy.Search {
 					NameObject = resTreeNode,
 					ObjectImageReference = resTreeNode.Icon,
 					LocationObject = module.ModuleDef,
-					LocationImageReference = options.DotNetImageService.GetImageReference(module.ModuleDef),
+					LocationImageReference = options.DotNetImageService.GetImageReference(module.ModuleDef!),
 					Document = module,
 				});
 			}
 
-			res = options.Filter.GetResult((ResourceElementNode)null);
+			res = options.Filter.GetResult((ResourceElementNode?)null);
 			if (res.FilterType == FilterType.Hide)
 				return;
 
@@ -321,7 +323,7 @@ namespace dnSpy.Search {
 				return;
 
 			if (res.IsMatch) {
-				bool m = IsMatch(resElNode.Name, resElNode);
+				bool m = IsMatch(resElNode.Name, resElNode) || IsMatch(Uri.UnescapeDataString(resElNode.Name), resElNode);
 				if (!m) {
 					if (resElNode.ResourceElement.ResourceData is BuiltInResourceData builtin) {
 						var val = builtin.Data;
@@ -359,7 +361,7 @@ namespace dnSpy.Search {
 		}
 
 		void SearchNonNetFile(IDsDocument nonNetFile) {
-			if (nonNetFile == null)
+			if (nonNetFile is null)
 				return;
 			var res = options.Filter.GetResult(nonNetFile);
 			if (res.FilterType == FilterType.Hide)
@@ -370,7 +372,7 @@ namespace dnSpy.Search {
 					Context = options.Context,
 					Object = nonNetFile,
 					NameObject = nonNetFile,
-					ObjectImageReference = options.DotNetImageService.GetImageReference(nonNetFile.PEImage),
+					ObjectImageReference = options.DotNetImageService.GetImageReference(nonNetFile.PEImage!),
 					LocationObject = null,
 					LocationImageReference = new ImageReference(),
 					Document = nonNetFile,
@@ -390,7 +392,7 @@ namespace dnSpy.Search {
 					NameObject = new NamespaceSearchResult(ns),
 					ObjectImageReference = options.DotNetImageService.GetNamespaceImageReference(),
 					LocationObject = ownerModule.ModuleDef,
-					LocationImageReference = options.DotNetImageService.GetImageReference(ownerModule.ModuleDef),
+					LocationImageReference = options.DotNetImageService.GetImageReference(ownerModule.ModuleDef!),
 					Document = ownerModule,
 				});
 			}
@@ -402,12 +404,13 @@ namespace dnSpy.Search {
 		}
 
 		void Search(IDsDocument ownerModule, string nsOwner, TypeDef type) {
+			CheckCustomAttributes(ownerModule, type, nsOwner);
+
 			var res = options.Filter.GetResult(type);
 			if (res.FilterType == FilterType.Hide)
 				return;
-			CheckCustomAttributes(ownerModule, type, nsOwner);
 
-			if (res.IsMatch && (IsMatch(type.FullName, type) || IsMatch(type.Name, type))) {
+			if (res.IsMatch && (IsMatch(FixTypeName(type.FullName), type) || IsMatch(FixTypeName(type.Name), type))) {
 				options.OnMatch(new SearchResult {
 					Context = options.Context,
 					Object = type,
@@ -427,13 +430,44 @@ namespace dnSpy.Search {
 			}
 		}
 
+		static string FixTypeName(string name) {
+			int i;
+			for (i = 0; i < name.Length; i++) {
+				var c = name[i];
+				if (c == '/' || c == '`')
+					break;
+			}
+			if (i == name.Length)
+				return name;
+			var sb = new StringBuilder();
+			sb.Append(name, 0, i);
+			for (; i < name.Length; i++) {
+				var c = name[i];
+				switch (c) {
+				case '/':
+					sb.Append('.');
+					break;
+				case '`':
+					// Ignore `1, `2 etc (generic types)
+					while (++i < name.Length && char.IsDigit(name[i]))
+						;
+					break;
+				default:
+					sb.Append(c);
+					break;
+				}
+			}
+			return sb.ToString();
+		}
+
 		void Search(IDsDocument ownerModule, TypeDef type) {
+			CheckCustomAttributes(ownerModule, type, type.DeclaringType);
+
 			var res = options.Filter.GetResult(type);
 			if (res.FilterType == FilterType.Hide)
 				return;
-			CheckCustomAttributes(ownerModule, type, type.DeclaringType);
 
-			if (res.IsMatch && (IsMatch(type.FullName, type) || IsMatch(type.Name, type))) {
+			if (res.IsMatch && (IsMatch(FixTypeName(type.FullName), type) || IsMatch(FixTypeName(type.Name), type))) {
 				options.OnMatch(new SearchResult {
 					Context = options.Context,
 					Object = type,
@@ -470,7 +504,8 @@ namespace dnSpy.Search {
 		bool CheckMatch(MethodDef method) {
 			if (IsMatch(method.Name, method))
 				return true;
-			if (IsMatch(method.DeclaringType.FullName + "." + method.Name.String, method))
+			if (IsMatch(FixTypeName(method.DeclaringType.FullName) + "." + method.Name.String, method) ||
+				IsMatch(FixTypeName(method.DeclaringType.FullName) + "::" + method.Name.String, method))
 				return true;
 
 			if (method.ImplMap is ImplMap im) {
@@ -532,7 +567,7 @@ namespace dnSpy.Search {
 			var res = options.Filter.GetResultLocals(method);
 			if (res.FilterType != FilterType.Hide) {
 				body = method.Body;
-				if (body == null)
+				if (body is null)
 					return; // Return immediately. All code here depends on a non-null body
 
 				foreach (var local in body.Variables) {
@@ -562,7 +597,7 @@ namespace dnSpy.Search {
 				return;
 
 			body = method.Body;
-			if (body == null)
+			if (body is null)
 				return;
 			int counter = 0;
 			foreach (var instr in body.Instructions) {
@@ -570,7 +605,7 @@ namespace dnSpy.Search {
 					options.CancellationToken.ThrowIfCancellationRequested();
 					counter = 0;
 				}
-				object operand;
+				object? operand;
 				// Only check numbers and strings. Don't pass in any type of operand to IsMatch()
 				switch (instr.OpCode.Code) {
 				case Code.Ldc_I4_M1: operand = -1; break;
@@ -590,7 +625,7 @@ namespace dnSpy.Search {
 				case Code.Ldstr: operand = instr.Operand; break;
 				default: operand = null; break;
 				}
-				if (operand != null && IsMatch(null, operand)) {
+				if (operand is not null && IsMatch(null, operand)) {
 					options.OnMatch(new SearchResult {
 						Context = options.Context,
 						Object = method,
@@ -609,7 +644,8 @@ namespace dnSpy.Search {
 		bool CheckMatch(FieldDef field) {
 			if (IsMatch(field.Name, field))
 				return true;
-			if (IsMatch(field.DeclaringType.FullName + "." + field.Name.String, field))
+			if (IsMatch(FixTypeName(field.DeclaringType.FullName) + "." + field.Name.String, field) ||
+				IsMatch(FixTypeName(field.DeclaringType.FullName) + "::" + field.Name.String, field))
 				return true;
 
 			if (field.ImplMap is ImplMap im) {
@@ -642,7 +678,8 @@ namespace dnSpy.Search {
 		bool CheckMatch(PropertyDef prop) {
 			if (IsMatch(prop.Name, prop))
 				return true;
-			if (IsMatch(prop.DeclaringType.FullName + "." + prop.Name.String, prop))
+			if (IsMatch(FixTypeName(prop.DeclaringType.FullName) + "." + prop.Name.String, prop) ||
+				IsMatch(FixTypeName(prop.DeclaringType.FullName) + "::" + prop.Name.String, prop))
 				return true;
 
 			return false;
@@ -670,7 +707,8 @@ namespace dnSpy.Search {
 		bool CheckMatch(EventDef evt) {
 			if (IsMatch(evt.Name, evt))
 				return true;
-			if (IsMatch(evt.DeclaringType.FullName + "." + evt.Name.String, evt))
+			if (IsMatch(FixTypeName(evt.DeclaringType.FullName) + "." + evt.Name.String, evt) ||
+				IsMatch(FixTypeName(evt.DeclaringType.FullName) + "::" + evt.Name.String, evt))
 				return true;
 
 			return false;

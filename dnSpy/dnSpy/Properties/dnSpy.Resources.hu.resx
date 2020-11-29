@@ -833,8 +833,8 @@
   <data name="AboutScreen_LoadedFiles" xml:space="preserve">
     <value>Betöltött fájlok:</value>
   </data>
-  <data name="SearchWindow_SearchGacAssemblies" xml:space="preserve">
-    <value>Keresés a GAC szerelvényekben</value>
+  <data name="SearchWindow_SearchFrameworkAssemblies" xml:space="preserve">
+    <value>Keresés a keretrendszer szerelvényei között</value>
   </data>
   <data name="SearchWindow_Where_AllFiles" xml:space="preserve">
     <value>Minden fájl</value>
@@ -2039,5 +2039,38 @@ A szűrő a Szerelvény Böngésző beállításainál módosítható.</value>
   </data>
   <data name="UnknownValue" xml:space="preserve">
     <value>&lt;Ismeretlen&gt;</value>
+  </data>
+  <data name="TypeReferencesFolder" xml:space="preserve">
+    <value>Típus hivatkozások</value>
+  </data>
+  <data name="TreeViewEventsFolder" xml:space="preserve">
+    <value>Események</value>
+  </data>
+  <data name="TreeViewFieldsFolder" xml:space="preserve">
+    <value>Mezők</value>
+  </data>
+  <data name="TreeViewMethodsFolder" xml:space="preserve">
+    <value>Metódusok</value>
+  </data>
+  <data name="TreeViewPropertiesFolder" xml:space="preserve">
+    <value>Tulajdonságok</value>
+  </data>
+  <data name="TreeViewTypesFolder" xml:space="preserve">
+    <value>Típusok</value>
+  </data>
+  <data name="NumberBaseFormatString" xml:space="preserve">
+    <value>Alap {0}:</value>
+  </data>
+  <data name="RawValue" xml:space="preserve">
+    <value>Érték:</value>
+  </data>
+  <data name="RecentFilesCommand" xml:space="preserve">
+    <value>Legutóbbi _fájlok</value>
+  </data>
+  <data name="ToolTip_Instruction" xml:space="preserve">
+    <value>Utasítás</value>
+  </data>
+  <data name="ToolTip_OpCode" xml:space="preserve">
+    <value>OpCode</value>
   </data>
 </root>

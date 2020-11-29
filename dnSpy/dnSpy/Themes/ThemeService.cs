@@ -43,7 +43,7 @@ namespace dnSpy.Themes {
 		readonly Dictionary<Guid, Theme> themes;
 
 		public ITheme Theme {
-			get => theme;
+			get => theme!;
 			set {
 				if (theme != value) {
 					theme = value;
@@ -55,7 +55,7 @@ namespace dnSpy.Themes {
 				}
 			}
 		}
-		ITheme theme;
+		ITheme? theme;
 
 		public IEnumerable<ITheme> AllThemes => themes.Values.OrderBy(x => x.Order);
 
@@ -117,8 +117,8 @@ namespace dnSpy.Themes {
 
 		void InitializeResources() {
 			var app = Application.Current;
-			Debug.Assert(app != null);
-			if (app != null)
+			Debug2.Assert(app is not null);
+			if (app is not null)
 				((Theme)Theme).UpdateResources(app.Resources);
 		}
 
@@ -131,11 +131,11 @@ namespace dnSpy.Themes {
 				return theme;
 			if (themes.TryGetValue(DefaultThemeGuid, out theme))
 				return theme;
-			return AllThemes.FirstOrDefault();
+			return AllThemes.First();
 		}
 
 		void SwitchThemeIfNecessary() {
-			if (Theme == null || Theme.IsHighContrast != IsHighContrast)
+			if (theme is null || theme.IsHighContrast != IsHighContrast)
 				Theme = GetThemeOrDefault(CurrentDefaultThemeGuid);
 		}
 
@@ -164,10 +164,10 @@ namespace dnSpy.Themes {
 
 		IEnumerable<string> GetDnthemePaths() => AppDirectories.GetDirectories("Themes");
 
-		Theme Load(string filename) {
+		Theme? Load(string filename) {
 			try {
 				var root = XDocument.Load(filename).Root;
-				if (root.Name != "theme")
+				if (root?.Name != "theme")
 					return null;
 
 				var theme = new Theme(root);

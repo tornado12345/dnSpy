@@ -31,7 +31,7 @@ namespace dnSpy.Text.Editor {
 		readonly ListenerInfo[] listenerInfos;
 
 		public WpfTextViewConnectionListenerService(IWpfTextView wpfTextView, Lazy<IWpfTextViewConnectionListener, IContentTypeAndTextViewRoleMetadata>[] wpfTextViewConnectionListeners, Lazy<ITextViewConnectionListener, IContentTypeAndTextViewRoleMetadata>[] textViewConnectionListeners) {
-			if (wpfTextViewConnectionListeners == null)
+			if (wpfTextViewConnectionListeners is null)
 				throw new ArgumentNullException(nameof(wpfTextViewConnectionListeners));
 			this.wpfTextView = wpfTextView ?? throw new ArgumentNullException(nameof(wpfTextView));
 			var list = new List<ListenerInfo>();
@@ -82,7 +82,7 @@ namespace dnSpy.Text.Editor {
 			}
 		}
 
-		void TextDataModel_ContentTypeChanged(object sender, TextDataModelContentTypeChangedEventArgs e) {
+		void TextDataModel_ContentTypeChanged(object? sender, TextDataModelContentTypeChangedEventArgs e) {
 			var buffer = wpfTextView.TextBuffer;
 			var coll = new Collection<ITextBuffer> { buffer };
 			foreach (var info in listenerInfos) {
@@ -103,7 +103,7 @@ namespace dnSpy.Text.Editor {
 			}
 		}
 
-		void WpfTextView_Closed(object sender, EventArgs e) {
+		void WpfTextView_Closed(object? sender, EventArgs e) {
 			foreach (var info in listenerInfos) {
 				if (info.Buffers.Count > 0) {
 					info.SubjectBuffersDisconnected(wpfTextView, ConnectionReason.TextViewLifetime, info.Buffers);

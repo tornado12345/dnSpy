@@ -19,6 +19,7 @@
 
 using System;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using dndbg.DotNet;
 using dnlib.DotNet;
@@ -29,7 +30,7 @@ namespace dndbg.Engine {
 	sealed class CorModuleDefHelper : ICorModuleDefHelper {
 		const ulong FAT_HEADER_SIZE = 3 * 4;
 		readonly DnModule module;
-		ImageSectionHeader[] sectionHeaders;
+		ImageSectionHeader[]? sectionHeaders;
 
 		public CorModuleDefHelper(DnModule module) {
 			this.module = module;
@@ -39,12 +40,12 @@ namespace dndbg.Engine {
 		public IAssembly CorLib {
 			get {
 				var corAsm = module.AppDomain.Assemblies.FirstOrDefault();
-				Debug.Assert(corAsm != null);
-				if (corAsm == null)
+				Debug2.Assert(corAsm is not null);
+				if (corAsm is null)
 					return AssemblyRefUser.CreateMscorlibReferenceCLR20();
 				var corMod = corAsm.Modules.FirstOrDefault();
-				Debug.Assert(corMod != null);
-				if (corMod == null)
+				Debug2.Assert(corMod is not null);
+				if (corMod is null)
 					return AssemblyRefUser.CreateMscorlibReferenceCLR20();
 				return corMod.GetOrCreateCorModuleDef().Assembly;
 			}
@@ -54,7 +55,7 @@ namespace dndbg.Engine {
 		public bool IsInMemory => module.IsInMemory;
 		public bool? IsCorLib => module.Assembly.UniqueIdAppDomain == 0 && module.UniqueIdAppDomain == 0;
 
-		public string Filename {
+		public string? Filename {
 			get {
 				if (module.IsInMemory)
 					return null;
@@ -73,8 +74,9 @@ namespace dndbg.Engine {
 
 			var func = module.CorModule.GetFunctionFromToken(mdToken);
 			var ilCode = func?.ILCode;
-			if (ilCode == null)
+			if (ilCode is null)
 				return false;
+			Debug2.Assert(func is not null);
 			ulong addr = ilCode.Address;
 			if (addr == 0)
 				return false;
@@ -130,14 +132,14 @@ namespace dndbg.Engine {
 			}
 		}
 
-		public byte[] ReadFieldInitialValue(uint fieldRva, uint fdToken, int size) {
+		public byte[]? ReadFieldInitialValue(uint fieldRva, uint fdToken, int size) {
 			if (module.IsDynamic)
 				return null;
 
 			return ReadFromRVA(fieldRva, size);
 		}
 
-		byte[] ReadFromRVA(uint rva, int size) {
+		byte[]? ReadFromRVA(uint rva, int size) {
 			if (module.IsDynamic)
 				return null;
 
@@ -147,12 +149,12 @@ namespace dndbg.Engine {
 				return null;
 
 			var offs = RVAToAddressOffset(rva);
-			if (offs == null)
+			if (offs is null)
 				return null;
 			addr += offs.Value;
 
 			var data = module.Process.CorProcess.ReadMemory(addr, size);
-			Debug.Assert(data != null && data.Length == size);
+			Debug2.Assert(data is not null && data.Length == size);
 			return data;
 		}
 
@@ -175,7 +177,7 @@ namespace dndbg.Engine {
 
 		ImageSectionHeader[] GetOrCreateSectionHeaders() {
 			var h = sectionHeaders;
-			if (h != null)
+			if (h is not null)
 				return h;
 
 			try {
@@ -193,7 +195,7 @@ namespace dndbg.Engine {
 			return sectionHeaders = Array.Empty<ImageSectionHeader>();
 		}
 
-		public bool TryCreateResourceStream(uint offset, out DataReaderFactory dataReaderFactory, out uint resourceOffset, out uint resourceLength) {
+		public bool TryCreateResourceStream(uint offset, [NotNullWhen(true)] out DataReaderFactory? dataReaderFactory, out uint resourceOffset, out uint resourceLength) {
 			if (module.IsDynamic) {
 				//TODO: 
 				dataReaderFactory = null;

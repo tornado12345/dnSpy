@@ -19,6 +19,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
+using System.Text;
 
 namespace dnSpy.Debugger.DotNet.Metadata {
 	/// <summary>
@@ -28,7 +31,7 @@ namespace dnSpy.Debugger.DotNet.Metadata {
 		/// <summary>
 		/// Namespace or null
 		/// </summary>
-		public readonly string Namespace;
+		public readonly string? Namespace;
 
 		/// <summary>
 		/// Name
@@ -38,14 +41,14 @@ namespace dnSpy.Debugger.DotNet.Metadata {
 		/// <summary>
 		/// Nested type names, separated with '+'
 		/// </summary>
-		public readonly string Extra;
+		public readonly string? Extra;
 
 		/// <summary>
 		/// Constructor
 		/// </summary>
 		/// <param name="namespace">Namespace or null</param>
 		/// <param name="name">Name</param>
-		public DmdTypeName(string @namespace, string name) {
+		public DmdTypeName(string? @namespace, string name) {
 			Namespace = @namespace;
 			Name = name;
 			Extra = null;
@@ -57,7 +60,7 @@ namespace dnSpy.Debugger.DotNet.Metadata {
 		/// <param name="namespace">Namespace or null</param>
 		/// <param name="name">Name</param>
 		/// <param name="extra">Nested type names, separated with '+'</param>
-		public DmdTypeName(string @namespace, string name, string extra) {
+		public DmdTypeName(string? @namespace, string name, string extra) {
 			Namespace = @namespace;
 			Name = name;
 			Extra = extra;
@@ -70,21 +73,24 @@ namespace dnSpy.Debugger.DotNet.Metadata {
 		/// <returns></returns>
 		public static DmdTypeName Create(DmdType type) {
 			if (type.TypeSignatureKind == DmdTypeSignatureKind.Type) {
+				Debug2.Assert(type.MetadataName is not null);
 				var declType = type.DeclaringType;
-				if ((object)declType == null)
+				if (declType is null)
 					return new DmdTypeName(type.MetadataNamespace, type.MetadataName);
+				Debug2.Assert(declType.MetadataName is not null);
 
-				if ((object)declType.DeclaringType == null)
+				if (declType.DeclaringType is null)
 					return new DmdTypeName(declType.MetadataNamespace, declType.MetadataName, type.MetadataName);
 
-				var list = ListCache<DmdType>.AllocList();
+				List<DmdType>? list = ListCache<DmdType>.AllocList();
 				for (;;) {
-					if ((object)type.DeclaringType == null)
+					if (type.DeclaringType is null)
 						break;
 					list.Add(type);
 					type = type.DeclaringType;
 				}
-				var sb = ObjectCache.AllocStringBuilder();
+				Debug2.Assert(type.MetadataName is not null);
+				StringBuilder? sb = ObjectCache.AllocStringBuilder();
 				for (int i = list.Count - 1; i >= 0; i--) {
 					if (i != list.Count - 1)
 						sb.Append('+');
@@ -102,12 +108,12 @@ namespace dnSpy.Debugger.DotNet.Metadata {
 		/// </summary>
 		/// <returns></returns>
 		public override string ToString() {
-			if (Namespace == null) {
-				if (Extra == null)
+			if (Namespace is null) {
+				if (Extra is null)
 					return Name;
 				return Name + "+" + Extra;
 			}
-			if (Extra == null)
+			if (Extra is null)
 				return Namespace + "." + Name;
 			return Namespace + "." + Name + "+" + Extra;
 		}
@@ -129,7 +135,7 @@ namespace dnSpy.Debugger.DotNet.Metadata {
 		/// <param name="x"></param>
 		/// <param name="y"></param>
 		/// <returns></returns>
-		public bool Equals(DmdTypeName x, DmdTypeName y) =>
+		public bool Equals([AllowNull] DmdTypeName x, [AllowNull] DmdTypeName y) =>
 			x.Name == y.Name &&
 			x.Namespace == y.Namespace &&
 			x.Extra == y.Extra;
@@ -139,7 +145,7 @@ namespace dnSpy.Debugger.DotNet.Metadata {
 		/// </summary>
 		/// <param name="obj"></param>
 		/// <returns></returns>
-		public int GetHashCode(DmdTypeName obj) =>
+		public int GetHashCode([DisallowNull] DmdTypeName obj) =>
 			StringComparer.Ordinal.GetHashCode(obj.Namespace ?? string.Empty) ^
 			StringComparer.Ordinal.GetHashCode(obj.Name ?? string.Empty) ^
 			StringComparer.Ordinal.GetHashCode(obj.Extra ?? string.Empty);

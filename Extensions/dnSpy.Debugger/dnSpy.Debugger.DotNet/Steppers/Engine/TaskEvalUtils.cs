@@ -38,35 +38,35 @@ namespace dnSpy.Debugger.DotNet.Steppers.Engine {
 		/// <param name="builderFieldModule">Module of builder field or null if unknown</param>
 		/// <param name="builderFieldToken">Token of builder field or 0 if unknown</param>
 		/// <returns></returns>
-		public static DbgDotNetValue TryGetBuilder(DbgEvaluationInfo evalInfo, DmdModule builderFieldModule, uint builderFieldToken) {
+		public static DbgDotNetValue? TryGetBuilder(DbgEvaluationInfo evalInfo, DmdModule? builderFieldModule, uint builderFieldToken) {
 			DbgDotNetValueResult thisArg = default;
 			DbgDotNetValueResult tmpResult = default;
 			try {
 				var runtime = evalInfo.Runtime.GetDotNetRuntime();
 				thisArg = runtime.GetParameterValue(evalInfo, 0);
-				if (!thisArg.IsNormalResult || thisArg.Value.IsNull)
+				if (!thisArg.IsNormalResult || thisArg.Value!.IsNull)
 					return null;
 				if (thisArg.Value.Type.IsByRef) {
 					tmpResult = thisArg.Value.LoadIndirect();
-					if (!tmpResult.IsNormalResult || tmpResult.Value.IsNull)
+					if (!tmpResult.IsNormalResult || tmpResult.Value!.IsNull)
 						return null;
 					thisArg.Value?.Dispose();
 					thisArg = tmpResult;
 					tmpResult = default;
 				}
 
-				DmdFieldInfo builderField = null;
-				if (builderFieldModule != null && builderFieldToken != 0)
+				DmdFieldInfo? builderField = null;
+				if (builderFieldModule is not null && builderFieldToken != 0)
 					builderField = thisArg.Value.Type.GetField(builderFieldModule, (int)builderFieldToken);
-				if ((object)builderField == null)
+				if (builderField is null)
 					builderField = TryGetBuilderField(thisArg.Value.Type);
-				if ((object)builderField == null)
+				if (builderField is null)
 					return null;
 				Debug.Assert((object)builderField == TryGetBuilderFieldByType(thisArg.Value.Type));
-				Debug.Assert((object)TryGetBuilderFieldByname(thisArg.Value.Type) == null ||
-					(object)TryGetBuilderFieldByname(thisArg.Value.Type) == TryGetBuilderFieldByType(thisArg.Value.Type));
+				Debug2.Assert(TryGetBuilderFieldByname(thisArg.Value.Type) is null ||
+					(object?)TryGetBuilderFieldByname(thisArg.Value.Type) == TryGetBuilderFieldByType(thisArg.Value.Type));
 				tmpResult = runtime.LoadField(evalInfo, thisArg.Value, builderField);
-				if (!tmpResult.IsNormalResult || tmpResult.Value.IsNull)
+				if (!tmpResult.IsNormalResult || tmpResult.Value!.IsNull)
 					return null;
 				var fieldValue = tmpResult.Value;
 				tmpResult = default;
@@ -78,28 +78,20 @@ namespace dnSpy.Debugger.DotNet.Steppers.Engine {
 			}
 		}
 
-		static DmdFieldInfo TryGetBuilderField(DmdType type) =>
+		static DmdFieldInfo? TryGetBuilderField(DmdType type) =>
 			TryGetBuilderFieldByname(type) ?? TryGetBuilderFieldByType(type);
 
-		static DmdFieldInfo TryGetBuilderFieldByname(DmdType type) {
-			foreach (var name in builderFieldNames) {
+		static DmdFieldInfo? TryGetBuilderFieldByname(DmdType type) {
+			foreach (var name in KnownMemberNames.builderFieldNames) {
 				const DmdBindingFlags flags = DmdBindingFlags.Instance | DmdBindingFlags.Public | DmdBindingFlags.NonPublic;
 				if (type.GetField(name, flags) is DmdFieldInfo field)
 					return field;
 			}
 			return null;
 		}
-		static readonly string[] builderFieldNames = new string[] {
-			// Roslyn C#
-			"<>t__builder",
-			// Roslyn Visual Basic
-			"$Builder",
-			// Mono mcs
-			"$builder",
-		};
 
-		static DmdFieldInfo TryGetBuilderFieldByType(DmdType type) {
-			DmdFieldInfo builderField = null;
+		static DmdFieldInfo? TryGetBuilderFieldByType(DmdType type) {
+			DmdFieldInfo? builderField = null;
 			foreach (var field in type.Fields) {
 				var fieldType = field.FieldType;
 				if (fieldType.IsNested)
@@ -110,7 +102,7 @@ namespace dnSpy.Debugger.DotNet.Steppers.Engine {
 					if (fieldType.MetadataNamespace == info.@namespace && fieldType.MetadataName == info.name)
 						return field;
 				}
-				if ((object)builderField == null && fieldType.MetadataName != null &&
+				if (builderField is null && fieldType.MetadataName is not null &&
 					(fieldType.MetadataName.EndsWith("MethodBuilder", StringComparison.Ordinal) ||
 					fieldType.MetadataName.EndsWith("MethodBuilder`1", StringComparison.Ordinal))) {
 					builderField = field;
@@ -123,14 +115,9 @@ namespace dnSpy.Debugger.DotNet.Steppers.Engine {
 			("System.Runtime.CompilerServices", "AsyncTaskMethodBuilder"),
 			("System.Runtime.CompilerServices", "AsyncTaskMethodBuilder`1"),
 			("System.Runtime.CompilerServices", "AsyncVoidMethodBuilder"),
+			("System.Runtime.CompilerServices", "AsyncValueTaskMethodBuilder"),
 			("System.Runtime.CompilerServices", "AsyncValueTaskMethodBuilder`1"),
 		};
-
-		const string AsyncTaskMethodBuilder_Builder_FieldName = "m_builder";
-		const string Builder_Task_FieldName = "m_task";
-		const string Builder_ObjectIdForDebugger_PropertyName = "ObjectIdForDebugger";
-		const string Builder_Task_PropertyName = "Task";
-		const string ValueTask_Task_Fieldname = "_task";
 
 		/// <summary>
 		/// Gets the task's object id or null on failure
@@ -138,35 +125,35 @@ namespace dnSpy.Debugger.DotNet.Steppers.Engine {
 		/// <param name="evalInfo">Evaluation info</param>
 		/// <param name="builderValue">Builder value, see <see cref="TryGetBuilder(DbgEvaluationInfo, DmdModule, uint)"/></param>
 		/// <returns></returns>
-		public static DbgDotNetValue TryGetTaskObjectId(DbgEvaluationInfo evalInfo, DbgDotNetValue builderValue) {
+		public static DbgDotNetValue? TryGetTaskObjectId(DbgEvaluationInfo evalInfo, DbgDotNetValue builderValue) {
 			var result =
 				TryGetTaskObjectId_FrameworkBuilder(evalInfo, builderValue) ??
 				TryGetTaskObjectId_ObjectIdForDebugger(evalInfo, builderValue) ??
 				TryGetTaskObjectId_TaskProperty(evalInfo, builderValue);
-			Debug.Assert(result == null || !result.IsNull);
+			Debug2.Assert(result is null || !result.IsNull);
 			return result;
 		}
 
-		static DbgDotNetValue TryGetTaskObjectId_FrameworkBuilder(DbgEvaluationInfo evalInfo, DbgDotNetValue builderValue) {
+		static DbgDotNetValue? TryGetTaskObjectId_FrameworkBuilder(DbgEvaluationInfo evalInfo, DbgDotNetValue builderValue) {
 			DbgDotNetValueResult fieldResult1 = default;
 			DbgDotNetValueResult fieldResult2 = default;
-			DbgDotNetValue resultValue = null;
+			DbgDotNetValue? resultValue = null;
 			try {
 				var runtime = evalInfo.Runtime.GetDotNetRuntime();
-				DmdFieldInfo field;
+				DmdFieldInfo? field;
 				var currInst = builderValue;
 
-				field = currInst.Type.GetField(AsyncTaskMethodBuilder_Builder_FieldName, DmdBindingFlags.Instance | DmdBindingFlags.Public | DmdBindingFlags.NonPublic);
-				if ((object)field != null) {
+				field = currInst.Type.GetField(KnownMemberNames.AsyncTaskMethodBuilder_Builder_FieldName, DmdBindingFlags.Instance | DmdBindingFlags.Public | DmdBindingFlags.NonPublic);
+				if (field is not null) {
 					fieldResult1 = runtime.LoadField(evalInfo, currInst, field);
 					if (fieldResult1.IsNormalResult)
-						currInst = fieldResult1.Value;
+						currInst = fieldResult1.Value!;
 				}
 
-				field = currInst.Type.GetField(Builder_Task_FieldName, DmdBindingFlags.Instance | DmdBindingFlags.Public | DmdBindingFlags.NonPublic);
-				if ((object)field != null) {
+				field = currInst.Type.GetField(KnownMemberNames.Builder_Task_FieldName, DmdBindingFlags.Instance | DmdBindingFlags.Public | DmdBindingFlags.NonPublic);
+				if (field is not null) {
 					fieldResult2 = runtime.LoadField(evalInfo, currInst, field);
-					if (fieldResult2.IsNormalResult && !fieldResult2.Value.IsNull)
+					if (fieldResult2.IsNormalResult && !fieldResult2.Value!.IsNull)
 						return resultValue = fieldResult2.Value;
 				}
 
@@ -180,17 +167,17 @@ namespace dnSpy.Debugger.DotNet.Steppers.Engine {
 			}
 		}
 
-		static DbgDotNetValue TryGetTaskObjectId_ObjectIdForDebugger(DbgEvaluationInfo evalInfo, DbgDotNetValue builderValue) {
+		static DbgDotNetValue? TryGetTaskObjectId_ObjectIdForDebugger(DbgEvaluationInfo evalInfo, DbgDotNetValue builderValue) {
 			DbgDotNetValueResult getObjectIdTaskResult = default;
-			DbgDotNetValue resultValue = null;
+			DbgDotNetValue? resultValue = null;
 			try {
 				var runtime = evalInfo.Runtime.GetDotNetRuntime();
 
-				var prop = builderValue.Type.GetProperty(Builder_ObjectIdForDebugger_PropertyName, DmdBindingFlags.Instance | DmdBindingFlags.Public | DmdBindingFlags.NonPublic);
+				var prop = builderValue.Type.GetProperty(KnownMemberNames.Builder_ObjectIdForDebugger_PropertyName, DmdBindingFlags.Instance | DmdBindingFlags.Public | DmdBindingFlags.NonPublic);
 				var getMethod = prop?.GetGetMethod(DmdGetAccessorOptions.All);
-				if ((object)getMethod != null && getMethod.GetMethodSignature().GetParameterTypes().Count == 0) {
+				if (getMethod is not null && getMethod.GetMethodSignature().GetParameterTypes().Count == 0) {
 					getObjectIdTaskResult = runtime.Call(evalInfo, builderValue, getMethod, Array.Empty<object>(), DbgDotNetInvokeOptions.None);
-					if (getObjectIdTaskResult.IsNormalResult && !getObjectIdTaskResult.Value.IsNull)
+					if (getObjectIdTaskResult.IsNormalResult && !getObjectIdTaskResult.Value!.IsNull)
 						return resultValue = getObjectIdTaskResult.Value;
 				}
 
@@ -202,29 +189,34 @@ namespace dnSpy.Debugger.DotNet.Steppers.Engine {
 			}
 		}
 
-		static DbgDotNetValue TryGetTaskObjectId_TaskProperty(DbgEvaluationInfo evalInfo, DbgDotNetValue builderValue) {
+		static DbgDotNetValue? TryGetTaskObjectId_TaskProperty(DbgEvaluationInfo evalInfo, DbgDotNetValue builderValue) {
 			DbgDotNetValueResult getTaskResult = default;
 			DbgDotNetValueResult taskFieldResult = default;
-			DbgDotNetValue resultValue = null;
+			DbgDotNetValue? resultValue = null;
 			try {
 				var runtime = evalInfo.Runtime.GetDotNetRuntime();
 
-				var prop = builderValue.Type.GetProperty(Builder_Task_PropertyName, DmdBindingFlags.Instance | DmdBindingFlags.Public | DmdBindingFlags.NonPublic);
+				var prop = builderValue.Type.GetProperty(KnownMemberNames.Builder_Task_PropertyName, DmdBindingFlags.Instance | DmdBindingFlags.Public | DmdBindingFlags.NonPublic);
 				var getMethod = prop?.GetGetMethod(DmdGetAccessorOptions.All);
-				if ((object)getMethod == null || getMethod.GetMethodSignature().GetParameterTypes().Count != 0)
+				if (getMethod is null || getMethod.GetMethodSignature().GetParameterTypes().Count != 0)
 					return null;
 
 				getTaskResult = runtime.Call(evalInfo, builderValue, getMethod, Array.Empty<object>(), DbgDotNetInvokeOptions.None);
-				if (!getTaskResult.IsNormalResult || getTaskResult.Value.IsNull)
+				if (!getTaskResult.IsNormalResult || getTaskResult.Value!.IsNull)
 					return null;
 				if (!getTaskResult.Value.Type.IsValueType)
 					return resultValue = getTaskResult.Value;
 
-				var field = getTaskResult.Value.Type.GetField(ValueTask_Task_Fieldname, DmdBindingFlags.Instance | DmdBindingFlags.Public | DmdBindingFlags.NonPublic);
-				if ((object)field != null) {
+				var field = getTaskResult.Value.Type.GetField(KnownMemberNames.ValueTask_Task_FieldName, DmdBindingFlags.Instance | DmdBindingFlags.Public | DmdBindingFlags.NonPublic);
+				if (field is null)
+					field = getTaskResult.Value.Type.GetField(KnownMemberNames.ValueTask_Obj_FieldName, DmdBindingFlags.Instance | DmdBindingFlags.Public | DmdBindingFlags.NonPublic);
+				if (field is not null) {
 					taskFieldResult = runtime.LoadField(evalInfo, getTaskResult.Value, field);
-					if (taskFieldResult.IsNormalResult && !taskFieldResult.Value.IsNull)
-						return resultValue = taskFieldResult.Value;
+					if (taskFieldResult.IsNormalResult && !taskFieldResult.Value!.IsNull) {
+						var taskType = taskFieldResult.Value.Type.AppDomain.GetWellKnownType(DmdWellKnownType.System_Threading_Tasks_Task, isOptional: true);
+						if (taskType is not null && taskFieldResult.Value.Type.IsSubclassOf(taskType))
+							return resultValue = taskFieldResult.Value;
+					}
 				}
 
 				return null;
@@ -239,12 +231,12 @@ namespace dnSpy.Debugger.DotNet.Steppers.Engine {
 
 		const string Task_NotifyDebuggerOfWaitCompletion_MethodName = "NotifyDebuggerOfWaitCompletion";
 		sealed class AsyncStepOutState {
-			public readonly DmdMethodInfo NotifyDebuggerOfWaitCompletionMethod;
-			public AsyncStepOutState(DmdMethodInfo notifyDebuggerOfWaitCompletionMethod) => NotifyDebuggerOfWaitCompletionMethod = notifyDebuggerOfWaitCompletionMethod;
+			public readonly DmdMethodInfo? NotifyDebuggerOfWaitCompletionMethod;
+			public AsyncStepOutState(DmdMethodInfo? notifyDebuggerOfWaitCompletionMethod) => NotifyDebuggerOfWaitCompletionMethod = notifyDebuggerOfWaitCompletionMethod;
 		}
 
 		static AsyncStepOutState GetAsyncStepOutState(DmdAppDomain appDomain) {
-			if (!appDomain.TryGetData(out AsyncStepOutState state))
+			if (!appDomain.TryGetData(out AsyncStepOutState? state))
 				state = SupportsAsyncStepOutCore(appDomain);
 			return state;
 
@@ -256,25 +248,25 @@ namespace dnSpy.Debugger.DotNet.Steppers.Engine {
 			}
 		}
 
-		public static bool SupportsAsyncStepOut(DmdAppDomain appDomain) =>
-			(object)GetNotifyDebuggerOfWaitCompletionMethod(appDomain) != null;
+		public static bool SupportsAsyncStepOut(DmdAppDomain? appDomain) =>
+			GetNotifyDebuggerOfWaitCompletionMethod(appDomain) is not null;
 
-		public static DmdMethodInfo GetNotifyDebuggerOfWaitCompletionMethod(DmdAppDomain appDomain) =>
-			GetAsyncStepOutState(appDomain).NotifyDebuggerOfWaitCompletionMethod;
+		public static DmdMethodInfo? GetNotifyDebuggerOfWaitCompletionMethod(DmdAppDomain? appDomain) =>
+			appDomain is null ? null : GetAsyncStepOutState(appDomain).NotifyDebuggerOfWaitCompletionMethod;
 
 		const string SetNotificationForWaitCompletion_Name = "SetNotificationForWaitCompletion";
 
-		public static (bool success, DbgDotNetValue taskValue) CallSetNotificationForWaitCompletion(DbgEvaluationInfo evalInfo, DbgModule builderFieldModule, uint builderFieldToken, bool value) {
-			DbgDotNetValue builderValue = null;
-			DbgDotNetValue taskValue = null;
+		public static (bool success, DbgDotNetValue? taskValue) CallSetNotificationForWaitCompletion(DbgEvaluationInfo evalInfo, DbgModule builderFieldModule, uint builderFieldToken, bool value) {
+			DbgDotNetValue? builderValue = null;
+			DbgDotNetValue? taskValue = null;
 			bool success = false;
 			try {
 				builderValue = TryGetBuilder(evalInfo, builderFieldModule.GetReflectionModule(), builderFieldToken);
-				if (builderValue == null)
+				if (builderValue is null)
 					return (false, null);
 				bool calledMethod = TryCallSetNotificationForWaitCompletion(evalInfo, builderValue, value);
 				taskValue = TryGetTaskValue(evalInfo, builderValue);
-				if (!calledMethod && taskValue != null)
+				if (!calledMethod && taskValue is not null)
 					calledMethod = TryCallSetNotificationForWaitCompletion(evalInfo, taskValue, value);
 				if (!calledMethod)
 					return (false, null);
@@ -292,7 +284,7 @@ namespace dnSpy.Debugger.DotNet.Steppers.Engine {
 			var appDomain = builder.Type.AppDomain;
 			var method = builder.Type.GetMethod(SetNotificationForWaitCompletion_Name, DmdSignatureCallingConvention.HasThis,
 				0, appDomain.System_Void, new[] { appDomain.System_Boolean }, throwOnError: false);
-			if ((object)method == null)
+			if (method is null)
 				return false;
 
 			var runtime = evalInfo.Runtime.GetDotNetRuntime();
@@ -302,9 +294,9 @@ namespace dnSpy.Debugger.DotNet.Steppers.Engine {
 			return true;
 		}
 
-		static DbgDotNetValue TryGetTaskValue(DbgEvaluationInfo evalInfo, DbgDotNetValue value) {
+		static DbgDotNetValue? TryGetTaskValue(DbgEvaluationInfo evalInfo, DbgDotNetValue value) {
 			var result = TryGetTaskObjectId_TaskProperty(evalInfo, value);
-			Debug.Assert(result == null || !result.IsNull);
+			Debug2.Assert(result is null || !result.IsNull);
 			return result;
 		}
 	}

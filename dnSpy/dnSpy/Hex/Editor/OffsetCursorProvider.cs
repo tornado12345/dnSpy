@@ -36,7 +36,7 @@ namespace dnSpy.Hex.Editor {
 		[ImportingConstructor]
 		OffsetHexMouseProcessorProvider(OffsetCursorProviderService offsetCursorProviderService) => this.offsetCursorProviderService = offsetCursorProviderService;
 
-		public override HexMouseProcessor GetAssociatedProcessor(WpfHexView wpfHexView) =>
+		public override HexMouseProcessor? GetAssociatedProcessor(WpfHexView wpfHexView) =>
 			new OffsetHexMouseProcessor(offsetCursorProviderService.Get(wpfHexView), wpfHexView);
 	}
 
@@ -77,12 +77,12 @@ namespace dnSpy.Hex.Editor {
 		[ImportingConstructor]
 		OffsetHexCursorProviderFactory(OffsetCursorProviderService offsetCursorProviderService) => this.offsetCursorProviderService = offsetCursorProviderService;
 
-		public override HexCursorProvider Create(WpfHexView wpfHexView) =>
+		public override HexCursorProvider? Create(WpfHexView wpfHexView) =>
 			new OffsetHexCursorProvider(offsetCursorProviderService.Get(wpfHexView));
 	}
 
 	sealed class OffsetHexCursorProvider : HexCursorProvider {
-		public override event EventHandler CursorInfoChanged;
+		public override event EventHandler? CursorInfoChanged;
 		public override HexCursorInfo CursorInfo => offsetCursorProvider.CursorInfo;
 		readonly OffsetCursorProvider offsetCursorProvider;
 
@@ -91,7 +91,7 @@ namespace dnSpy.Hex.Editor {
 			offsetCursorProvider.CursorInfoChanged += OffsetCursorProvider_CursorInfoChanged;
 		}
 
-		void OffsetCursorProvider_CursorInfoChanged(object sender, EventArgs e) => CursorInfoChanged?.Invoke(this, EventArgs.Empty);
+		void OffsetCursorProvider_CursorInfoChanged(object? sender, EventArgs e) => CursorInfoChanged?.Invoke(this, EventArgs.Empty);
 	}
 
 	abstract class OffsetCursorProviderService {
@@ -105,7 +105,7 @@ namespace dnSpy.Hex.Editor {
 	}
 
 	sealed class OffsetCursorProvider {
-		public event EventHandler CursorInfoChanged;
+		public event EventHandler? CursorInfoChanged;
 
 		public HexCursorInfo CursorInfo {
 			get => cursorInfo;

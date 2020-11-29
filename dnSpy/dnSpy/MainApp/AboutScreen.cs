@@ -54,11 +54,11 @@ namespace dnSpy.MainApp {
 			aboutContentType = contentTypeRegistryService.GetContentType(ContentTypes.AboutDnSpy);
 		}
 
-		public DocumentTabContent Create(IDocumentTabContentFactoryContext context) => null;
+		public DocumentTabContent? Create(IDocumentTabContentFactoryContext context) => null;
 
 		static readonly Guid GUID_SerializedContent = new Guid("1C931C0F-D968-4664-B22D-87287A226EEC");
 
-		public DocumentTabContent Deserialize(Guid guid, ISettingsSection section, IDocumentTabContentFactoryContext context) {
+		public DocumentTabContent? Deserialize(Guid guid, ISettingsSection section, IDocumentTabContentFactoryContext context) {
 			if (guid == GUID_SerializedContent)
 				return new AboutScreenDocumentTabContent(documentViewerContentFactoryProvider, appWindow, extensionService, aboutContentType);
 			return null;
@@ -129,12 +129,12 @@ namespace dnSpy.MainApp {
 					try {
 						var info = FileVersionInfo.GetVersionInfo(Assembly.Location);
 						var fileVer = info.FileVersion;
-						if (!string.IsNullOrEmpty(fileVer))
+						if (!string2.IsNullOrEmpty(fileVer))
 							return fileVer;
 					}
 					catch {
 					}
-					return Assembly.GetName().Version.ToString();
+					return Assembly.GetName().Version!.ToString();
 				}
 			}
 
@@ -152,8 +152,8 @@ namespace dnSpy.MainApp {
 				get {
 					var name = Name;
 					var verStr = VersionString;
-					Debug.Assert(!string.IsNullOrEmpty(verStr));
-					if (string.IsNullOrEmpty(verStr))
+					Debug.Assert(!string2.IsNullOrEmpty(verStr));
+					if (string2.IsNullOrEmpty(verStr))
 						return name;
 					return $"{name} ({verStr})";
 				}
@@ -162,7 +162,7 @@ namespace dnSpy.MainApp {
 			public string Copyright {
 				get {
 					var c = ExtensionInfo.Copyright;
-					if (!string.IsNullOrEmpty(c))
+					if (!string2.IsNullOrEmpty(c))
 						return c;
 					var attr = Assembly.GetCustomAttributes(typeof(AssemblyCopyrightAttribute), false);
 					if (attr.Length == 0)
@@ -174,7 +174,7 @@ namespace dnSpy.MainApp {
 			public string ShortDescription {
 				get {
 					var s = ExtensionInfo.ShortDescription;
-					if (!string.IsNullOrEmpty(s))
+					if (!string2.IsNullOrEmpty(s))
 						return s;
 					var attr = Assembly.GetCustomAttributes(typeof(AssemblyDescriptionAttribute), false);
 					if (attr.Length == 0)
@@ -192,8 +192,8 @@ namespace dnSpy.MainApp {
 		void Write(IDecompilerOutput output) {
 #if NETFRAMEWORK
 			const string frameworkName = ".NET Framework";
-#elif NETCOREAPP
-			const string frameworkName = ".NET Core";
+#elif NET
+			const string frameworkName = ".NET";
 #else
 #error Unknown target framework
 #endif
@@ -215,11 +215,11 @@ namespace dnSpy.MainApp {
 		void WriteResourceFile(IDecompilerOutput output, string name, bool addNewLine = true) {
 			if (addNewLine)
 				output.WriteLine();
-			using (var stream = GetType().Assembly.GetManifestResourceStream(name))
+			using (var stream = GetType().Assembly.GetManifestResourceStream(name)!)
 			using (var streamReader = new StreamReader(stream, Encoding.UTF8)) {
 				for (;;) {
 					var line = streamReader.ReadLine();
-					if (line == null)
+					if (line is null)
 						break;
 					output.WriteLine(line, BoxedTextColor.Text);
 				}
@@ -227,7 +227,7 @@ namespace dnSpy.MainApp {
 		}
 
 		void WriteShortInfo(IDecompilerOutput output, string s) {
-			if (string.IsNullOrEmpty(s))
+			if (string2.IsNullOrEmpty(s))
 				return;
 			const int MAX_SHORT_LEN = 128;
 			if (s.Length > MAX_SHORT_LEN)

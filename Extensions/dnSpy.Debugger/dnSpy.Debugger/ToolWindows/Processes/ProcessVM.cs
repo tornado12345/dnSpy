@@ -85,7 +85,7 @@ namespace dnSpy.Debugger.ToolWindows.Processes {
 
 		internal string Title {
 			get {
-				if (title == null)
+				if (title is null)
 					title = GetProcessTitle() ?? string.Empty;
 				return title;
 			}
@@ -98,14 +98,14 @@ namespace dnSpy.Debugger.ToolWindows.Processes {
 				}
 			}
 		}
-		string title;
+		string? title;
 
 		internal int Order { get; }
 
 		sealed class ProcessState : IDisposable {
 			public string Title {
 				get {
-					if (process == null)
+					if (process is null)
 						return string.Empty;
 					try {
 						process.Refresh();
@@ -121,7 +121,7 @@ namespace dnSpy.Debugger.ToolWindows.Processes {
 			// it's cached here and disposed of when the DbgProcess is closed.
 			// It's no problem if we're debugging just one process, but try 5-20 processes.
 			// ;)
-			readonly Process process;
+			readonly Process? process;
 
 			public ProcessState(int pid) {
 				try {
@@ -186,11 +186,11 @@ namespace dnSpy.Debugger.ToolWindows.Processes {
 		void UI(TimeSpan delay, Action callback) => Context.UIDispatcher.UI(delay, callback);
 
 		// DbgManager thread
-		void DbgProcess_PropertyChanged(object sender, PropertyChangedEventArgs e) =>
+		void DbgProcess_PropertyChanged(object? sender, PropertyChangedEventArgs e) =>
 			UI(() => DbgProcess_PropertyChanged_UI(e.PropertyName));
 
 		// UI thread
-		void DbgProcess_PropertyChanged_UI(string propertyName) {
+		void DbgProcess_PropertyChanged_UI(string? propertyName) {
 			Context.UIDispatcher.VerifyAccess();
 			switch (propertyName) {
 			case nameof(Process.Name):
@@ -231,7 +231,7 @@ namespace dnSpy.Debugger.ToolWindows.Processes {
 		}
 
 		// DbgManager thread
-		void DbgProcess_IsRunningChanged(object sender, EventArgs e) => UI(() => {
+		void DbgProcess_IsRunningChanged(object? sender, EventArgs e) => UI(() => {
 			if (refreshTitleOnPause && !Process.IsRunning) {
 				refreshTitleOnPause = false;
 				RefreshTitle_UI();
@@ -239,7 +239,7 @@ namespace dnSpy.Debugger.ToolWindows.Processes {
 		});
 
 		// DbgManager thread
-		void DbgProcess_DelayedIsRunningChanged(object sender, EventArgs e) => UI(() => refreshTitleOnPause = true);
+		void DbgProcess_DelayedIsRunningChanged(object? sender, EventArgs e) => UI(() => refreshTitleOnPause = true);
 
 		// UI thread
 		internal void Dispose() {

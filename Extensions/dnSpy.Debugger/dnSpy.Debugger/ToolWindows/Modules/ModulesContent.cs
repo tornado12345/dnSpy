@@ -42,9 +42,9 @@ namespace dnSpy.Debugger.ToolWindows.Modules {
 
 	[Export(typeof(IModulesContent))]
 	sealed class ModulesContent : IModulesContent {
-		public object UIObject => modulesControl;
-		public IInputElement FocusedElement => modulesControl.ListView;
-		public FrameworkElement ZoomElement => modulesControl;
+		public object? UIObject => modulesControl;
+		public IInputElement? FocusedElement => modulesControl.ListView;
+		public FrameworkElement? ZoomElement => modulesControl;
 		public ListView ListView => modulesControl.ListView;
 		public ModulesOperations Operations { get; }
 
@@ -87,7 +87,7 @@ namespace dnSpy.Debugger.ToolWindows.Modules {
 			wpfCommandService.Add(ControlConstants.GUID_DEBUGGER_MODULES_LISTVIEW, modulesControl.ListView);
 		}
 
-		void ModulesControl_ModulesListViewDoubleClick(object sender, EventArgs e) {
+		void ModulesControl_ModulesListViewDoubleClick(object? sender, EventArgs e) {
 			bool newTab = Keyboard.Modifiers == ModifierKeys.Shift || Keyboard.Modifiers == ModifierKeys.Control;
 			if (Operations.CanGoToModule)
 				Operations.GoToModule(newTab);

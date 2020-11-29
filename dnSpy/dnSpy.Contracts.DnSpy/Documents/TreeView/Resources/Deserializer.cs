@@ -29,9 +29,9 @@ namespace dnSpy.Contracts.Documents.TreeView.Resources {
 	sealed class DeserializedDataInfo {
 		public Type ObjectType { get; }
 		public string Name { get; }
-		public object Value { get; }
+		public object? Value { get; }
 
-		public DeserializedDataInfo(Type objectType, string name, object value) {
+		public DeserializedDataInfo(Type objectType, string name, object? value) {
 			ObjectType = objectType;
 			Name = name;
 			Value = value;
@@ -89,9 +89,11 @@ namespace dnSpy.Contracts.Documents.TreeView.Resources {
 		public static Dictionary<string, DeserializedDataInfo> Deserialize(string asmName, string typeName, byte[] data) {
 			var fmt = new BinaryFormatter();
 			fmt.Binder = new MyBinder(asmName, typeName);
+#pragma warning disable SYSLIB0011
 			var obj = fmt.Deserialize(new MemoryStream(data)) as DeserializedType;
-			Debug.Assert(obj != null);
-			if (obj == null)
+#pragma warning restore SYSLIB0011
+			Debug2.Assert(obj is not null);
+			if (obj is null)
 				return new Dictionary<string, DeserializedDataInfo>();
 			return obj.DeserializedDataInfos;
 		}

@@ -43,7 +43,7 @@ namespace dnSpy.Contracts.Controls {
 		/// <summary>
 		/// Raised when a new <see cref="MetroWindow"/> instance has been created
 		/// </summary>
-		internal static EventHandler<MetroWindowCreatedEventArgs> MetroWindowCreated;
+		internal static event EventHandler<MetroWindowCreatedEventArgs>? MetroWindowCreated;
 
 		/// <summary>
 		/// Constructor
@@ -61,8 +61,8 @@ namespace dnSpy.Contracts.Controls {
 			base.OnSourceInitialized(e);
 
 			var hwndSource = PresentationSource.FromVisual(this) as HwndSource;
-			Debug.Assert(hwndSource != null);
-			if (hwndSource != null) {
+			Debug2.Assert(hwndSource is not null);
+			if (hwndSource is not null) {
 				hwndSource.AddHook(WndProc);
 				wpfDpi = new Size(96.0 * hwndSource.CompositionTarget.TransformToDevice.M11, 96.0 * hwndSource.CompositionTarget.TransformToDevice.M22);
 
@@ -157,7 +157,7 @@ namespace dnSpy.Contracts.Controls {
 		/// <summary>
 		/// Raised when the DPI (<see cref="WindowDpi"/>) has changed
 		/// </summary>
-		public event EventHandler WindowDpiChanged;
+		public event EventHandler? WindowDpiChanged;
 
 		/// <summary>
 		/// Show system menu command
@@ -167,7 +167,7 @@ namespace dnSpy.Contracts.Controls {
 		/// <summary>
 		/// Raised when full screen state has changed
 		/// </summary>
-		public event EventHandler IsFullScreenChanged;
+		public event EventHandler? IsFullScreenChanged;
 
 		/// <summary>
 		/// Is full screen property
@@ -218,11 +218,11 @@ namespace dnSpy.Contracts.Controls {
 
 		static void OnMaximizedElementChanged(DependencyObject d, DependencyPropertyChangedEventArgs e) {
 			var border = d as Border;
-			Debug.Assert(border != null);
-			if (border == null)
+			Debug2.Assert(border is not null);
+			if (border is null)
 				return;
 			var win = Window.GetWindow(border) as MetroWindow;
-			if (win == null)
+			if (win is null)
 				return;
 
 			new MaximizedWindowFixer(win, border);
@@ -244,15 +244,15 @@ namespace dnSpy.Contracts.Controls {
 				border.Loaded += border_Loaded;
 			}
 
-			void border_Loaded(object sender, RoutedEventArgs e) {
+			void border_Loaded(object? sender, RoutedEventArgs e) {
 				border.Loaded -= border_Loaded;
 				UpdatePadding(metroWindow);
 			}
 
-			void MetroWindow_StateChanged(object sender, EventArgs e) => UpdatePadding((MetroWindow)sender);
+			void MetroWindow_StateChanged(object? sender, EventArgs e) => UpdatePadding((MetroWindow)sender!);
 
 			void UpdatePadding(MetroWindow window) {
-				Debug.Assert(window != null);
+				Debug2.Assert(window is not null);
 
 				var state = window.IsFullScreen ? WindowState.Maximized : window.WindowState;
 				switch (state) {
@@ -319,7 +319,7 @@ namespace dnSpy.Contracts.Controls {
 		static void OnUseResizeBorderChanged(DependencyObject d, DependencyPropertyChangedEventArgs e) {
 			var win = (MetroWindow)d;
 			var wc = (WindowChrome)win.GetValue(WindowChrome.WindowChromeProperty);
-			if (wc == null)
+			if (wc is null)
 				return;
 
 			win.InitializeWindowCaptionAndResizeBorder(wc);
@@ -661,12 +661,12 @@ namespace dnSpy.Contracts.Controls {
 			}
 		}
 
-		static void ShowSystemMenu(object o) {
+		static void ShowSystemMenu(object? o) {
 			var depo = o as DependencyObject;
-			if (depo == null)
+			if (depo is null)
 				return;
 			var win = Window.GetWindow(depo);
-			if (win == null)
+			if (win is null)
 				return;
 
 			var scale = 1.0;
@@ -679,11 +679,11 @@ namespace dnSpy.Contracts.Controls {
 		/// </summary>
 		/// <param name="target">Target that gets the scale transform</param>
 		/// <param name="scale">Scale to use where 1.0 is 100%</param>
-		public void SetScaleTransform(DependencyObject target, double scale) => SetScaleTransform(target, target, scale);
+		public void SetScaleTransform(DependencyObject? target, double scale) => SetScaleTransform(target, target, scale);
 
-		void SetScaleTransform(DependencyObject textObj, DependencyObject vc, double scale) {
+		void SetScaleTransform(DependencyObject? textObj, DependencyObject? vc, double scale) {
 			Debug.Assert(textObj != this);
-			if (vc == null || textObj == null)
+			if (vc is null || textObj is null)
 				return;
 
 			if (scale == 1)

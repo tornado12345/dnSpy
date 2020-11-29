@@ -33,7 +33,7 @@ namespace dnSpy.Text.Editor {
 	[ContentType(ContentTypes.Text)]
 	[TextViewRole(PredefinedTextViewRoles.Interactive)]
 	sealed class HorizontalScrollBarMarginProvider : IWpfTextViewMarginProvider {
-		public IWpfTextViewMargin CreateMargin(IWpfTextViewHost wpfTextViewHost, IWpfTextViewMargin marginContainer) =>
+		public IWpfTextViewMargin? CreateMargin(IWpfTextViewHost wpfTextViewHost, IWpfTextViewMargin marginContainer) =>
 			new HorizontalScrollBarMargin(wpfTextViewHost);
 	}
 
@@ -59,7 +59,7 @@ namespace dnSpy.Text.Editor {
 
 		void UpdateVisibility() => Visibility = Enabled ? Visibility.Visible : Visibility.Collapsed;
 
-		public ITextViewMargin GetTextViewMargin(string marginName) =>
+		public ITextViewMargin? GetTextViewMargin(string marginName) =>
 			StringComparer.OrdinalIgnoreCase.Equals(PredefinedMarginNames.HorizontalScrollBar, marginName) ? this : null;
 
 		protected override void OnScroll(ScrollEventArgs e) {
@@ -68,7 +68,7 @@ namespace dnSpy.Text.Editor {
 			wpfTextViewHost.TextView.ViewportLeft = Value;
 		}
 
-		void Options_OptionChanged(object sender, EditorOptionChangedEventArgs e) {
+		void Options_OptionChanged(object? sender, EditorOptionChangedEventArgs e) {
 			if (e.OptionId == DefaultTextViewHostOptions.HorizontalScrollBarName)
 				UpdateVisibility();
 			else if (!Enabled) {
@@ -80,7 +80,7 @@ namespace dnSpy.Text.Editor {
 			}
 		}
 
-		void HorizontalScrollBarMargin_IsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e) {
+		void HorizontalScrollBarMargin_IsVisibleChanged(object? sender, DependencyPropertyChangedEventArgs e) {
 			if (Visibility == Visibility.Visible) {
 				RegisterEvents();
 				IsEnabled = !IsWordWrap;
@@ -93,7 +93,7 @@ namespace dnSpy.Text.Editor {
 				UnregisterEvents();
 		}
 
-		void TextView_LayoutChanged(object sender, TextViewLayoutChangedEventArgs e) {
+		void TextView_LayoutChanged(object? sender, TextViewLayoutChangedEventArgs e) {
 			LargeChange = wpfTextViewHost.TextView.ViewportWidth;
 			ViewportSize = wpfTextViewHost.TextView.ViewportWidth;
 			UpdateMaximum();

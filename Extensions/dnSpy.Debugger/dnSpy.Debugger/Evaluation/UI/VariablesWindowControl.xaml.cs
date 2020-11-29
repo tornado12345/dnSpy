@@ -30,7 +30,7 @@ using dnSpy.Debugger.Evaluation.ViewModel;
 
 namespace dnSpy.Debugger.Evaluation.UI {
 	sealed partial class VariablesWindowControl : UserControl {
-		static /*readonly*/ Lazy<VariablesWindowOperations> variablesWindowOperations;
+		static /*readonly*/ Lazy<VariablesWindowOperations>? variablesWindowOperations;
 
 		[ExportAutoLoaded]
 		sealed class Loader : IAutoLoaded {
@@ -38,19 +38,19 @@ namespace dnSpy.Debugger.Evaluation.UI {
 			Loader(Lazy<VariablesWindowOperations> variablesWindowOperations) => VariablesWindowControl.variablesWindowOperations = variablesWindowOperations;
 		}
 
-		public ListView ListView => treeViewContentPresenter.Content as ListView;
+		public ListView? ListView => treeViewContentPresenter.Content as ListView;
 		public VariablesWindowControl() => InitializeComponent();
 		public void SetTreeView(ITreeView treeView, VariablesWindowKind windowKind) {
-			var listView = (ListView)treeView?.UIObject;
+			var listView = (ListView?)treeView?.UIObject;
 			if (treeViewContentPresenter.Content == listView)
 				return;
 			if (treeViewContentPresenter.Content is UIElement oldElem)
 				oldElem.PreviewTextInput -= TreeView_PreviewTextInput;
-			if (listView != null)
+			if (listView is not null)
 				listView.PreviewTextInput += TreeView_PreviewTextInput;
 			treeViewContentPresenter.Content = listView;
-			AutomationPeerMemoryLeakWorkaround.SetEmptyCount(listView, GetEmptyCount(windowKind));
-			if (listView != null) {
+			if (listView is not null) {
+				AutomationPeerMemoryLeakWorkaround.SetEmptyCount(listView, GetEmptyCount(windowKind));
 				var gridView = (GridView)FindResource("GridView");
 				listView.View = gridView;
 			}
@@ -73,9 +73,9 @@ namespace dnSpy.Debugger.Evaluation.UI {
 			}
 		}
 
-		void TreeView_PreviewTextInput(object sender, TextCompositionEventArgs e) {
-			Debug.Assert(variablesWindowOperations != null);
-			if (variablesWindowOperations == null)
+		void TreeView_PreviewTextInput(object? sender, TextCompositionEventArgs e) {
+			Debug2.Assert(variablesWindowOperations is not null);
+			if (variablesWindowOperations is null)
 				return;
 			if (!(treeViewContentPresenter.Content is ListView listView) || listView.SelectedItems.Count != 1)
 				return;

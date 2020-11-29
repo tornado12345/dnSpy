@@ -42,9 +42,9 @@ namespace dnSpy.Documents.Tabs {
 			documentTreeViewSettings.PropertyChanged += DocumentTreeViewSettings_PropertyChanged;
 		}
 
-		void DocumentTreeViewSettings_PropertyChanged(object sender, PropertyChangedEventArgs e) {
+		void DocumentTreeViewSettings_PropertyChanged(object? sender, PropertyChangedEventArgs e) {
 			if (e.PropertyName == nameof(IDocumentTreeViewSettings.DeserializeResources)) {
-				var documentTreeViewSettings = (IDocumentTreeViewSettings)sender;
+				var documentTreeViewSettings = (IDocumentTreeViewSettings)sender!;
 				if (documentTreeViewSettings.DeserializeResources)
 					DeserializeResources();
 			}
@@ -71,20 +71,20 @@ namespace dnSpy.Documents.Tabs {
 			if (modifiedResourceNodes.Count == 0)
 				return;
 
-			var ownerNodes = new HashSet<ResourcesFolderNode>();
+			var ownerNodes = new HashSet<ResourcesFolderNode?>();
 			foreach (var node in modifiedResourceNodes) {
 				var owner = node.GetAncestorOrSelf<ResourcesFolderNode>();
-				if (owner != null)
+				if (owner is not null)
 					ownerNodes.Add(owner);
 			}
 			if (ownerNodes.Count == 0)
 				return;
 
-			decompilationCache.Clear(new HashSet<IDsDocument>(ownerNodes.Select(a => {
+			decompilationCache.Clear(new HashSet<IDsDocument?>(ownerNodes.Select(a => {
 				var mod = a.GetModuleNode();
-				Debug.Assert(mod != null);
+				Debug2.Assert(mod is not null);
 				return mod?.Document;
-			}).Where(a => a != null)));
+			}).Where(a => a is not null)));
 
 			var tabs = new List<IDocumentTab>();
 			foreach (var tab in documentTabService.VisibleFirstTabs) {

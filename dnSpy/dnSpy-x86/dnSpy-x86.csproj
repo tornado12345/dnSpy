@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <Import Project="..\..\DnSpyCommon.props" />
 
@@ -9,12 +9,13 @@
 
     <SignAssembly>True</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\dnSpy.snk</AssemblyOriginatorKeyFile>
-    <OutputPath>..\dnSpy\bin\$(Configuration)\</OutputPath>
+    <Nullable>enable</Nullable>
+    <OutputPath Condition=" '$(IsDotNetFramework)' == 'true' ">..\dnSpy\bin\$(Configuration)\</OutputPath>
 
+    <RuntimeIdentifiers>$(DnSpyRuntimeIdentifiers)</RuntimeIdentifiers>
     <OutputType>WinExe</OutputType>
     <Prefer32Bit>true</Prefer32Bit>
     <PlatformTarget>AnyCPU</PlatformTarget>
-    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -23,7 +24,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="..\dnSpy\app.config">
+    <None Include="..\dnSpy\app.config" Condition=" '$(IsDotNetFramework)' == 'true' " >
       <Link>app.config</Link>
     </None>
     <None Include="..\dnSpy\app.manifest">

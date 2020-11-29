@@ -28,6 +28,8 @@ using dnlib.PE;
 
 namespace dnSpy.AsmEditor.Compiler {
 	static unsafe class MDPatcherUtils {
+		public sealed class InvalidMetadataException : Exception { }
+
 		public static IEnumerable<TypeDef> GetMetadataTypes(TypeDef type) {
 			if (!ExistsInMetadata(type))
 				yield break;
@@ -49,34 +51,34 @@ namespace dnSpy.AsmEditor.Compiler {
 
 		public unsafe static uint ReadCompressedUInt32(ref byte* data, byte* end) {
 			if (data >= end)
-				throw new IndexOutOfRangeException();
+				throw new InvalidMetadataException();
 			byte b = *data++;
 			if ((b & 0x80) == 0)
 				return b;
 
 			if ((b & 0xC0) == 0x80) {
 				if (data >= end)
-					throw new IndexOutOfRangeException();
+					throw new InvalidMetadataException();
 				return (uint)(((b & 0x3F) << 8) | *data++);
 			}
 
 			if (data + 2 >= end)
-				throw new IndexOutOfRangeException();
+				throw new InvalidMetadataException();
 			return (uint)(((b & 0x1F) << 24) | (*data++ << 16) |
 					(*data++ << 8) | *data++);
 		}
 
-		public static bool ExistsInMetadata(TypeDef type) => type != null && !(type is TypeDefUser);
+		public static bool ExistsInMetadata(TypeDef? type) => type is not null && !(type is TypeDefUser);
 
-		public static bool ReferencesModule(ModuleDef sourceModule, ModuleDef targetModule) {
-			if (targetModule == null)
+		public static bool ReferencesModule(ModuleDef sourceModule, ModuleDef? targetModule) {
+			if (targetModule is null)
 				return false;
 
 			if (sourceModule == targetModule)
 				return true;
 
 			var targetAssembly = targetModule.Assembly;
-			if (targetAssembly != null) {
+			if (targetAssembly is not null) {
 				// Don't compare version, there could be binding redirects
 				var asmComparer = new AssemblyNameComparer(AssemblyNameComparerFlags.Name | AssemblyNameComparerFlags.PublicKeyToken | AssemblyNameComparerFlags.Culture | AssemblyNameComparerFlags.ContentType);
 				foreach (var asmRef in sourceModule.GetAssemblyRefs()) {
@@ -95,7 +97,7 @@ namespace dnSpy.AsmEditor.Compiler {
 			return false;
 		}
 
-		public static Metadata TryCreateMetadata(RawModuleBytes moduleData, bool isFileLayout) {
+		public static Metadata? TryCreateMetadata(RawModuleBytes moduleData, bool isFileLayout) {
 			try {
 				return MetadataFactory.CreateMetadata(new PEImage((IntPtr)moduleData.Pointer, (uint)moduleData.Size, isFileLayout ? ImageLayout.File : ImageLayout.Memory, verify: true));
 			}
@@ -106,7 +108,7 @@ namespace dnSpy.AsmEditor.Compiler {
 			return null;
 		}
 
-		public static bool CheckTypeDefOrTypeRefName(ITypeDefOrRef tdr, UTF8String @namespace, UTF8String name) {
+		public static bool CheckTypeDefOrTypeRefName(ITypeDefOrRef? tdr, UTF8String @namespace, UTF8String name) {
 			if (tdr is TypeDef td)
 				return td.Name == name && td.Namespace == @namespace;
 			if (tdr is TypeRef tr)
@@ -120,10 +122,10 @@ namespace dnSpy.AsmEditor.Compiler {
 
 		static bool HasIgnoresAccessChecksToAttribute(ModuleDef targetModule, ModuleDef sourceModule) {
 			var targetAssembly = targetModule.Assembly;
-			if (targetAssembly == null)
+			if (targetAssembly is null)
 				return false;
 			var sourceAssembly = sourceModule.Assembly;
-			if (sourceAssembly == null)
+			if (sourceAssembly is null)
 				return false;
 			foreach (var ca in sourceAssembly.CustomAttributes) {
 				if (ca.ConstructorArguments.Count != 1)
@@ -131,7 +133,7 @@ namespace dnSpy.AsmEditor.Compiler {
 				if (!MDPatcherUtils.CheckTypeDefOrTypeRefName(ca.Constructor?.DeclaringType, nameSystem_Runtime_CompilerServices, nameIgnoresAccessChecksToAttribute))
 					continue;
 				var asmName = (ca.ConstructorArguments[0].Value as UTF8String)?.String;
-				if (asmName == null)
+				if (asmName is null)
 					continue;
 				int index = asmName.IndexOf(',');
 				if (index >= 0)
@@ -150,10 +152,10 @@ namespace dnSpy.AsmEditor.Compiler {
 
 		static bool HasInternalsVisibleToAttribute(ModuleDef targetModule, ModuleDef sourceModule) {
 			var targetAssembly = targetModule.Assembly;
-			if (targetAssembly == null)
+			if (targetAssembly is null)
 				return false;
 			var sourceAssembly = sourceModule.Assembly;
-			if (sourceAssembly == null)
+			if (sourceAssembly is null)
 				return false;
 			foreach (var ca in targetAssembly.CustomAttributes) {
 				if (ca.ConstructorArguments.Count != 1)
@@ -161,7 +163,7 @@ namespace dnSpy.AsmEditor.Compiler {
 				if (!MDPatcherUtils.CheckTypeDefOrTypeRefName(ca.Constructor?.DeclaringType, nameSystem_Runtime_CompilerServices, nameInternalsVisibleToAttribute))
 					continue;
 				var asmName = (ca.ConstructorArguments[0].Value as UTF8String)?.String;
-				if (asmName == null)
+				if (asmName is null)
 					continue;
 				int index = asmName.IndexOf(',');
 				if (index >= 0)
@@ -182,7 +184,7 @@ namespace dnSpy.AsmEditor.Compiler {
 			if (sourceAssembly.PublicKeyOrToken is PublicKeyToken)
 				throw new InvalidOperationException("PublicKey must be used or it must be null");
 			var publicKeyBytes = (sourceAssembly.PublicKeyOrToken as PublicKey)?.Data;
-			if (publicKeyBytes == null || publicKeyBytes.Length == 0)
+			if (publicKeyBytes is null || publicKeyBytes.Length == 0)
 				return sourceAssembly.Name;
 			else {
 				var sb = new StringBuilder();

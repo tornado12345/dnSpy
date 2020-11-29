@@ -24,7 +24,7 @@ using dnSpy.Contracts.MVVM;
 namespace dnSpy.Decompiler.ILSpy.Core.Settings {
 	class ILSettings : ViewModelBase {
 		protected virtual void OnModified() { }
-		public event EventHandler SettingsVersionChanged;
+		public event EventHandler? SettingsVersionChanged;
 
 		void OptionsChanged() {
 			Interlocked.Increment(ref settingsVersion);
@@ -119,6 +119,17 @@ namespace dnSpy.Decompiler.ILSpy.Core.Settings {
 		}
 		int maxStringLength = ICSharpCode.Decompiler.DecompilerSettings.ConstMaxStringLength;
 
+		public bool HexadecimalNumbers {
+			get { return hexadecimalNumbers; }
+			set {
+				if (hexadecimalNumbers != value) {
+					hexadecimalNumbers = value;
+					OnPropertyChanged(nameof(HexadecimalNumbers));
+				}
+			}
+		}
+		bool hexadecimalNumbers = false;
+
 		public ILSettings Clone() => CopyTo(new ILSettings());
 
 		public ILSettings CopyTo(ILSettings other) {
@@ -129,19 +140,21 @@ namespace dnSpy.Decompiler.ILSpy.Core.Settings {
 			other.SortMembers = SortMembers;
 			other.ShowPdbInfo = ShowPdbInfo;
 			other.MaxStringLength = MaxStringLength;
+			other.HexadecimalNumbers = HexadecimalNumbers;
 			return other;
 		}
 
-		public override bool Equals(object obj) {
+		public override bool Equals(object? obj) {
 			var other = obj as ILSettings;
-			return other != null &&
+			return other is not null &&
 				ShowILComments == other.ShowILComments &&
 				ShowXmlDocumentation == other.ShowXmlDocumentation &&
 				ShowTokenAndRvaComments == other.ShowTokenAndRvaComments &&
 				ShowILBytes == other.ShowILBytes &&
 				SortMembers == other.SortMembers &&
 				ShowPdbInfo == other.ShowPdbInfo &&
-				MaxStringLength == other.MaxStringLength;
+				MaxStringLength == other.MaxStringLength &&
+				HexadecimalNumbers == other.HexadecimalNumbers;
 		}
 
 		public override int GetHashCode() {
@@ -154,6 +167,7 @@ namespace dnSpy.Decompiler.ILSpy.Core.Settings {
 			if (SortMembers) h ^= 0x08000000;
 			if (ShowPdbInfo) h ^= 0x04000000;
 			h ^= (uint)MaxStringLength;
+			if (HexadecimalNumbers) h ^= 0x02000000;
 
 			return (int)h;
 		}

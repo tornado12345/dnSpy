@@ -32,11 +32,11 @@ namespace dnSpy.Documents.Tabs.Dialogs {
 		public string Name => Tab.Content.Title;
 		public TabsVM Owner { get; }
 
-		readonly IDsDocument document;
+		readonly IDsDocument? document;
 
 		public string Module {
 			get {
-				if (document == null)
+				if (document is null)
 					return string.Empty;
 				return System.IO.Path.GetFileName(document.Filename);
 			}
@@ -44,7 +44,7 @@ namespace dnSpy.Documents.Tabs.Dialogs {
 
 		public string Path {
 			get {
-				if (document == null)
+				if (document is null)
 					return string.Empty;
 				return document.Filename;
 			}
@@ -53,7 +53,7 @@ namespace dnSpy.Documents.Tabs.Dialogs {
 		public TabVM(TabsVM owner, IDocumentTab tab) {
 			Owner = owner;
 			Tab = tab;
-			var node = tab.Content.Nodes.FirstOrDefault().GetTopNode();
+			var node = tab.Content.Nodes.FirstOrDefault().GetDocumentNode();
 			document = node?.Document;
 		}
 	}

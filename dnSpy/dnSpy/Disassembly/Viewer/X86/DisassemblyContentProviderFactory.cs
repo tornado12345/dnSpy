@@ -30,9 +30,9 @@ namespace dnSpy.Disassembly.Viewer.X86 {
 	[Export(typeof(DisassemblyContentProviderFactoryDependencies))]
 	sealed class DisassemblyContentProviderFactoryDependencies {
 		public DisassemblyContentSettings DisasmSettings { get; }
-		public IMasmDisassemblySettings MasmSettings { get; }
-		public INasmDisassemblySettings NasmSettings { get; }
-		public IGasDisassemblySettings GasSettings { get; }
+		public IX86DisassemblySettings MasmSettings { get; }
+		public IX86DisassemblySettings NasmSettings { get; }
+		public IX86DisassemblySettings GasSettings { get; }
 
 		[ImportingConstructor]
 		DisassemblyContentProviderFactoryDependencies(DisassemblyContentSettingsImpl disasm, MasmDisassemblySettingsImpl masm, NasmDisassemblySettingsImpl nasm, GasDisassemblySettingsImpl gas) {
@@ -47,17 +47,18 @@ namespace dnSpy.Disassembly.Viewer.X86 {
 		readonly DisassemblyContentProviderFactoryDependencies deps;
 		readonly int bitness;
 		readonly DisassemblyContentFormatterOptions formatterOptions;
-		readonly Contracts.Disassembly.ISymbolResolver symbolResolver;
-		readonly string header;
+		readonly Contracts.Disassembly.ISymbolResolver? symbolResolver;
+		readonly string? header;
 		readonly NativeCodeOptimization optimization;
 		readonly NativeCodeBlock[] blocks;
-		readonly X86NativeCodeInfo codeInfo;
-		readonly NativeVariableInfo[] variableInfo;
-		readonly string methodName;
-		readonly string moduleName;
+		readonly X86NativeCodeInfo? codeInfo;
+		readonly NativeVariableInfo[]? variableInfo;
+		readonly string? methodName;
+		readonly string? shortMethodName;
+		readonly string? moduleName;
 
-		public DisassemblyContentProviderFactory(DisassemblyContentProviderFactoryDependencies deps, int bitness, DisassemblyContentFormatterOptions formatterOptions, Contracts.Disassembly.ISymbolResolver symbolResolver, string header, NativeCodeOptimization optimization, NativeCodeBlock[] blocks, NativeCodeInfo codeInfo, NativeVariableInfo[] variableInfo, string methodName, string moduleName) {
-			if (blocks == null)
+		public DisassemblyContentProviderFactory(DisassemblyContentProviderFactoryDependencies deps, int bitness, DisassemblyContentFormatterOptions formatterOptions, Contracts.Disassembly.ISymbolResolver? symbolResolver, string? header, NativeCodeOptimization optimization, NativeCodeBlock[] blocks, NativeCodeInfo? codeInfo, NativeVariableInfo[]? variableInfo, string? methodName, string? shortMethodName, string? moduleName) {
+			if (blocks is null)
 				throw new ArgumentNullException(nameof(blocks));
 			this.deps = deps ?? throw new ArgumentNullException(nameof(deps));
 			this.bitness = bitness;
@@ -69,13 +70,14 @@ namespace dnSpy.Disassembly.Viewer.X86 {
 			this.codeInfo = codeInfo as X86NativeCodeInfo;
 			this.variableInfo = variableInfo;
 			this.methodName = methodName;
+			this.shortMethodName = shortMethodName;
 			this.moduleName = moduleName;
 		}
 
 		public DisassemblyContentProvider Create() {
 			var blocks = BlockFactory.Create(bitness, this.blocks);
 			var cachedSymResolver = new CachedSymbolResolver();
-			if (symbolResolver != null) {
+			if (symbolResolver is not null) {
 				var addresses = GetPossibleSymbolAddresses(blocks);
 				if (addresses.Length != 0) {
 					var symbolResolverResults = new SymbolResolverResult[addresses.Length];
@@ -84,10 +86,10 @@ namespace dnSpy.Disassembly.Viewer.X86 {
 				}
 			}
 			foreach (var block in blocks) {
-				if (!string.IsNullOrEmpty(block.Label))
+				if (!string2.IsNullOrEmpty(block.Label))
 					cachedSymResolver.AddSymbol(block.Address, new SymbolResolverResult(SymbolKindUtils.ToSymbolKind(block.LabelKind), block.Label, block.Address), fakeSymbol: true);
 			}
-			return new DisassemblyContentProviderImpl(bitness, cachedSymResolver, deps.DisasmSettings, deps.MasmSettings, deps.NasmSettings, deps.GasSettings, formatterOptions, header, optimization, blocks, codeInfo, variableInfo, methodName, moduleName);
+			return new DisassemblyContentProviderImpl(bitness, cachedSymResolver, deps.DisasmSettings, deps.MasmSettings, deps.NasmSettings, deps.GasSettings, formatterOptions, header, optimization, blocks, codeInfo, variableInfo, methodName, shortMethodName, moduleName);
 		}
 
 		static ulong[] GetPossibleSymbolAddresses(Block[] blocks) {
@@ -138,7 +140,7 @@ namespace dnSpy.Disassembly.Viewer.X86 {
 									break;
 
 								case 8:
-									addresses.Add((ulong)(int)instr.MemoryDisplacement);
+									addresses.Add(instr.MemoryDisplacement64);
 									break;
 								}
 							}

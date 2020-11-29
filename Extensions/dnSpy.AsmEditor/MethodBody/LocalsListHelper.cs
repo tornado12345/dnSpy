@@ -30,7 +30,7 @@ using dnSpy.Contracts.Text;
 
 namespace dnSpy.AsmEditor.MethodBody {
 	sealed class LocalsListHelper : ListBoxHelperBase<LocalVM> {
-		CilBodyVM cilBodyVM;
+		CilBodyVM? cilBodyVM;
 		readonly TypeSigCreator typeSigCreator;
 
 		protected override string AddNewBeforeSelectionMessage => dnSpy_AsmEditor_Resources.Local_Command1;
@@ -54,14 +54,14 @@ namespace dnSpy.AsmEditor.MethodBody {
 			AddStandardMenuHandlers();
 		}
 
-		void coll_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e) {
-			if (e.NewItems != null)
+		void coll_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e) {
+			if (e.NewItems is not null)
 				InitializeLocals(e.NewItems);
 		}
 
 		void InitializeLocals(System.Collections.IList list) {
-			foreach (LocalVM local in list)
-				local.TypeSigCreator = typeSigCreator;
+			foreach (LocalVM? local in list)
+				local!.TypeSigCreator = typeSigCreator;
 		}
 
 		protected override void CopyItemsAsText(LocalVM[] locals) {
@@ -100,7 +100,7 @@ namespace dnSpy.AsmEditor.MethodBody {
 				return data;
 			var newData = new LocalVM[data.Length];
 			for (int i = 0; i < data.Length; i++)
-				newData[i] = data[i].Import(cilBodyVM.TypeSigCreatorOptions, cilBodyVM.OwnerModule);
+				newData[i] = data[i].Import(cilBodyVM!.TypeSigCreatorOptions, cilBodyVM.OwnerModule);
 			return newData;
 		}
 	}

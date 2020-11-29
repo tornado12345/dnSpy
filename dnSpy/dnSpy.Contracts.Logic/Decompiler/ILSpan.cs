@@ -19,6 +19,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
 namespace dnSpy.Contracts.Decompiler {
@@ -107,7 +108,7 @@ namespace dnSpy.Contracts.Decompiler {
 
 		sealed class ILSpanComparer : IComparer<ILSpan> {
 			public static readonly ILSpanComparer Instance = new ILSpanComparer();
-			public int Compare(ILSpan x, ILSpan y) {
+			public int Compare([AllowNull] ILSpan x, [AllowNull] ILSpan y) {
 				int c = unchecked((int)x.Start - (int)y.Start);
 				if (c != 0)
 					return c;
@@ -143,7 +144,7 @@ namespace dnSpy.Contracts.Decompiler {
 		/// </summary>
 		/// <param name="obj"></param>
 		/// <returns></returns>
-		public override bool Equals(object obj) => obj is ILSpan && Equals((ILSpan)obj);
+		public override bool Equals(object? obj) => obj is ILSpan && Equals((ILSpan)obj);
 
 		/// <summary>
 		/// GetHashCode()

@@ -30,8 +30,8 @@ namespace dnSpy.Debugger.DotNet.Code {
 				ToParameters(debugInfo.Parameters), ToSourceStatements(debugInfo.Statements),
 				ToScope(debugInfo.Scope), ToAsyncMethodDebugInfo(debugInfo.AsyncInfo));
 
-		static DbgCompilerKind ToCompiler(string compilerName) {
-			if (compilerName == null)
+		static DbgCompilerKind ToCompiler(string? compilerName) {
+			if (compilerName is null)
 				return DbgCompilerKind.Unknown;
 			switch (compilerName) {
 			case PredefinedCompilerNames.MicrosoftCSharp:		return DbgCompilerKind.MicrosoftCSharp;
@@ -85,7 +85,7 @@ namespace dnSpy.Debugger.DotNet.Code {
 					flags |= DbgLocalFlags.DecompilerGenerated;
 				int index;
 				var local = l.Local;
-				if (local == null)
+				if (local is null)
 					index = -1;
 				else {
 					index = local.Index;
@@ -135,8 +135,8 @@ namespace dnSpy.Debugger.DotNet.Code {
 			}
 		}
 
-		static DbgAsyncMethodDebugInfo ToAsyncMethodDebugInfo(AsyncMethodDebugInfo asyncInfo) {
-			if (asyncInfo == null)
+		static DbgAsyncMethodDebugInfo? ToAsyncMethodDebugInfo(AsyncMethodDebugInfo? asyncInfo) {
+			if (asyncInfo is null)
 				return null;
 
 			var stepInfos = asyncInfo.StepInfos;
@@ -144,7 +144,7 @@ namespace dnSpy.Debugger.DotNet.Code {
 			for (int i = 0; i < stepInfos.Length; i++)
 				newStepInfos[i] = new DbgAsyncStepInfo(stepInfos[i].YieldOffset, stepInfos[i].ResumeMethod, stepInfos[i].ResumeOffset);
 
-			return new DbgAsyncMethodDebugInfo(newStepInfos, asyncInfo.BuilderFieldOrNull, asyncInfo.CatchHandlerOffset, asyncInfo.SetResultOffset);
+			return new DbgAsyncMethodDebugInfo(newStepInfos, asyncInfo.BuilderField, asyncInfo.CatchHandlerOffset, asyncInfo.SetResultOffset);
 		}
 	}
 }

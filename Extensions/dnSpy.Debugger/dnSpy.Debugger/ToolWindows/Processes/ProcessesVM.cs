@@ -23,6 +23,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.ComponentModel.Composition;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using dnSpy.Contracts.Debugger;
 using dnSpy.Contracts.Debugger.Text;
 using dnSpy.Contracts.MVVM;
@@ -104,9 +105,8 @@ namespace dnSpy.Debugger.ToolWindows.Processes {
 			this.debuggerSettings = debuggerSettings;
 			lazyToolWindowVMHelper = new DebuggerLazyToolWindowVMHelper(this, uiDispatcher, dbgManager);
 			var classificationFormatMap = classificationFormatMapService.GetClassificationFormatMap(AppearanceCategoryConstants.UIMisc);
-			processContext = new ProcessContext(uiDispatcher, classificationFormatMap, textElementProvider, new SearchMatcher(searchColumnDefinitions)) {
+			processContext = new ProcessContext(uiDispatcher, classificationFormatMap, textElementProvider, new SearchMatcher(searchColumnDefinitions), processFormatterProvider.Create()) {
 				SyntaxHighlight = debuggerSettings.SyntaxHighlight,
-				Formatter = processFormatterProvider.Create(),
 			};
 			Descs = new GridViewColumnDescs {
 				Columns = new GridViewColumnDesc[] {
@@ -195,17 +195,17 @@ namespace dnSpy.Debugger.ToolWindows.Processes {
 		}
 
 		// UI thread
-		void ClassificationFormatMap_ClassificationFormatMappingChanged(object sender, EventArgs e) {
+		void ClassificationFormatMap_ClassificationFormatMappingChanged(object? sender, EventArgs e) {
 			processContext.UIDispatcher.VerifyAccess();
 			RefreshThemeFields_UI();
 		}
 
 		// random thread
-		void DebuggerSettings_PropertyChanged(object sender, PropertyChangedEventArgs e) =>
+		void DebuggerSettings_PropertyChanged(object? sender, PropertyChangedEventArgs e) =>
 			UI(() => DebuggerSettings_PropertyChanged_UI(e.PropertyName));
 
 		// UI thread
-		void DebuggerSettings_PropertyChanged_UI(string propertyName) {
+		void DebuggerSettings_PropertyChanged_UI(string? propertyName) {
 			processContext.UIDispatcher.VerifyAccess();
 			if (propertyName == nameof(DebuggerSettings.UseHexadecimal))
 				RefreshHexFields_UI();
@@ -240,14 +240,14 @@ namespace dnSpy.Debugger.ToolWindows.Processes {
 		void UI(Action callback) => processContext.UIDispatcher.UI(callback);
 
 		// DbgManager thread
-		void DbgManager_DelayedIsRunningChanged(object sender, EventArgs e) => UI(() => {
+		void DbgManager_DelayedIsRunningChanged(object? sender, EventArgs e) => UI(() => {
 			// If all processes are running and the window is hidden, hide it now
 			if (!IsVisible)
 				lazyToolWindowVMHelper.TryHideWindow();
 		});
 
 		// DbgManager thread
-		void DbgManager_ProcessesChanged(object sender, DbgCollectionChangedEventArgs<DbgProcess> e) {
+		void DbgManager_ProcessesChanged(object? sender, DbgCollectionChangedEventArgs<DbgProcess> e) {
 			if (e.Added)
 				UI(() => AddItems_UI(e.Objects));
 			else {
@@ -262,7 +262,7 @@ namespace dnSpy.Debugger.ToolWindows.Processes {
 		}
 
 		// DbgManager thread
-		void DbgManager_CurrentProcessChanged(object sender, DbgCurrentObjectChangedEventArgs<DbgProcess> e) =>
+		void DbgManager_CurrentProcessChanged(object? sender, DbgCurrentObjectChangedEventArgs<DbgProcess> e) =>
 			UI(() => UpdateCurrentProcess_UI());
 
 		// UI thread
@@ -350,12 +350,18 @@ namespace dnSpy.Debugger.ToolWindows.Processes {
 		void InitializeNothingMatched(string filterText) =>
 			NothingMatched = AllItems.Count == 0 && !string.IsNullOrWhiteSpace(filterText);
 
-		public int Compare(ProcessVM x, ProcessVM y) {
+		public int Compare([AllowNull] ProcessVM x, [AllowNull] ProcessVM y) {
 			Debug.Assert(processContext.UIDispatcher.CheckAccess());
+			if ((object?)x == y)
+				return 0;
+			if (x is null)
+				return -1;
+			if (y is null)
+				return 1;
 			var (desc, dir) = Descs.SortedColumn;
 
 			int id;
-			if (desc == null || dir == GridViewSortDirection.Default) {
+			if (desc is null || dir == GridViewSortDirection.Default) {
 				id = ProcessesWindowColumnIds.Default_Order;
 				dir = GridViewSortDirection.Ascending;
 			}

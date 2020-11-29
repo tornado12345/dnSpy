@@ -44,13 +44,13 @@ namespace dnSpy.Settings.Dialog {
 		readonly Lazy<IAppSettingsPageProvider>[] appSettingsPageProviders;
 		readonly Lazy<IAppSettingsModifiedListener, IAppSettingsModifiedListenerMetadata>[] appSettingsModifiedListeners;
 		Guid? lastSelectedGuid;
-		ShowAppSettingsDialog showAppSettings;
+		ShowAppSettingsDialog? showAppSettings;
 
 #pragma warning disable CS0169
 		[Export]
 		[Name(ContentTypes.OptionsDialogText)]
 		[BaseDefinition(ContentTypes.Text)]
-		static readonly ContentTypeDefinition OptionsDialogTextContentTypeDefinition;
+		static readonly ContentTypeDefinition? OptionsDialogTextContentTypeDefinition;
 #pragma warning restore CS0169
 
 		[ImportingConstructor]
@@ -65,12 +65,12 @@ namespace dnSpy.Settings.Dialog {
 			this.appSettingsModifiedListeners = appSettingsModifiedListeners.OrderBy(a => a.Metadata.Order).ToArray();
 		}
 
-		public void Show(Window owner) => Show2(null, owner);
-		public void Show(Guid guid, Window owner) => Show2(guid, owner);
+		public void Show(Window? owner) => Show2(null, owner);
+		public void Show(Guid guid, Window? owner) => Show2(guid, owner);
 
-		void Show2(Guid? guid, Window owner) {
-			if (showAppSettings != null) {
-				if (guid != null)
+		void Show2(Guid? guid, Window? owner) {
+			if (showAppSettings is not null) {
+				if (guid is not null)
 					showAppSettings.Select(guid.Value);
 				return;
 			}

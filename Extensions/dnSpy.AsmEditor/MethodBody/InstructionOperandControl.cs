@@ -90,17 +90,17 @@ namespace dnSpy.AsmEditor.MethodBody {
 		}
 
 		void OnInstructionOperandVMChanged(InstructionOperandVM oldValue, InstructionOperandVM newValue) {
-			if (oldValue != null)
+			if (oldValue is not null)
 				oldValue.PropertyChanged -= instructionOperandVM_PropertyChanged;
-			if (newValue != null) {
+			if (newValue is not null) {
 				newValue.PropertyChanged += instructionOperandVM_PropertyChanged;
 				InitializeOperandType(newValue);
 			}
 		}
 
-		void instructionOperandVM_PropertyChanged(object sender, PropertyChangedEventArgs e) {
+		void instructionOperandVM_PropertyChanged(object? sender, PropertyChangedEventArgs e) {
 			if (e.PropertyName == nameof(MethodBody.InstructionOperandVM.InstructionOperandType))
-				InitializeOperandType((InstructionOperandVM)sender);
+				InitializeOperandType((InstructionOperandVM)sender!);
 		}
 
 		void InitializeOperandType(InstructionOperandVM instructionOperandVM) {
@@ -120,7 +120,7 @@ namespace dnSpy.AsmEditor.MethodBody {
 				// switching from a textbox opcode to a non-textbox opcode and back to the textbox
 				// again. Only solution seems to be to create a new textbox.
 				var textBox = Content as TextBox;
-				if (textBox == null) {
+				if (textBox is null) {
 					textBox = new TextBox();
 					var binding = new Binding(nameof(InstructionOperandVM) + "." + nameof(InstructionOperandVM.Text) + "." + nameof(InstructionOperandVM.Text.StringValue)) {
 						Source = this,
@@ -144,7 +144,7 @@ namespace dnSpy.AsmEditor.MethodBody {
 			case InstructionOperandType.MethodSig:
 			case InstructionOperandType.SwitchTargets:
 				var button = Content as FastClickButton;
-				if (button == null) {
+				if (button is null) {
 					button = new FastClickButton();
 					var binding = new Binding(nameof(InstructionOperandVM) + "." + nameof(InstructionOperandVM.Other)) {
 						Source = this,
@@ -172,7 +172,7 @@ namespace dnSpy.AsmEditor.MethodBody {
 			case InstructionOperandType.Local:
 			case InstructionOperandType.Parameter:
 				var comboBox = Content as ComboBox;
-				if (comboBox == null) {
+				if (comboBox is null) {
 					comboBox = new ComboBox();
 					comboBox.ItemTemplate = (DataTemplate)GetValue(ComboBoxItemTemplateProperty);
 					ComboBoxAttachedProps.SetSelectionBoxItemTemplate(comboBox, (DataTemplate)GetValue(ComboBoxSelectionBoxItemTemplateProperty));

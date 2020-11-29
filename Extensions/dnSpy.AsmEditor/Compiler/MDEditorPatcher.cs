@@ -37,7 +37,7 @@ namespace dnSpy.AsmEditor.Compiler {
 		readonly RawModuleBytes moduleData;
 		readonly byte* peFile;
 		readonly IAssembly tempAssembly;
-		readonly TypeDef nonNestedEditedTypeOrNull;
+		readonly TypeDef? nonNestedEditedType;
 		readonly RemappedTypeTokens remappedTypeTokens;
 		readonly List<byte> sigBuilder;
 		readonly MetadataEditor mdEditor;
@@ -47,12 +47,12 @@ namespace dnSpy.AsmEditor.Compiler {
 		bool UpdateTypeReferences => (options & MDEditorPatcherOptions.UpdateTypeReferences) != 0;
 		bool AllowInternalAccess => (options & MDEditorPatcherOptions.AllowInternalAccess) != 0;
 
-		public MDEditorPatcher(RawModuleBytes moduleData, MetadataEditor mdEditor, IAssembly tempAssembly, TypeDef nonNestedEditedTypeOrNull, MDEditorPatcherOptions options) {
+		public MDEditorPatcher(RawModuleBytes moduleData, MetadataEditor mdEditor, IAssembly tempAssembly, TypeDef? nonNestedEditedType, MDEditorPatcherOptions options) {
 			this.moduleData = moduleData;
 			peFile = (byte*)moduleData.Pointer;
 			this.tempAssembly = tempAssembly;
-			this.nonNestedEditedTypeOrNull = nonNestedEditedTypeOrNull;
-			remappedTypeTokens = new RemappedTypeTokens(nonNestedEditedTypeOrNull);
+			this.nonNestedEditedType = nonNestedEditedType;
+			remappedTypeTokens = new RemappedTypeTokens(nonNestedEditedType);
 			sigBuilder = new List<byte>();
 			this.mdEditor = mdEditor;
 			this.options = options;
@@ -66,18 +66,18 @@ namespace dnSpy.AsmEditor.Compiler {
 		}
 
 		public void Patch(ModuleDef module) {
-			if (UpdateTypeReferences) {
-				if (nonNestedEditedTypeOrNull.Module == module)
-					DeleteTypeDef(mdEditor, nonNestedEditedTypeOrNull);
-				PatchTypeRefsToEditedType(nonNestedEditedTypeOrNull);
-				PatchTypeTokenReferences(nonNestedEditedTypeOrNull);
+			if (UpdateTypeReferences && nonNestedEditedType is not null) {
+				if (nonNestedEditedType.Module == module)
+					DeleteTypeDef(mdEditor, nonNestedEditedType);
+				PatchTypeRefsToEditedType(nonNestedEditedType);
+				PatchTypeTokenReferences(nonNestedEditedType);
 			}
 			if (AllowInternalAccess)
 				AddInternalsVisibleToAttribute();
 		}
 
 		void DeleteTypeDef(MetadataEditor mdEditor, TypeDef nonNestedTypeDef) {
-			Debug.Assert(nonNestedTypeDef.DeclaringType == null);
+			Debug2.Assert(nonNestedTypeDef.DeclaringType is null);
 
 			var dict = new Dictionary<TypeDef, (TypeDef Type, uint TypeRefRid, RawTypeRefRow TypeRefRow)>();
 			foreach (var type in MDPatcherUtils.GetMetadataTypes(nonNestedTypeDef)) {
@@ -101,7 +101,7 @@ namespace dnSpy.AsmEditor.Compiler {
 			foreach (var kv in dict) {
 				var deletedType = kv.Value;
 				uint resolutionScope;
-				if (deletedType.Type.DeclaringType != null) {
+				if (deletedType.Type.DeclaringType is not null) {
 					var declType = dict[deletedType.Type.DeclaringType];
 					resolutionScope = CodedToken.ResolutionScope.Encode(new MDToken(Table.TypeRef, declType.TypeRefRid));
 				}
@@ -117,7 +117,7 @@ namespace dnSpy.AsmEditor.Compiler {
 		/// reference it in the temporary edit-assembly.
 		/// </summary>
 		void PatchTypeRefsToEditedType(TypeDef nonNestedEditedType) {
-			Debug.Assert(nonNestedEditedType.DeclaringType == null);
+			Debug2.Assert(nonNestedEditedType.DeclaringType is null);
 			if (remappedTypeTokens.Count == 0)
 				return;
 
@@ -172,7 +172,7 @@ namespace dnSpy.AsmEditor.Compiler {
 
 			case Table.AssemblyRef:
 				var asm = module.Assembly;
-				if (asm == null)
+				if (asm is null)
 					return false;
 				if (!mdEditor.RealMetadata.TablesStream.TryReadAssemblyRefRow(resolutionScope.Rid, out var assemblyRefRow))
 					return false;
@@ -215,7 +215,7 @@ namespace dnSpy.AsmEditor.Compiler {
 		}
 
 		static bool DataEquals(ref DataReader a, byte[] b) {
-			if (b == null)
+			if (b is null)
 				return false;
 			if (a.Length != (uint)b.Length)
 				return false;
@@ -486,7 +486,7 @@ namespace dnSpy.AsmEditor.Compiler {
 				return newSig;
 
 			var data = MDSigPatcher.PatchTypeSignature(sigBuilder, remappedTypeTokens, moduleData, (uint)mdEditor.RealMetadata.BlobStream.StartOffset, sig);
-			if (data != null)
+			if (data is not null)
 				newSig = mdEditor.BlobHeap.Create(data);
 			else
 				newSig = sig;
@@ -504,7 +504,7 @@ namespace dnSpy.AsmEditor.Compiler {
 				return newSig;
 
 			var data = MDSigPatcher.PatchCallingConventionSignature(sigBuilder, remappedTypeTokens, moduleData, (uint)mdEditor.RealMetadata.BlobStream.StartOffset, sig);
-			if (data != null)
+			if (data is not null)
 				newSig = mdEditor.BlobHeap.Create(data);
 			else
 				newSig = sig;
@@ -552,14 +552,14 @@ namespace dnSpy.AsmEditor.Compiler {
 				p += columnName.Offset;
 				for (uint i = 0; i < table.Rows; i++, p += rowSize) {
 					uint nameOffset = columnName.Size == 2 ? *(ushort*)p : *(uint*)p;
-					UTF8String foundCorlibName = null;
+					UTF8String? foundCorlibName = null;
 					foreach (var corlibName in corlibSimpleNames) {
 						if (StringsStreamNameEquals(ref stringsStream, nameOffset, corlibName.Data)) {
 							foundCorlibName = corlibName;
 							break;
 						}
 					}
-					if ((object)foundCorlibName == null)
+					if (foundCorlibName is null)
 						continue;
 
 					// Don't use any WinMD mscorlib refs (version = 255.255.255.255)

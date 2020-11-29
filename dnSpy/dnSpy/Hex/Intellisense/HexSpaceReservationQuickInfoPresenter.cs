@@ -29,9 +29,9 @@ namespace dnSpy.Hex.Intellisense {
 		UIElement IHexPopupIntellisensePresenter.SurfaceElement => control;
 		VSTA.PopupStyles IHexPopupIntellisensePresenter.PopupStyles => VSTA.PopupStyles.PositionClosest;
 		string IHexPopupIntellisensePresenter.SpaceReservationManagerName => HexIntellisenseSpaceReservationManagerNames.QuickInfoSpaceReservationManagerName;
-		event EventHandler IHexPopupIntellisensePresenter.SurfaceElementChanged { add { } remove { } }
-		event EventHandler<VSLI.ValueChangedEventArgs<VSTA.PopupStyles>> IHexPopupIntellisensePresenter.PopupStylesChanged { add { } remove { } }
-		public event EventHandler PresentationSpanChanged;
+		event EventHandler? IHexPopupIntellisensePresenter.SurfaceElementChanged { add { } remove { } }
+		event EventHandler<VSLI.ValueChangedEventArgs<VSTA.PopupStyles>>? IHexPopupIntellisensePresenter.PopupStylesChanged { add { } remove { } }
+		public event EventHandler? PresentationSpanChanged;
 
 		public double Opacity {
 			get => control.Opacity;
@@ -56,7 +56,7 @@ namespace dnSpy.Hex.Intellisense {
 			session.ApplicableToSpanChanged += Session_ApplicableToSpanChanged;
 		}
 
-		void Session_ApplicableToSpanChanged(object sender, EventArgs e) {
+		void Session_ApplicableToSpanChanged(object? sender, EventArgs e) {
 			if (session.IsDismissed)
 				return;
 			SetPresentationSpan(session.ApplicableToSpan, session.TriggerPoint);

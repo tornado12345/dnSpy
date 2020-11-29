@@ -31,7 +31,7 @@ namespace dnSpy.Debugger.Impl {
 			readonly DbgManagerImpl owner;
 			readonly List<DbgProcess> processes;
 			Action<bool> onCompleted;
-			DispatcherTimer timer;
+			DispatcherTimer? timer;
 
 			public StopDebuggingHelper(DbgManagerImpl owner, Action<bool> onCompleted) {
 				lockObj = new object();
@@ -62,7 +62,7 @@ namespace dnSpy.Debugger.Impl {
 			// Random thread
 			void StopTimer() {
 				lock (lockObj) {
-					if (timer != null) {
+					if (timer is not null) {
 						timer.Tick -= Timer_Tick_DbgThread;
 						timer.Stop();
 						timer = null;
@@ -71,7 +71,7 @@ namespace dnSpy.Debugger.Impl {
 			}
 
 			// DbgManager thread
-			void Timer_Tick_DbgThread(object sender, EventArgs e) {
+			void Timer_Tick_DbgThread(object? sender, EventArgs e) {
 				lock (lockObj) {
 					if (timer != sender)
 						return;
@@ -81,7 +81,7 @@ namespace dnSpy.Debugger.Impl {
 			}
 
 			// DbgManager thread
-			void DbgManager_ProcessesChanged(object sender, DbgCollectionChangedEventArgs<DbgProcess> e) {
+			void DbgManager_ProcessesChanged(object? sender, DbgCollectionChangedEventArgs<DbgProcess> e) {
 				if (!e.Added) {
 					bool raiseEvent = false;
 					lock (lockObj) {
@@ -106,7 +106,7 @@ namespace dnSpy.Debugger.Impl {
 					processes.Clear();
 					owner.ProcessesChanged -= DbgManager_ProcessesChanged;
 					onCompletedLocal = onCompleted;
-					onCompleted = null;
+					onCompleted = null!;
 				}
 				onCompletedLocal?.Invoke(success);
 			}

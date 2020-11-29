@@ -19,7 +19,7 @@ namespace dnSpy.Properties {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "15.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "16.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     public class dnSpy_Resources {
@@ -3306,6 +3306,15 @@ namespace dnSpy.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Base {0}:.
+        /// </summary>
+        public static string NumberBaseFormatString {
+            get {
+                return ResourceManager.GetString("NumberBaseFormatString", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to _Open....
         /// </summary>
         public static string OpenCommand {
@@ -3743,6 +3752,24 @@ namespace dnSpy.Properties {
         public static string PasteUTF8Command {
             get {
                 return ResourceManager.GetString("PasteUTF8Command", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Raw:.
+        /// </summary>
+        public static string RawValue {
+            get {
+                return ResourceManager.GetString("RawValue", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Recent _Files.
+        /// </summary>
+        public static string RecentFilesCommand {
+            get {
+                return ResourceManager.GetString("RecentFilesCommand", resourceCulture);
             }
         }
         
@@ -4341,11 +4368,11 @@ namespace dnSpy.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Search in GAC assemblies.
+        ///   Looks up a localized string similar to Search in framework assemblies.
         /// </summary>
-        public static string SearchWindow_SearchGacAssemblies {
+        public static string SearchWindow_SearchFrameworkAssemblies {
             get {
-                return ResourceManager.GetString("SearchWindow_SearchGacAssemblies", resourceCulture);
+                return ResourceManager.GetString("SearchWindow_SearchFrameworkAssemblies", resourceCulture);
             }
         }
         
@@ -5655,11 +5682,83 @@ namespace dnSpy.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Instruction.
+        /// </summary>
+        public static string ToolTip_Instruction {
+            get {
+                return ResourceManager.GetString("ToolTip_Instruction", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to OpCode.
+        /// </summary>
+        public static string ToolTip_OpCode {
+            get {
+                return ResourceManager.GetString("ToolTip_OpCode", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Window Position.
         /// </summary>
         public static string ToolWindowWinPosButtonToolTip {
             get {
                 return ResourceManager.GetString("ToolWindowWinPosButtonToolTip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Events.
+        /// </summary>
+        public static string TreeViewEventsFolder {
+            get {
+                return ResourceManager.GetString("TreeViewEventsFolder", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Fields.
+        /// </summary>
+        public static string TreeViewFieldsFolder {
+            get {
+                return ResourceManager.GetString("TreeViewFieldsFolder", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Methods.
+        /// </summary>
+        public static string TreeViewMethodsFolder {
+            get {
+                return ResourceManager.GetString("TreeViewMethodsFolder", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Properties.
+        /// </summary>
+        public static string TreeViewPropertiesFolder {
+            get {
+                return ResourceManager.GetString("TreeViewPropertiesFolder", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Types.
+        /// </summary>
+        public static string TreeViewTypesFolder {
+            get {
+                return ResourceManager.GetString("TreeViewTypesFolder", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Type References.
+        /// </summary>
+        public static string TypeReferencesFolder {
+            get {
+                return ResourceManager.GetString("TypeReferencesFolder", resourceCulture);
             }
         }
         

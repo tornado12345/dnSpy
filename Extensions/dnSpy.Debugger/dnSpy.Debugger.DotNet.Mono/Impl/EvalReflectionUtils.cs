@@ -17,25 +17,26 @@
     along with dnSpy.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+using dnSpy.Debugger.DotNet.Metadata;
 using dnSpy.Debugger.DotNet.Mono.Properties;
 using Mono.Debugger.Soft;
 
 namespace dnSpy.Debugger.DotNet.Mono.Impl {
 	static class EvalReflectionUtils {
-		public static string TryGetExceptionMessage(ObjectMirror exObj) {
-			var field = GetField(exObj.Type, "_message", "message");
-			if (field == null)
+		public static string? TryGetExceptionMessage(ObjectMirror exObj) {
+			var field = GetField(exObj.Type, KnownMemberNames.Exception_Message_FieldName, KnownMemberNames.Exception_Message_FieldName_Mono);
+			if (field is null)
 				return null;
 			var value = exObj.GetValue(field);
 			if (value is StringMirror sm)
 				return sm.Value ?? dnSpy_Debugger_DotNet_Mono_Resources.ExceptionMessageIsNull;
-			if (value == null || (value is PrimitiveValue pv && pv.Value == null))
+			if (value is null || (value is PrimitiveValue pv && pv.Value is null))
 				return dnSpy_Debugger_DotNet_Mono_Resources.ExceptionMessageIsNull;
 			return null;
 		}
 
-		static FieldInfoMirror GetField(TypeMirror type, string name1, string name2) {
-			while (type != null) {
+		static FieldInfoMirror? GetField(TypeMirror type, string name1, string name2) {
+			while (type is not null) {
 				foreach (var field in type.GetFields()) {
 					if (field.Name == name1 || field.Name == name2)
 						return field;

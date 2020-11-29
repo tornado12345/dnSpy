@@ -48,7 +48,7 @@ namespace dnSpy.AsmEditor.Compiler {
 			}
 
 			public override ImageReference? GetIcon(AsmEditorContext context) => editCodeVMCreator.GetIcon(CompilationKind.EditAssembly);
-			public override string GetHeader(AsmEditorContext context) => editCodeVMCreator.GetHeader(CompilationKind.EditAssembly);
+			public override string? GetHeader(AsmEditorContext context) => editCodeVMCreator.GetHeader(CompilationKind.EditAssembly);
 			public override bool IsVisible(AsmEditorContext context) => EditAssemblyCommand.CanExecute(editCodeVMCreator, context.Nodes);
 			public override void Execute(AsmEditorContext context) => EditAssemblyCommand.Execute(editCodeVMCreator, addUpdatedNodesHelperProvider, undoCommandService, appService, context.Nodes);
 		}
@@ -70,7 +70,7 @@ namespace dnSpy.AsmEditor.Compiler {
 			}
 
 			public override ImageReference? GetIcon(AsmEditorContext context) => editCodeVMCreator.GetIcon(CompilationKind.EditAssembly);
-			public override string GetHeader(AsmEditorContext context) => editCodeVMCreator.GetHeader(CompilationKind.EditAssembly);
+			public override string? GetHeader(AsmEditorContext context) => editCodeVMCreator.GetHeader(CompilationKind.EditAssembly);
 			public override bool IsVisible(AsmEditorContext context) => EditAssemblyCommand.CanExecute(editCodeVMCreator, context.Nodes);
 			public override void Execute(AsmEditorContext context) => EditAssemblyCommand.Execute(editCodeVMCreator, addUpdatedNodesHelperProvider, undoCommandService, appService, context.Nodes);
 		}
@@ -92,7 +92,7 @@ namespace dnSpy.AsmEditor.Compiler {
 			}
 
 			public override ImageReference? GetIcon(CodeContext context) => editCodeVMCreator.GetIcon(CompilationKind.EditAssembly);
-			public override string GetHeader(CodeContext context) => editCodeVMCreator.GetHeader(CompilationKind.EditAssembly);
+			public override string? GetHeader(CodeContext context) => editCodeVMCreator.GetHeader(CompilationKind.EditAssembly);
 			public override bool IsEnabled(CodeContext context) => EditAssemblyCommand.CanExecute(editCodeVMCreator, context.Nodes);
 			public override void Execute(CodeContext context) => EditAssemblyCommand.Execute(editCodeVMCreator, addUpdatedNodesHelperProvider, undoCommandService, appService, context.Nodes);
 		}
@@ -105,19 +105,19 @@ namespace dnSpy.AsmEditor.Compiler {
 				return;
 
 			var asmNode = nodes[0] as AssemblyDocumentNode;
-			ModuleDocumentNode modNode;
-			if (asmNode != null) {
+			ModuleDocumentNode? modNode;
+			if (asmNode is not null) {
 				asmNode.TreeNode.EnsureChildrenLoaded();
 				modNode = asmNode.TreeNode.DataChildren.FirstOrDefault() as ModuleDocumentNode;
 			}
 			else
 				modNode = nodes[0] as ModuleDocumentNode;
-			Debug.Assert(modNode != null);
-			if (modNode == null)
+			Debug2.Assert(modNode is not null);
+			if (modNode is null)
 				return;
 			var module = modNode.Document.ModuleDef;
-			Debug.Assert(module != null);
-			if (module == null)
+			Debug2.Assert(module is not null);
+			if (module is null)
 				throw new InvalidOperationException();
 
 			if (module.IsManifestModule)
@@ -135,7 +135,7 @@ namespace dnSpy.AsmEditor.Compiler {
 				vm.Dispose();
 				return;
 			}
-			Debug.Assert(vm.Result != null);
+			Debug2.Assert(vm.Result is not null);
 
 			undoCommandService.Value.Add(new EditAssemblyCommand(addUpdatedNodesHelperProvider, modNode, vm.Result));
 			vm.Dispose();

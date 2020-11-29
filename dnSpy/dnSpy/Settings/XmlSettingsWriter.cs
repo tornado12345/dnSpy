@@ -29,15 +29,15 @@ namespace dnSpy.Settings {
 		readonly ISettingsService mgr;
 		readonly string filename;
 
-		public XmlSettingsWriter(ISettingsService mgr, string filename = null) {
+		public XmlSettingsWriter(ISettingsService mgr, string? filename = null) {
 			this.mgr = mgr;
 			this.filename = filename ?? AppDirectories.SettingsFilename;
 		}
 
 		public void Write() {
-			Directory.CreateDirectory(Path.GetDirectoryName(filename));
+			Directory.CreateDirectory(Path.GetDirectoryName(filename)!);
 			var doc = new XDocument(new XElement(XmlSettingsConstants.XML_ROOT_NAME));
-			Write(doc.Root);
+			Write(doc.Root!);
 			doc.Save(filename);
 		}
 
@@ -56,16 +56,16 @@ namespace dnSpy.Settings {
 				return xmlSect;
 
 			xmlSect.SetAttributeValue(XmlSettingsConstants.SECTION_ATTRIBUTE_NAME, XmlUtils.EscapeAttributeValue(section.Name));
-			foreach (var attr in section.Attributes.OrderBy(a => a.Item1.ToUpperInvariant())) {
-				var n = XmlUtils.FilterAttributeName(attr.Item1);
-				Debug.Assert(n != null, "Invalid character(s) in section attribute name. Only valid XML attribute names can be used.");
-				if (n == null)
+			foreach (var attr in section.Attributes.OrderBy(a => a.key.ToUpperInvariant())) {
+				var n = XmlUtils.FilterAttributeName(attr.key);
+				Debug2.Assert(n is not null, "Invalid character(s) in section attribute name. Only valid XML attribute names can be used.");
+				if (n is null)
 					continue;
 				bool b = n == XmlSettingsConstants.SECTION_ATTRIBUTE_NAME;
 				Debug.Assert(!b, $"Attribute name '{XmlSettingsConstants.SECTION_ATTRIBUTE_NAME}' is reserved for use by the XML writer");
 				if (b)
 					continue;
-				xmlSect.SetAttributeValue(n, XmlUtils.EscapeAttributeValue(attr.Item2));
+				xmlSect.SetAttributeValue(n, XmlUtils.EscapeAttributeValue(attr.value));
 			}
 
 			foreach (var childSection in Sort(section.Sections))

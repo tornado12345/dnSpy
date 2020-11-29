@@ -55,31 +55,31 @@ namespace dnSpy.Contracts.MVVM {
 				ClearAll(itemsControl);
 		}
 
-		public static void ClearAll(ItemsControl itemsControl) {
-			if (itemsControl == null)
+		public static void ClearAll(ItemsControl? itemsControl) {
+			if (itemsControl is null)
 				return;
 
 			// Some of the cached items contain references to data that should be GC'd
 			var method = itemsControl.ItemContainerGenerator.GetType().GetMethod("ResetRecyclableContainers", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, Array.Empty<Type>(), null);
-			Debug.Assert((object)method != null);
+			Debug2.Assert(method is not null);
 			method?.Invoke(itemsControl.ItemContainerGenerator, Array.Empty<object>());
 
 			var automationPeer = UIElementAutomationPeer.FromElement(itemsControl);
-			if (automationPeer != null) {
-				PropertyInfo prop;
-				MethodInfo getMethod;
+			if (automationPeer is not null) {
+				PropertyInfo? prop;
+				MethodInfo? getMethod;
 
 				if (automationPeer is ItemsControlAutomationPeer) {
 					// Clear _dataChildren
 					prop = automationPeer.GetType().GetProperty("ItemPeers", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
 					getMethod = prop?.GetGetMethod(nonPublic: true);
-					Debug.Assert((object)getMethod != null);
-					if ((object)getMethod != null) {
+					Debug2.Assert(getMethod is not null);
+					if (getMethod is not null) {
 						var coll = getMethod.Invoke(automationPeer, Array.Empty<object>());
-						Debug.Assert(coll != null);
-						if (coll != null) {
+						Debug2.Assert(coll is not null);
+						if (coll is not null) {
 							var clearMethod = coll.GetType().GetMethod("Clear", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, Array.Empty<Type>(), null);
-							Debug.Assert((object)clearMethod != null);
+							Debug2.Assert(clearMethod is not null);
 							clearMethod?.Invoke(coll, Array.Empty<object>());
 						}
 					}
@@ -87,10 +87,10 @@ namespace dnSpy.Contracts.MVVM {
 					// Clear _recentlyRealizedPeers
 					prop = automationPeer.GetType().GetProperty("RecentlyRealizedPeers", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
 					getMethod = prop?.GetGetMethod(nonPublic: true);
-					Debug.Assert((object)getMethod != null);
-					if ((object)getMethod != null) {
+					Debug2.Assert(getMethod is not null);
+					if (getMethod is not null) {
 						var coll = getMethod.Invoke(automationPeer, Array.Empty<object>()) as System.Collections.IList;
-						Debug.Assert(coll != null);
+						Debug2.Assert(coll is not null);
 						coll?.Clear();
 					}
 				}
@@ -98,14 +98,14 @@ namespace dnSpy.Contracts.MVVM {
 				// Set ChildrenValid = false
 				prop = automationPeer.GetType().GetProperty("ChildrenValid", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
 				var setMethod = prop?.GetSetMethod(nonPublic: true);
-				Debug.Assert((object)setMethod != null);
+				Debug2.Assert(setMethod is not null);
 				setMethod?.Invoke(automationPeer, new object[] { false });
 
 				// Clear _children
 				prop = automationPeer.GetType().GetProperty("Children", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
 				getMethod = prop?.GetGetMethod(nonPublic: true);
-				Debug.Assert((object)getMethod != null);
-				if ((object)getMethod != null) {
+				Debug2.Assert(getMethod is not null);
+				if (getMethod is not null) {
 					var coll = getMethod.Invoke(automationPeer, Array.Empty<object>()) as System.Collections.IList;
 					coll?.Clear();
 				}

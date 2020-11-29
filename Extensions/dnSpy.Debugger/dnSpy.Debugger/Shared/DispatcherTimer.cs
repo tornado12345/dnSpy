@@ -25,9 +25,9 @@ namespace dnSpy.Debugger.Shared {
 		readonly object lockObj;
 		readonly Dispatcher dispatcher;
 		readonly TimeSpan interval;
-		Timer timer;
+		Timer? timer;
 
-		public event EventHandler Tick;
+		public event EventHandler? Tick;
 
 		public DispatcherTimer(Dispatcher dispatcher, TimeSpan interval) {
 			if (interval < TimeSpan.Zero)
@@ -39,9 +39,9 @@ namespace dnSpy.Debugger.Shared {
 			this.interval = interval;
 		}
 
-		void OnTimerCallback(object state) {
+		void OnTimerCallback(object? state) {
 			lock (lockObj) {
-				if (timer == null)
+				if (timer is null)
 					return;
 			}
 			if (dispatcher.HasShutdownStarted || dispatcher.HasShutdownFinished) {
@@ -50,7 +50,7 @@ namespace dnSpy.Debugger.Shared {
 			}
 			dispatcher.BeginInvoke(() => {
 				lock (lockObj) {
-					if (timer == null)
+					if (timer is null)
 						return;
 				}
 				Tick?.Invoke(this, EventArgs.Empty);
@@ -59,14 +59,14 @@ namespace dnSpy.Debugger.Shared {
 
 		public void Start() {
 			lock (lockObj) {
-				if (timer != null)
+				if (timer is not null)
 					return;
 				timer = new Timer(OnTimerCallback, null, interval, interval);
 			}
 		}
 
 		public void Stop() {
-			Timer oldTimer;
+			Timer? oldTimer;
 			lock (lockObj) {
 				oldTimer = timer;
 				timer = null;

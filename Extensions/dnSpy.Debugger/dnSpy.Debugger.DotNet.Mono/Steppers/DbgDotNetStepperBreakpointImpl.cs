@@ -25,21 +25,23 @@ using Mono.Debugger.Soft;
 
 namespace dnSpy.Debugger.DotNet.Mono.Steppers {
 	sealed class DbgDotNetStepperBreakpointImpl : DbgDotNetStepperBreakpoint {
-		public override event EventHandler<DbgDotNetStepperBreakpointEventArgs> Hit;
+		public override event EventHandler<DbgDotNetStepperBreakpointEventArgs>? Hit;
 
 		readonly DbgEngineImpl engine;
-		readonly DbgThread thread;
+		readonly DbgThread? thread;
 		readonly BreakpointEventRequest breakpoint;
 
-		public DbgDotNetStepperBreakpointImpl(DbgEngineImpl engine, DbgThread thread, DbgModule module, uint token, uint offset) {
+		public DbgDotNetStepperBreakpointImpl(DbgEngineImpl engine, DbgThread? thread, DbgModule module, uint token, uint offset) {
 			this.engine = engine ?? throw new ArgumentNullException(nameof(engine));
 			this.thread = thread;
 			engine.VerifyMonoDebugThread();
 			breakpoint = engine.CreateBreakpointForStepper(module, token, offset, OnBreakpointHit);
 		}
 
-		bool OnBreakpointHit(DbgThread thread) {
-			if (this.thread == null || thread == this.thread) {
+		bool OnBreakpointHit(DbgThread? thread) {
+			if (this.thread is null || thread == this.thread) {
+				if (thread is null)
+					throw new InvalidOperationException();
 				var e = new DbgDotNetStepperBreakpointEventArgs(thread);
 				Hit?.Invoke(this, e);
 				return e.Pause;

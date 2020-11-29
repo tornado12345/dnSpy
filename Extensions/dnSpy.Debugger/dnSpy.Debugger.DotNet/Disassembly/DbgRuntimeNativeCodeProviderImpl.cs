@@ -21,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -44,7 +45,7 @@ namespace dnSpy.Debugger.DotNet.Disassembly {
 		readonly Lazy<DbgMetadataService> dbgMetadataService;
 		readonly Lazy<DbgModuleIdProviderService> dbgModuleIdProviderService;
 		readonly IDecompilerService decompilerService;
-		readonly IDecompiler ilDecompiler;
+		readonly IDecompiler? ilDecompiler;
 
 		[ImportingConstructor]
 		DbgRuntimeNativeCodeProviderImpl(Lazy<DbgMetadataService> dbgMetadataService, Lazy<DbgModuleIdProviderService> dbgModuleIdProviderService, IDecompilerService decompilerService) {
@@ -84,7 +85,7 @@ namespace dnSpy.Debugger.DotNet.Disassembly {
 			return false;
 		}
 
-		bool CreateResult(IDbgDotNetRuntime runtime, DbgModule methodModule, uint methodToken, string header, DbgNativeCodeOptions options, DbgDotNetNativeCode nativeCode, out GetNativeCodeResult result) {
+		bool CreateResult(IDbgDotNetRuntime runtime, DbgModule? methodModule, uint methodToken, string? header, DbgNativeCodeOptions options, DbgDotNetNativeCode nativeCode, out GetNativeCodeResult result) {
 			if (methodToken == uint.MaxValue)
 				methodToken = 0;
 
@@ -94,23 +95,24 @@ namespace dnSpy.Debugger.DotNet.Disassembly {
 				newBlocks[i] = new NativeCodeBlock(blocks.Kind, blocks.Address, blocks.Code, null);
 			}
 
-			var decompiler = decompilerService.Decompiler;
-			if (decompiler != null && decompiler.GenericGuid == DecompilerConstants.LANGUAGE_IL)
+			IDecompiler? decompiler = decompilerService.Decompiler;
+			if (decompiler is not null && decompiler.GenericGuid == DecompilerConstants.LANGUAGE_IL)
 				decompiler = null;
-			bool canShowILCode = (options & DbgNativeCodeOptions.ShowILCode) != 0 && ilDecompiler != null;
-			bool canShowCode = (options & DbgNativeCodeOptions.ShowCode) != 0 && decompiler != null;
-			NativeVariableInfo[] nativeVariableInfo = null;
-			if (methodModule != null && methodToken != 0 && (canShowILCode || canShowCode) && HasSequencePoints(nativeCode)) {
+			bool canShowILCode = (options & DbgNativeCodeOptions.ShowILCode) != 0 && ilDecompiler is not null;
+			bool canShowCode = (options & DbgNativeCodeOptions.ShowCode) != 0 && decompiler is not null;
+			NativeVariableInfo[]? nativeVariableInfo = null;
+			if (methodModule is not null && methodToken != 0 && (canShowILCode || canShowCode) && HasSequencePoints(nativeCode)) {
 				var module = dbgMetadataService.Value.TryGetMetadata(methodModule, DbgLoadModuleOptions.AutoLoaded);
 				var method = module?.ResolveToken(methodToken) as MethodDef;
-				if (method != null) {
+				if (method is not null) {
 					var cancellationToken = CancellationToken.None;
 
 					ILSourceStatementProvider ilCodeProvider = default;
 					SourceStatementProvider codeProvider = default;
-					List<int> ilOffsets = null;
+					List<int>? ilOffsets = null;
 
 					if (canShowILCode) {
+						Debug2.Assert(ilDecompiler is not null);
 						var provider = new DecompiledCodeProvider(ilDecompiler, method, cancellationToken);
 						if (provider.TryDecompile())
 							ilCodeProvider = provider.CreateILCodeProvider();
@@ -136,7 +138,7 @@ namespace dnSpy.Debugger.DotNet.Disassembly {
 						var info = codeProvider.GetStatement(ilOffset);
 						AddStatement(commentBuilder, info.line, info.span, showStmt: true);
 						if (!ilCodeProvider.IsDefault) {
-							if (ilOffsets == null)
+							if (ilOffsets is null)
 								ilOffsets = GetILOffsets(nativeBlocks);
 							int endILOffset = GetNextILOffset(ilOffsets, ilOffset);
 							if (endILOffset < 0)
@@ -152,7 +154,7 @@ namespace dnSpy.Debugger.DotNet.Disassembly {
 				}
 			}
 
-			var newCode = new NativeCode(nativeCode.Kind, nativeCode.Optimization, newBlocks, nativeCode.CodeInfo, nativeVariableInfo, nativeCode.MethodName, nativeCode.ModuleName);
+			var newCode = new NativeCode(nativeCode.Kind, nativeCode.Optimization, newBlocks, nativeCode.CodeInfo, nativeVariableInfo, nativeCode.MethodName, nativeCode.ShortMethodName, nativeCode.ModuleName);
 			var symbolResolver = new DotNetSymbolResolver(runtime);
 			result = new GetNativeCodeResult(newCode, symbolResolver, header);
 			return true;
@@ -183,7 +185,7 @@ namespace dnSpy.Debugger.DotNet.Disassembly {
 		}
 
 		void AddStatement(StringBuilder sb, string lines, TextSpan span, bool showStmt) {
-			if (lines == null)
+			if (lines is null)
 				return;
 
 			Debug.Assert(span.End <= lines.Length);
@@ -227,7 +229,7 @@ namespace dnSpy.Debugger.DotNet.Disassembly {
 			return -1;
 		}
 
-		static bool TryGetDotNetRuntime(DbgRuntime dbgRuntime, out IDbgDotNetRuntime runtime) {
+		static bool TryGetDotNetRuntime(DbgRuntime dbgRuntime, [NotNullWhen(true)] out IDbgDotNetRuntime? runtime) {
 			runtime = null;
 			if (dbgRuntime.Process.State != DbgProcessState.Paused || dbgRuntime.IsClosed)
 				return false;
@@ -256,7 +258,7 @@ namespace dnSpy.Debugger.DotNet.Disassembly {
 				return false;
 
 			uint methodToken = frame.FunctionToken;
-			const string header = null;
+			const string? header = null;
 			return CreateResult(runtime, frame.Module, methodToken, header, options, nativeCode, out result);
 		}
 
@@ -282,20 +284,20 @@ namespace dnSpy.Debugger.DotNet.Disassembly {
 				return false;
 
 			var module = loc.DbgModule ?? dbgModuleIdProviderService.Value.GetModule(loc.Module);
-			if (module == null)
+			if (module is null)
 				return false;
 			var reflectionModule = module.GetReflectionModule();
-			if (reflectionModule == null)
+			if (reflectionModule is null)
 				return false;
 
 			var reflectionMethod = reflectionModule.ResolveMethod((int)loc.Token);
-			if ((object)reflectionMethod == null)
+			if (reflectionMethod is null)
 				return false;
 
 			if (!runtime.TryGetNativeCode(reflectionMethod, out var nativeCode))
 				return false;
 
-			const string header = null;
+			const string? header = null;
 			return CreateResult(runtime, module, loc.Token, header, options, nativeCode, out result);
 		}
 	}

@@ -525,7 +525,7 @@
     <value>Ctrl+{0}</value>
   </data>
   <data name="ShortCutKeyDelete" xml:space="preserve">
-    <value>Видалити</value>
+    <value>Del</value>
   </data>
   <data name="ShortCutKeyEnter" xml:space="preserve">
     <value>Enter</value>
@@ -585,7 +585,7 @@
     <value>Показати тип повернення</value>
   </data>
   <data name="ShowTokensCommand" xml:space="preserve">
-    <value>Показувати токени</value>
+    <value>Показати токени</value>
   </data>
   <data name="ShowIntrinsicTypeKeywordsCommand" xml:space="preserve">
     <value>Показати ключові слова вбудованих типів</value>
@@ -816,7 +816,7 @@
     <value>_Вікна</value>
   </data>
   <data name="OutputCommand" xml:space="preserve">
-    <value>Вив_ід</value>
+    <value>_Вивід</value>
   </data>
   <data name="ShortCutKeyCtrlAltW_DIGIT" xml:space="preserve">
     <value>Ctrl+Alt+W, {0}</value>
@@ -1353,7 +1353,7 @@
     <value>Ctrl+V</value>
   </data>
   <data name="ClearAllCommand" xml:space="preserve">
-    <value>Очистити все</value>
+    <value>Очистити Все</value>
   </data>
   <data name="DeleteWatchCommand" xml:space="preserve">
     <value>В_идалити watch</value>
@@ -1522,5 +1522,11 @@
   </data>
   <data name="Processes_Search_ToolTip" xml:space="preserve">
     <value>Пошук процесу</value>
+  </data>
+  <data name="DbgSettings_FocusDebuggerWhenProcessBreaks" xml:space="preserve">
+    <value>Винести dnSpy на перідній фон, коли спрацює точка зупинки в дебагері</value>
+  </data>
+  <data name="Column_LoadModule" xml:space="preserve">
+    <value>Зааантажити</value>
   </data>
 </root>

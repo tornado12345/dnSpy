@@ -29,7 +29,7 @@ namespace dnSpy.Contracts.Debugger {
 		/// <summary>
 		/// Raised when a property is changed
 		/// </summary>
-		public abstract event PropertyChangedEventHandler PropertyChanged;
+		public abstract event PropertyChangedEventHandler? PropertyChanged;
 
 		/// <summary>
 		/// Gets the owner debug manager
@@ -49,7 +49,7 @@ namespace dnSpy.Contracts.Debugger {
 		/// <summary>
 		/// Raised when <see cref="Runtimes"/> is changed
 		/// </summary>
-		public abstract event EventHandler<DbgCollectionChangedEventArgs<DbgRuntime>> RuntimesChanged;
+		public abstract event EventHandler<DbgCollectionChangedEventArgs<DbgRuntime>>? RuntimesChanged;
 
 		/// <summary>
 		/// Gets the process bitness (32 or 64)
@@ -99,7 +99,7 @@ namespace dnSpy.Contracts.Debugger {
 		/// <summary>
 		/// Raised when <see cref="Threads"/> is changed
 		/// </summary>
-		public abstract event EventHandler<DbgCollectionChangedEventArgs<DbgThread>> ThreadsChanged;
+		public abstract event EventHandler<DbgCollectionChangedEventArgs<DbgThread>>? ThreadsChanged;
 
 		/// <summary>
 		/// true if the process is running, false if it's paused or terminated (see <see cref="State"/>)
@@ -109,12 +109,12 @@ namespace dnSpy.Contracts.Debugger {
 		/// <summary>
 		/// Raised when <see cref="IsRunning"/> is changed, see also <see cref="DelayedIsRunningChanged"/>
 		/// </summary>
-		public abstract event EventHandler IsRunningChanged;
+		public abstract event EventHandler? IsRunningChanged;
 
 		/// <summary>
 		/// Raised when the process has been running for a little while, eg. 1 second.
 		/// </summary>
-		public abstract event EventHandler DelayedIsRunningChanged;
+		public abstract event EventHandler? DelayedIsRunningChanged;
 
 		/// <summary>
 		/// Reads memory. Unreadable memory is returned as 0s.
@@ -139,7 +139,7 @@ namespace dnSpy.Contracts.Debugger {
 		/// <param name="address">Address in the debugged process</param>
 		/// <param name="destination">Destination buffer</param>
 		public void ReadMemory(ulong address, byte[] destination) {
-			if (destination == null)
+			if (destination is null)
 				throw new ArgumentNullException(nameof(destination));
 			ReadMemory(address, destination, 0, destination.Length);
 		}
@@ -183,7 +183,7 @@ namespace dnSpy.Contracts.Debugger {
 		/// <param name="address">Address in the debugged process</param>
 		/// <param name="source">Source buffer</param>
 		public void WriteMemory(ulong address, byte[] source) {
-			if (source == null)
+			if (source is null)
 				throw new ArgumentNullException(nameof(source));
 			WriteMemory(address, source, 0, source.Length);
 		}

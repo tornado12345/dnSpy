@@ -24,7 +24,7 @@ using Microsoft.VisualStudio.Language.Intellisense;
 
 namespace dnSpy.Language.Intellisense {
 	abstract class QuickInfoPresenterBase : IIntellisensePresenter, IIntellisenseCommandTarget, INotifyPropertyChanged {
-		public event PropertyChangedEventHandler PropertyChanged { add { } remove { } }
+		public event PropertyChangedEventHandler? PropertyChanged { add { } remove { } }
 		public IIntellisenseSession Session => session;
 		public IList<object> QuickInfoContent => session.QuickInfoContent;
 
@@ -59,7 +59,7 @@ namespace dnSpy.Language.Intellisense {
 			}
 		}
 
-		void Session_Dismissed(object sender, EventArgs e) {
+		void Session_Dismissed(object? sender, EventArgs e) {
 			session.Dismissed -= Session_Dismissed;
 			OnSessionDismissed();
 		}

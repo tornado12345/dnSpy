@@ -54,10 +54,12 @@ namespace dnSpy.Contracts.Text.Classification {
 		}
 
 		/// <inheritdoc/>
-		public void Write(TextColor color, string text) => Write(color.Box(), text);
+		public void Write(TextColor color, string? text) => Write(color.Box(), text);
 
 		/// <inheritdoc/>
-		public void Write(object color, string text) {
+		public void Write(object color, string? text) {
+			if (text is null)
+				return;
 			colors.Add(new SpanData<object>(new Span(sb.Length, text.Length), color));
 			sb.Append(text);
 		}
@@ -69,5 +71,11 @@ namespace dnSpy.Contracts.Text.Classification {
 			colors.Clear();
 			sb.Clear();
 		}
+
+		/// <summary>
+		/// Gets all text
+		/// </summary>
+		/// <returns></returns>
+		public override string ToString() => Text;
 	}
 }

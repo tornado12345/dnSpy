@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Diagnostics;
 using System.Linq;
 using dnSpy.Contracts.Debugger.DotNet.Code;
 using Microsoft.CodeAnalysis.ExpressionEvaluator;
@@ -43,8 +42,7 @@ namespace dnSpy.Roslyn.Debugger.ExpressionCompiler {
 				}
 			}
 			foreach (var info in compilerGeneratedVariables) {
-				Debug.Assert(res[info.Index] == null);
-				if (res[info.Index] == null)
+				if (res[info.Index] is null)
 					res[info.Index] = info.Name;
 			}
 			return ImmutableArray.Create(res);

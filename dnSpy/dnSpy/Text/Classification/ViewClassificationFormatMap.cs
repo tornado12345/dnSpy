@@ -34,19 +34,20 @@ namespace dnSpy.Text.Classification {
 			set => categoryMap.DefaultTextProperties = value;
 		}
 
-		public event EventHandler<EventArgs> ClassificationFormatMappingChanged;
+		public event EventHandler<EventArgs>? ClassificationFormatMappingChanged;
 		readonly ClassificationFormatMapService classificationFormatMapService;
 		readonly string appearanceCategoryName;
 		IClassificationFormatMap categoryMap;
 
 		protected ViewClassificationFormatMap(ClassificationFormatMapService classificationFormatMapService, string appearanceCategoryName) {
+			categoryMap = null!;
 			this.classificationFormatMapService = classificationFormatMapService ?? throw new ArgumentNullException(nameof(classificationFormatMapService));
 			this.appearanceCategoryName = appearanceCategoryName ?? throw new ArgumentNullException(nameof(appearanceCategoryName));
 		}
 
 		protected void Initialize() => UpdateAppearanceMap();
 
-		protected void Options_OptionChanged(object sender, EditorOptionChangedEventArgs e) {
+		protected void Options_OptionChanged(object? sender, EditorOptionChangedEventArgs e) {
 			if (e.OptionId == appearanceCategoryName)
 				UpdateAppearanceMap();
 		}
@@ -58,14 +59,14 @@ namespace dnSpy.Text.Classification {
 			if (categoryMap == newMap)
 				return;
 
-			if (categoryMap != null)
+			if (categoryMap is not null)
 				categoryMap.ClassificationFormatMappingChanged -= CategoryMap_ClassificationFormatMappingChanged;
 			categoryMap = newMap;
 			categoryMap.ClassificationFormatMappingChanged += CategoryMap_ClassificationFormatMappingChanged;
 			ClassificationFormatMappingChanged?.Invoke(this, EventArgs.Empty);
 		}
 
-		void CategoryMap_ClassificationFormatMappingChanged(object sender, EventArgs e) =>
+		void CategoryMap_ClassificationFormatMappingChanged(object? sender, EventArgs e) =>
 			ClassificationFormatMappingChanged?.Invoke(this, EventArgs.Empty);
 
 		public TextFormattingRunProperties GetExplicitTextProperties(IClassificationType classificationType) =>
@@ -96,7 +97,7 @@ namespace dnSpy.Text.Classification {
 		public void EndBatchUpdate() => categoryMap.EndBatchUpdate();
 
 		public void Dispose() {
-			if (categoryMap != null)
+			if (categoryMap is not null)
 				categoryMap.ClassificationFormatMappingChanged -= CategoryMap_ClassificationFormatMappingChanged;
 			DisposeCore();
 		}

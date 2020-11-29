@@ -29,9 +29,9 @@ namespace dnSpy.Debugger.Dialogs.DebugProgram {
 		internal Guid PageGuid => StartDebuggingOptionsPage.Guid;
 
 		public bool IsValid => StartDebuggingOptionsPage.IsValid;
-		public event EventHandler IsValidChanged;
+		public event EventHandler? IsValidChanged;
 
-		public object UIObject => StartDebuggingOptionsPage.UIObject;
+		public object? UIObject => StartDebuggingOptionsPage.UIObject;
 		public string Name => StartDebuggingOptionsPage.DisplayName;
 
 		public OptionsPageVM(StartDebuggingOptionsPage page) {
@@ -39,7 +39,7 @@ namespace dnSpy.Debugger.Dialogs.DebugProgram {
 			StartDebuggingOptionsPage.PropertyChanged += StartDebuggingOptionsPage_PropertyChanged;
 		}
 
-		void StartDebuggingOptionsPage_PropertyChanged(object sender, PropertyChangedEventArgs e) {
+		void StartDebuggingOptionsPage_PropertyChanged(object? sender, PropertyChangedEventArgs e) {
 			Debug.Assert(sender == StartDebuggingOptionsPage);
 			if (e.PropertyName == nameof(StartDebuggingOptionsPage.IsValid))
 				IsValidChanged?.Invoke(this, EventArgs.Empty);

@@ -17,12 +17,6 @@
     along with dnSpy.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-// .NET Core 3.0:
-// 'UnmanagedType.IDispatch' is obsolete: 'Marshalling as IDispatch may be unavailable in future releases.'
-// 'UnmanagedType.SafeArray' is obsolete: 'Marshalling as SafeArray may be unavailable in future releases.'
-// 'VarEnum' is obsolete: 'Marshalling VARIANTs may be unavailable in future releases.'
-#pragma warning disable CS0618
-
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 
@@ -30,14 +24,14 @@ namespace dnSpy.Debugger.DotNet.Metadata {
 	sealed class DmdMarshalType {
 		public readonly UnmanagedType Value;
 		public readonly VarEnum SafeArraySubType;
-		public readonly DmdType SafeArrayUserDefinedSubType;
+		public readonly DmdType? SafeArrayUserDefinedSubType;
 		public readonly int IidParameterIndex;
 		public readonly UnmanagedType ArraySubType;
 		public readonly short SizeParamIndex;
 		public readonly int SizeConst;
-		public readonly string MarshalType;
-		public readonly DmdType MarshalTypeRef;
-		public readonly string MarshalCookie;
+		public readonly string? MarshalType;
+		public readonly DmdType? MarshalTypeRef;
+		public readonly string? MarshalCookie;
 
 		DmdMarshalType(UnmanagedType unmanagedType, int iidParamIndex) {
 			Value = unmanagedType;
@@ -49,7 +43,7 @@ namespace dnSpy.Debugger.DotNet.Metadata {
 			SizeConst = size;
 		}
 
-		DmdMarshalType(VarEnum safeArraySubType, DmdType safeArrayUserDefinedSubType) {
+		DmdMarshalType(VarEnum safeArraySubType, DmdType? safeArrayUserDefinedSubType) {
 			Value = UnmanagedType.SafeArray;
 			SafeArraySubType = safeArraySubType;
 			SafeArrayUserDefinedSubType = safeArrayUserDefinedSubType;
@@ -68,7 +62,7 @@ namespace dnSpy.Debugger.DotNet.Metadata {
 			SizeConst = sizeConst;
 		}
 
-		DmdMarshalType(string marshalType, DmdType marshalTypeRef, string marshalCookie) {
+		DmdMarshalType(string? marshalType, DmdType? marshalTypeRef, string? marshalCookie) {
 			Value = UnmanagedType.CustomMarshaler;
 			MarshalType = marshalType;
 			MarshalTypeRef = marshalTypeRef;
@@ -84,7 +78,7 @@ namespace dnSpy.Debugger.DotNet.Metadata {
 
 		public static DmdMarshalType CreateFixedSysString(int size) => new DmdMarshalType(size);
 
-		public static DmdMarshalType CreateSafeArray(VarEnum safeArraySubType, DmdType safeArrayUserDefinedSubType) =>
+		public static DmdMarshalType CreateSafeArray(VarEnum safeArraySubType, DmdType? safeArrayUserDefinedSubType) =>
 			new DmdMarshalType(safeArraySubType, safeArrayUserDefinedSubType);
 
 		public static DmdMarshalType CreateFixedArray(int size, UnmanagedType arraySubType) =>
@@ -93,7 +87,7 @@ namespace dnSpy.Debugger.DotNet.Metadata {
 		public static DmdMarshalType CreateArray(UnmanagedType arraySubType, short sizeParamIndex, int sizeConst) =>
 			new DmdMarshalType(arraySubType, sizeParamIndex, sizeConst);
 
-		public static DmdMarshalType CreateCustomMarshaler(string marshalType, DmdType marshalTypeRef, string marshalCookie) =>
+		public static DmdMarshalType CreateCustomMarshaler(string marshalType, DmdType? marshalTypeRef, string? marshalCookie) =>
 			new DmdMarshalType(marshalType, marshalTypeRef, marshalCookie);
 
 		public static DmdMarshalType Create(UnmanagedType unmanagedType) => new DmdMarshalType(unmanagedType);

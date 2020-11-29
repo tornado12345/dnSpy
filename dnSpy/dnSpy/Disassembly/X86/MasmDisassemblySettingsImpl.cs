@@ -24,60 +24,23 @@ using dnSpy.Contracts.Disassembly;
 using dnSpy.Contracts.Settings;
 
 namespace dnSpy.Disassembly.X86 {
-	class MasmDisassemblySettings : DisassemblySettings, IMasmDisassemblySettings {
+	class MasmDisassemblySettings : DisassemblySettings, IX86DisassemblySettings {
 		public MasmDisassemblySettings() {
 			HexSuffix = "h";
 			OctalSuffix = "o";
 			BinarySuffix = "b";
 		}
 
-		public bool AddDsPrefix32 {
-			get => addDsPrefix32;
-			set {
-				if (value != addDsPrefix32) {
-					addDsPrefix32 = value;
-					OnPropertyChanged(nameof(AddDsPrefix32));
-				}
-			}
-		}
-		bool addDsPrefix32 = true;
-
-		public bool SymbolDisplInBrackets {
-			get => symbolDisplInBrackets;
-			set {
-				if (value != symbolDisplInBrackets) {
-					symbolDisplInBrackets = value;
-					OnPropertyChanged(nameof(SymbolDisplInBrackets));
-				}
-			}
-		}
-		bool symbolDisplInBrackets = true;
-
-		public bool DisplInBrackets {
-			get => displInBrackets;
-			set {
-				if (value != displInBrackets) {
-					displInBrackets = value;
-					OnPropertyChanged(nameof(DisplInBrackets));
-				}
-			}
-		}
-		bool displInBrackets = true;
-
 		public MasmDisassemblySettings Clone() => CopyTo(new MasmDisassemblySettings());
 
 		public MasmDisassemblySettings CopyTo(MasmDisassemblySettings other) {
-			if (other == null)
+			if (other is null)
 				throw new ArgumentNullException(nameof(other));
 			base.CopyTo(other);
-			other.AddDsPrefix32 = AddDsPrefix32;
-			other.SymbolDisplInBrackets = SymbolDisplInBrackets;
-			other.DisplInBrackets = DisplInBrackets;
 			return other;
 		}
 	}
 
-	[Export(typeof(IMasmDisassemblySettings))]
 	[Export(typeof(MasmDisassemblySettingsImpl))]
 	sealed class MasmDisassemblySettingsImpl : MasmDisassemblySettings {
 		static readonly Guid SETTINGS_GUID = new Guid("F70D9AFD-0233-4630-A2A7-0C5A157158FF");
@@ -90,21 +53,15 @@ namespace dnSpy.Disassembly.X86 {
 
 			var sect = settingsService.GetOrCreateSection(SETTINGS_GUID);
 			ReadSettings(sect);
-			AddDsPrefix32 = sect.Attribute<bool?>(nameof(AddDsPrefix32)) ?? AddDsPrefix32;
-			SymbolDisplInBrackets = sect.Attribute<bool?>(nameof(SymbolDisplInBrackets)) ?? SymbolDisplInBrackets;
-			DisplInBrackets = sect.Attribute<bool?>(nameof(DisplInBrackets)) ?? DisplInBrackets;
 
 			PropertyChanged += OnPropertyChanged;
 		}
 
-		void OnPropertyChanged(object sender, PropertyChangedEventArgs e) => Save();
+		void OnPropertyChanged(object? sender, PropertyChangedEventArgs e) => Save();
 
 		void Save() {
 			var sect = settingsService.RecreateSection(SETTINGS_GUID);
 			WriteSettings(sect);
-			sect.Attribute(nameof(AddDsPrefix32), AddDsPrefix32);
-			sect.Attribute(nameof(SymbolDisplInBrackets), SymbolDisplInBrackets);
-			sect.Attribute(nameof(DisplInBrackets), DisplInBrackets);
 		}
 	}
 }

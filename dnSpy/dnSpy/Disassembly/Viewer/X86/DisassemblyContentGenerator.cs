@@ -20,6 +20,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using dnSpy.Contracts.Disassembly;
 using dnSpy.Contracts.Disassembly.Viewer;
 using dnSpy.Contracts.Text;
@@ -32,24 +33,53 @@ namespace dnSpy.Disassembly.Viewer.X86 {
 		const int HEXBYTES_COLUMN_BYTE_LENGTH = 10;
 
 		sealed class AsmReferenceFactory {
-			readonly Dictionary<(FormatterOutputTextKind kind, string value), AsmReference> dict = new Dictionary<(FormatterOutputTextKind kind, string value), AsmReference>();
+			readonly Dictionary<(FormatterTextKind kind, string value), AsmReference> refDict = new Dictionary<(FormatterTextKind kind, string value), AsmReference>();
+			readonly Dictionary<(Code code, string mnemonic, CpuidFeature[] cpuidFeatures), MnemonicReference> mnemonicDict = new Dictionary<(Code code, string mnemonic, CpuidFeature[] cpuidFeatures), MnemonicReference>(new MnemonicComparer());
 
-			public AsmReference Create(FormatterOutputTextKind kind, string value) {
+			sealed class MnemonicComparer : IEqualityComparer<(Code code, string mnemonic, CpuidFeature[] cpuidFeatures)> {
+				public bool Equals([AllowNull] (Code code, string mnemonic, CpuidFeature[] cpuidFeatures) x, [AllowNull] (Code code, string mnemonic, CpuidFeature[] cpuidFeatures) y) {
+					if (x.code != y.code)
+						return false;
+					if (x.mnemonic != y.mnemonic)
+						return false;
+					var xc = x.cpuidFeatures;
+					var yc = y.cpuidFeatures;
+					if (xc.Length != yc.Length)
+						return false;
+					for (int i = 0; i < xc.Length; i++) {
+						if (xc[i] != yc[i])
+							return false;
+					}
+					return true;
+				}
+
+				public int GetHashCode([DisallowNull] (Code code, string mnemonic, CpuidFeature[] cpuidFeatures) obj) =>
+					(int)obj.code ^ StringComparer.Ordinal.GetHashCode(obj.mnemonic);
+			}
+
+			public AsmReference Create(FormatterTextKind kind, string value) {
 				var key = (kind, value);
-				if (!dict.TryGetValue(key, out var asmRef))
-					dict[key] = asmRef = new AsmReference(kind, value);
+				if (!refDict.TryGetValue(key, out var asmRef))
+					refDict[key] = asmRef = new AsmReference(kind, value);
 				return asmRef;
+			}
+
+			public MnemonicReference Create(in Instruction instruction, string mnemonic) {
+				var key = (instruction.Code, mnemonic, instruction.CpuidFeatures);
+				if (!mnemonicDict.TryGetValue(key, out var mnemonicRef))
+					mnemonicDict[key] = mnemonicRef = new MnemonicReference(instruction.Code, mnemonic, instruction.CpuidFeatures);
+				return mnemonicRef;
 			}
 		}
 
 		sealed class AsmReference {
-			readonly FormatterOutputTextKind kind;
+			readonly FormatterTextKind kind;
 			readonly string value;
-			public AsmReference(FormatterOutputTextKind kind, string value) {
+			public AsmReference(FormatterTextKind kind, string value) {
 				this.kind = kind;
 				this.value = value;
 			}
-			public override bool Equals(object obj) => obj is AsmReference other && kind == other.kind && StringComparer.Ordinal.Equals(value, other.value);
+			public override bool Equals(object? obj) => obj is AsmReference other && kind == other.kind && StringComparer.Ordinal.Equals(value, other.value);
 			public override int GetHashCode() => (int)kind ^ StringComparer.Ordinal.GetHashCode(value ?? string.Empty);
 		}
 
@@ -62,19 +92,19 @@ namespace dnSpy.Disassembly.Viewer.X86 {
 				this.output = output;
 			}
 
-			public override void Write(string text, FormatterOutputTextKind kind) {
+			public override void Write(string text, FormatterTextKind kind) {
 				var color = GetColor(kind);
 				switch (kind) {
-				case FormatterOutputTextKind.Directive:
-				case FormatterOutputTextKind.Prefix:
-				case FormatterOutputTextKind.Mnemonic:
-				case FormatterOutputTextKind.Keyword:
-				case FormatterOutputTextKind.Register:
-				case FormatterOutputTextKindExtensions.UnknownSymbol:
-				case FormatterOutputTextKind.Data:
-				case FormatterOutputTextKind.Label:
-				case FormatterOutputTextKind.Function:
-				case FormatterOutputTextKind.Decorator:
+				case FormatterTextKind.Directive:
+				case FormatterTextKind.Prefix:
+				case FormatterTextKind.Mnemonic:
+				case FormatterTextKind.Keyword:
+				case FormatterTextKind.Register:
+				case FormatterTextKindExtensions.UnknownSymbol:
+				case FormatterTextKind.Data:
+				case FormatterTextKind.Label:
+				case FormatterTextKind.Function:
+				case FormatterTextKind.Decorator:
 					output.Write(text, refFactory.Create(kind, text), DisassemblyReferenceFlags.Local, color);
 					break;
 
@@ -83,43 +113,70 @@ namespace dnSpy.Disassembly.Viewer.X86 {
 					break;
 				}
 			}
+
+			public override void WriteNumber(in Instruction instruction, int operand, int instructionOperand, string text, ulong value, NumberKind numberKind, FormatterTextKind kind) {
+				var color = GetColor(kind);
+				const DisassemblyReferenceFlags flags = DisassemblyReferenceFlags.Local | DisassemblyReferenceFlags.NoFollow;
+				output.Write(text, GetValue(value, numberKind), flags, color);
+			}
+
+			static object GetValue(ulong value, NumberKind numberKind) {
+				switch (numberKind) {
+				case NumberKind.Int8:	return (sbyte)value;
+				case NumberKind.UInt8:	return (byte)value;
+				case NumberKind.Int16:	return (short)value;
+				case NumberKind.UInt16:	return (ushort)value;
+				case NumberKind.Int32:	return (int)value;
+				case NumberKind.UInt32:	return (uint)value;
+				case NumberKind.Int64:	return (long)value;
+				case NumberKind.UInt64:	return (ulong)value;
+				default:
+					Debug.Fail($"Unknown number kind: {numberKind}");
+					throw new ArgumentOutOfRangeException(nameof(numberKind), $"Unknown number kind: {numberKind}");
+				}
+			}
+
+			public override void WriteMnemonic(in Instruction instruction, string text) {
+				var color = GetColor(FormatterTextKind.Mnemonic);
+				output.Write(text, refFactory.Create(instruction, text), DisassemblyReferenceFlags.Local, color);
+			}
 		}
 
-		static object GetColor(FormatterOutputTextKind kind) {
+		static object GetColor(FormatterTextKind kind) {
 			switch (kind) {
-			case FormatterOutputTextKind.Text:
+			case FormatterTextKind.Text:
 				return BoxedTextColor.Text;
-			case FormatterOutputTextKind.Directive:
+			case FormatterTextKind.Directive:
 				return BoxedTextColor.AsmDirective;
-			case FormatterOutputTextKind.Prefix:
+			case FormatterTextKind.Prefix:
 				return BoxedTextColor.AsmPrefix;
-			case FormatterOutputTextKind.Mnemonic:
+			case FormatterTextKind.Mnemonic:
 				return BoxedTextColor.AsmMnemonic;
-			case FormatterOutputTextKind.Keyword:
+			case FormatterTextKind.Keyword:
 				return BoxedTextColor.AsmKeyword;
-			case FormatterOutputTextKind.Operator:
+			case FormatterTextKind.Operator:
 				return BoxedTextColor.AsmOperator;
-			case FormatterOutputTextKind.Punctuation:
+			case FormatterTextKind.Punctuation:
 				return BoxedTextColor.AsmPunctuation;
-			case FormatterOutputTextKind.Number:
+			case FormatterTextKind.Number:
 				return BoxedTextColor.AsmNumber;
-			case FormatterOutputTextKind.Register:
+			case FormatterTextKind.Register:
 				return BoxedTextColor.AsmRegister;
-			case FormatterOutputTextKind.SelectorValue:
+			case FormatterTextKind.SelectorValue:
 				return BoxedTextColor.AsmSelectorValue;
-			case FormatterOutputTextKind.LabelAddress:
+			case FormatterTextKind.LabelAddress:
 				return BoxedTextColor.AsmLabelAddress;
-			case FormatterOutputTextKind.FunctionAddress:
+			case FormatterTextKind.FunctionAddress:
 				return BoxedTextColor.AsmFunctionAddress;
-			case FormatterOutputTextKindExtensions.UnknownSymbol:
+			case FormatterTextKindExtensions.UnknownSymbol:
 				return BoxedTextColor.AsmLabel;
-			case FormatterOutputTextKind.Data:
+			case FormatterTextKind.Data:
 				return BoxedTextColor.AsmData;
-			case FormatterOutputTextKind.Label:
+			case FormatterTextKind.Label:
 				return BoxedTextColor.AsmLabel;
-			case FormatterOutputTextKind.Function:
+			case FormatterTextKind.Function:
 				return BoxedTextColor.AsmFunction;
-			case FormatterOutputTextKind.Decorator:
+			case FormatterTextKind.Decorator:
 				return BoxedTextColor.Text;
 			default:
 				Debug.Fail($"Unknown output kind: {kind}");
@@ -142,7 +199,7 @@ namespace dnSpy.Disassembly.Viewer.X86 {
 			}
 		}
 
-		static string GetName(NativeVariableInfo[] variableInfo, in X86Variable varInfo) {
+		static string? GetName(NativeVariableInfo[] variableInfo, in X86Variable varInfo) {
 			foreach (var info in variableInfo) {
 				if (info.IsLocal == varInfo.IsLocal && info.Index == varInfo.Index)
 					return info.Name;
@@ -150,35 +207,30 @@ namespace dnSpy.Disassembly.Viewer.X86 {
 			return null;
 		}
 
-		public static void Write(int bitness, DisassemblyContentOutput output, string header, NativeCodeOptimization optimization, Formatter formatter, string commentPrefix, InternalFormatterOptions formatterOptions, Block[] blocks, X86NativeCodeInfo codeInfo, NativeVariableInfo[] variableInfo, string methodName, string moduleName) {
-			if (variableInfo == null)
+		internal const string LINE = "********************************************";
+
+		public static void Write(int bitness, DisassemblyContentOutput output, string? header, NativeCodeOptimization optimization, Formatter formatter, string commentPrefix, InternalFormatterOptions formatterOptions, Block[] blocks, X86NativeCodeInfo? codeInfo, NativeVariableInfo[]? variableInfo, string? methodName, string? moduleName) {
+			if (variableInfo is null)
 				variableInfo = Array.Empty<NativeVariableInfo>();
 			if (optimization == NativeCodeOptimization.Unoptimized) {
-				const string LINE = "********************************************";
 				WriteComment(output, commentPrefix, LINE);
 				WriteComment(output, commentPrefix, dnSpy_Resources.Disassembly_MethodIsNotOptimized);
 				WriteComment(output, commentPrefix, LINE);
 				output.Write(Environment.NewLine, BoxedTextColor.Text);
 			}
-			if (header != null) {
+			if (header is not null) {
 				WriteComment(output, commentPrefix, header);
 				output.Write(Environment.NewLine, BoxedTextColor.Text);
 			}
 
-			if (moduleName != null)
+			if (moduleName is not null)
 				WriteComment(output, commentPrefix, moduleName);
-			if (methodName != null)
+			if (methodName is not null)
 				WriteComment(output, commentPrefix, methodName);
-			ulong codeSize = 0;
-			foreach (var block in blocks) {
-				var instrs = block.Instructions;
-				if (instrs.Length > 0)
-					codeSize += instrs[instrs.Length - 1].Instruction.NextIP - block.Address;
-			}
-			WriteComment(output, commentPrefix, $"Size: {codeSize} (0x{codeSize:X})");
+			WriteComment(output, commentPrefix, GetCodeSizeString(blocks));
 			output.Write(Environment.NewLine, BoxedTextColor.Text);
 
-			bool upperCaseHex = (formatterOptions & InternalFormatterOptions.UpperCaseHex) != 0;
+			bool uppercaseHex = (formatterOptions & InternalFormatterOptions.UppercaseHex) != 0;
 			var variables = codeInfo?.Variables ?? Array.Empty<X86Variable>();
 			if (variables.Length != 0) {
 				var sb = new System.Text.StringBuilder();
@@ -192,7 +244,7 @@ namespace dnSpy.Disassembly.Viewer.X86 {
 						sb.Append(' ');
 					}
 					var name = varInfo.Name ?? GetName(variableInfo, varInfo);
-					if (name != null) {
+					if (name is not null) {
 						printedName = true;
 						if (varInfo.Index >= 0)
 							sb.Append('(');
@@ -205,9 +257,9 @@ namespace dnSpy.Disassembly.Viewer.X86 {
 						sb.Append("???");
 						sb.Append(' ');
 					}
-					sb.Append(FormatAddress(bitness, varInfo.LiveAddress, upperCaseHex));
+					sb.Append(FormatAddress(bitness, varInfo.LiveAddress, uppercaseHex));
 					sb.Append('-');
-					sb.Append(FormatAddress(bitness, varInfo.LiveAddress + varInfo.LiveLength, upperCaseHex));
+					sb.Append(FormatAddress(bitness, varInfo.LiveAddress + varInfo.LiveLength, uppercaseHex));
 					sb.Append(' ');
 					switch (varInfo.LocationKind) {
 					case X86VariableLocationKind.Other:
@@ -230,7 +282,7 @@ namespace dnSpy.Disassembly.Viewer.X86 {
 							sb.Append('+');
 						if (memOffs != 0) {
 							sb.Append(formatter.Options.HexPrefix ?? string.Empty);
-							sb.Append(memOffs.ToString(upperCaseHex ? "X2" : "x2"));
+							sb.Append(memOffs.ToString(uppercaseHex ? "X2" : "x2"));
 							sb.Append(formatter.Options.HexSuffix ?? string.Empty);
 						}
 						sb.Append(']');
@@ -252,9 +304,9 @@ namespace dnSpy.Disassembly.Viewer.X86 {
 				ref readonly var block = ref blocks[i];
 				if (i > 0 && (formatterOptions & InternalFormatterOptions.EmptyLineBetweenBasicBlocks) != 0)
 					output.Write(Environment.NewLine, BoxedTextColor.Text);
-				if (!string.IsNullOrEmpty(block.Comment))
+				if (!string2.IsNullOrEmpty(block.Comment))
 					WriteComment(output, commentPrefix, block.Comment);
-				if ((formatterOptions & InternalFormatterOptions.AddLabels) != 0 && !string.IsNullOrEmpty(block.Label)) {
+				if ((formatterOptions & InternalFormatterOptions.AddLabels) != 0 && !string2.IsNullOrEmpty(block.Label)) {
 					output.Write(block.Label, refFactory.Create(block.LabelKind, block.Label), DisassemblyReferenceFlags.Definition | DisassemblyReferenceFlags.Local, GetColor(block.LabelKind));
 					output.Write(":", BoxedTextColor.AsmPunctuation);
 					output.Write(Environment.NewLine, BoxedTextColor.Text);
@@ -264,7 +316,7 @@ namespace dnSpy.Disassembly.Viewer.X86 {
 				for (int j = 0; j < instrs.Length; j++) {
 					ref var instr = ref instrs[j].Instruction;
 					if ((formatterOptions & InternalFormatterOptions.InstructionAddresses) != 0) {
-						var address = FormatAddress(bitness, instr.IP, upperCaseHex);
+						var address = FormatAddress(bitness, instr.IP, uppercaseHex);
 						output.Write(address, BoxedTextColor.AsmAddress);
 						output.Write(" ", BoxedTextColor.Text);
 					}
@@ -273,10 +325,10 @@ namespace dnSpy.Disassembly.Viewer.X86 {
 
 					if ((formatterOptions & InternalFormatterOptions.InstructionBytes) != 0) {
 						var code = instrs[j].Code;
-						var codeBytes = code.Array;
+						var codeBytes = code.Array!;
 						for (int k = 0; k < code.Count; k++) {
 							byte b = codeBytes[k + code.Offset];
-							output.Write(b.ToString(upperCaseHex ? "X2" : "x2"), BoxedTextColor.AsmHexBytes);
+							output.Write(b.ToString(uppercaseHex ? "X2" : "x2"), BoxedTextColor.AsmHexBytes);
 						}
 						int missingBytes = HEXBYTES_COLUMN_BYTE_LENGTH - code.Count;
 						for (int k = 0; k < missingBytes; k++)
@@ -284,22 +336,37 @@ namespace dnSpy.Disassembly.Viewer.X86 {
 						output.Write(" ", BoxedTextColor.Text);
 					}
 
-					formatter.Format(ref instr, formatterOutput);
+					formatter.Format(instr, formatterOutput);
 					output.Write(Environment.NewLine, BoxedTextColor.Text);
 				}
 			}
 		}
 
-		static string FormatAddress(int bitness, ulong address, bool upperCaseHex) {
+		internal static string GetCodeSizeString(Block[] blocks) {
+			ulong codeSize = GetCodeSize(blocks);
+			return $"Size: {codeSize} (0x{codeSize:X})";
+		}
+
+		static ulong GetCodeSize(Block[] blocks) {
+			ulong codeSize = 0;
+			foreach (var block in blocks) {
+				var instrs = block.Instructions;
+				if (instrs.Length > 0)
+					codeSize += instrs[instrs.Length - 1].Instruction.NextIP - block.Address;
+			}
+			return codeSize;
+		}
+
+		static string FormatAddress(int bitness, ulong address, bool uppercaseHex) {
 			switch (bitness) {
 			case 16:
-				return address.ToString(upperCaseHex ? "X4" : "x4");
+				return address.ToString(uppercaseHex ? "X4" : "x4");
 
 			case 32:
-				return address.ToString(upperCaseHex ? "X8" : "x8");
+				return address.ToString(uppercaseHex ? "X8" : "x8");
 
 			case 64:
-				return address.ToString(upperCaseHex ? "X16" : "x16");
+				return address.ToString(uppercaseHex ? "X16" : "x16");
 
 			default:
 				Debug.Fail($"Unknown bitness: {bitness}");

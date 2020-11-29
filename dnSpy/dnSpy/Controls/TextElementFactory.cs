@@ -81,7 +81,7 @@ namespace dnSpy.Controls {
 			bool filterOutNewLines = (flags & TextElementFlags.FilterOutNewLines) != 0;
 			if (tags.Count != 0) {
 				if (useFastTextBlock) {
-					return new FastTextBlock((flags & TextElementFlags.NewFormatter) != 0, new TextSrc {
+					return new FastTextBlock(new TextSrc {
 						text = ToString(WpfUnicodeUtils.ReplaceBadChars(text), filterOutNewLines),
 						classificationFormatMap = classificationFormatMap,
 						tagsList = tags.ToArray(),
@@ -97,7 +97,7 @@ namespace dnSpy.Controls {
 
 			FrameworkElement fwElem;
 			if (useFastTextBlock) {
-				fwElem = new FastTextBlock((flags & TextElementFlags.NewFormatter) != 0) {
+				fwElem = new FastTextBlock() {
 					Text = ToString(WpfUnicodeUtils.ReplaceBadChars(text), filterOutNewLines)
 				};
 			}
@@ -138,26 +138,30 @@ namespace dnSpy.Controls {
 
 		// Ki's fast TextSource
 		sealed class TextSrc : TextSource, FastTextBlock.IFastTextSource {
+#pragma warning disable CS8618 // Non-nullable field is uninitialized.
 			FastTextBlock parent;
 			internal string text;
 			internal IClassificationFormatMap classificationFormatMap;
 			internal TextClassificationTag[] tagsList;
+#pragma warning restore CS8618 // Non-nullable field is uninitialized.
 
 			sealed class TextProps : TextRunProperties {
+#pragma warning disable CS8618 // Non-nullable field is uninitialized.
 				internal Brush background;
 				internal Brush foreground;
 				internal Typeface typeface;
 				internal double fontSize;
-				internal TextDecorationCollection textDecorations;
-				internal TextEffectCollection textEffects;
+				internal TextDecorationCollection? textDecorations;
+				internal TextEffectCollection? textEffects;
+#pragma warning restore CS8618 // Non-nullable field is uninitialized.
 
 				public override Brush BackgroundBrush => background;
 				public override CultureInfo CultureInfo => CultureInfo.CurrentUICulture;
 				public override double FontHintingEmSize => fontSize;
 				public override double FontRenderingEmSize => fontSize;
 				public override Brush ForegroundBrush => foreground;
-				public override TextDecorationCollection TextDecorations => textDecorations;
-				public override TextEffectCollection TextEffects => textEffects;
+				public override TextDecorationCollection? TextDecorations => textDecorations;
+				public override TextEffectCollection? TextEffects => textEffects;
 				public override Typeface Typeface => typeface;
 			}
 

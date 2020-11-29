@@ -41,12 +41,12 @@ namespace dnSpy.Contracts.Hex.Editor {
 		/// <summary>
 		/// Gets/sets the background brush
 		/// </summary>
-		public abstract Brush Background { get; set; }
+		public abstract Brush? Background { get; set; }
 
 		/// <summary>
 		/// Raised when the background property has changed
 		/// </summary>
-		public abstract event EventHandler<VSTE.BackgroundBrushChangedEventArgs> BackgroundBrushChanged;
+		public abstract event EventHandler<VSTE.BackgroundBrushChangedEventArgs>? BackgroundBrushChanged;
 
 		/// <summary>
 		/// Gets/sets the zoom level between 20% to 400%
@@ -56,7 +56,7 @@ namespace dnSpy.Contracts.Hex.Editor {
 		/// <summary>
 		/// Raised when the zoom level has changed
 		/// </summary>
-		public abstract event EventHandler<VSTE.ZoomLevelChangedEventArgs> ZoomLevelChanged;
+		public abstract event EventHandler<VSTE.ZoomLevelChangedEventArgs>? ZoomLevelChanged;
 
 		/// <summary>
 		/// Gets the formatted line source

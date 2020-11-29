@@ -1524,4 +1524,10 @@ Biztosan ki akarja nyitni?</value>
   <data name="Processes_Search_ToolTip" xml:space="preserve">
     <value>Folyamat keresése</value>
   </data>
+  <data name="DbgSettings_FocusDebuggerWhenProcessBreaks" xml:space="preserve">
+    <value>A dnSpy kerüljön előtérbe ha a hibakereső töréspontra fut</value>
+  </data>
+  <data name="Column_LoadModule" xml:space="preserve">
+    <value>Betöltés</value>
+  </data>
 </root>

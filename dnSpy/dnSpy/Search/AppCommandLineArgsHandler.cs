@@ -43,17 +43,17 @@ namespace dnSpy.Search {
 			var loc = GetSearchLocation(args.SearchIn);
 			var typ = GetSearchType(args.SearchFor);
 
-			if (loc != null) {
+			if (loc is not null) {
 				show = true;
 				searchService.Value.SearchLocation = loc.Value;
 			}
 
-			if (typ != null) {
+			if (typ is not null) {
 				show = true;
 				searchService.Value.SearchType = typ.Value;
 			}
 
-			if (args.SearchText != null) {
+			if (args.SearchText is not null) {
 				show = true;
 				searchService.Value.SearchText = args.SearchText;
 			}

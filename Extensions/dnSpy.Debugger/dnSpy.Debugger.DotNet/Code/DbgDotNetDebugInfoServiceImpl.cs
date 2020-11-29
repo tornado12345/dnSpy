@@ -58,7 +58,7 @@ namespace dnSpy.Debugger.DotNet.Code {
 		void UI(Action callback) => uiDispatcher.UI(callback);
 
 		public override Task<MethodDebugInfoResult> GetMethodDebugInfoAsync(DbgModule module, uint token) {
-			if (module == null)
+			if (module is null)
 				throw new ArgumentNullException(nameof(module));
 			var tcs = new TaskCompletionSource<MethodDebugInfoResult>();
 			UI(() => GetMethodDebugInfo_UI(module, token, tcs));
@@ -82,15 +82,15 @@ namespace dnSpy.Debugger.DotNet.Code {
 			var documentViewer = tab.TryGetDocumentViewer();
 			var methodDebugService = documentViewer.GetMethodDebugService();
 			var moduleId = dbgModuleIdProviderService.GetModuleId(module);
-			if (moduleId == null)
+			if (moduleId is null)
 				return default;
 
 			var key = new ModuleTokenId(moduleId.Value, token);
 			var decompilerDebugInfo = methodDebugService.TryGetMethodDebugInfo(key);
-			DbgMethodDebugInfo debugInfo;
-			DbgMethodDebugInfo stateMachineDebugInfoOrNull = null;
+			DbgMethodDebugInfo? debugInfo;
+			DbgMethodDebugInfo? stateMachineDebugInfo = null;
 			int methodVersion;
-			if (decompilerDebugInfo != null) {
+			if (decompilerDebugInfo is not null) {
 				methodVersion = 1;
 				debugInfo = DbgMethodDebugInfoUtils.ToDbgMethodDebugInfo(decompilerDebugInfo);
 			}
@@ -98,11 +98,11 @@ namespace dnSpy.Debugger.DotNet.Code {
 				var cancellationToken = CancellationToken.None;
 				var result = dbgMethodDebugInfoProvider.Value.GetMethodDebugInfo(decompilerService.Value.Decompiler, module, token, cancellationToken);
 				methodVersion = result.MethodVersion;
-				debugInfo = result.DebugInfoOrNull;
-				stateMachineDebugInfoOrNull = result.StateMachineDebugInfoOrNull;
+				debugInfo = result.DebugInfo;
+				stateMachineDebugInfo = result.StateMachineDebugInfo;
 			}
 
-			return new MethodDebugInfoResult(methodVersion, debugInfo, stateMachineDebugInfoOrNull);
+			return new MethodDebugInfoResult(methodVersion, debugInfo, stateMachineDebugInfo);
 		}
 	}
 }

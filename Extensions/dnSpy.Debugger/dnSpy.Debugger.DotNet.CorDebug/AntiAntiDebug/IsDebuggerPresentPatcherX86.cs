@@ -17,6 +17,7 @@
     along with dnSpy.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using dnSpy.Contracts.Debugger.AntiAntiDebug;
 using dnSpy.Contracts.Debugger.DotNet.CorDebug;
@@ -30,8 +31,8 @@ namespace dnSpy.Debugger.DotNet.CorDebug.AntiAntiDebug {
 		public IsDebuggerPresentPatcherX86(DbgNativeFunctionHookContext context, DbgCorDebugInternalRuntime runtime)
 			: base(context) => clrFilename = runtime.ClrFilename;
 
-		public bool TryPatchX86(out string errorMessage) {
-			var function = functionProvider.GetFunction(IsDebuggerPresentConstants.DllName, IsDebuggerPresentConstants.FuncName);
+		public bool TryPatchX86(string dllName, [NotNullWhen(false)] out string? errorMessage) {
+			var function = functionProvider.GetFunction(dllName, IsDebuggerPresentConstants.FuncName);
 			var clrDllName = Path.GetFileName(clrFilename);
 			if (!functionProvider.TryGetModuleAddress(clrDllName, out var clrAddress, out var clrEndAddress)) {
 				errorMessage = $"Couldn't get the address of {clrDllName}";
@@ -65,7 +66,7 @@ namespace dnSpy.Debugger.DotNet.CorDebug.AntiAntiDebug {
 			instructions.Add(Instruction.Create(II.Code.Retnd));
 
 			var block = new InstructionBlock(new CodeWriterImpl(function), instructions, function.NewCodeAddress);
-			if (!BlockEncoder.TryEncode(process.Bitness, block, out var encErrMsg)) {
+			if (!BlockEncoder.TryEncode(process.Bitness, block, out var encErrMsg, out _)) {
 				errorMessage = $"Failed to encode: {encErrMsg}";
 				return false;
 			}
@@ -74,8 +75,8 @@ namespace dnSpy.Debugger.DotNet.CorDebug.AntiAntiDebug {
 			return true;
 		}
 
-		public bool TryPatchX64(out string errorMessage) {
-			var function = functionProvider.GetFunction(IsDebuggerPresentConstants.DllName, IsDebuggerPresentConstants.FuncName);
+		public bool TryPatchX64(string dllName, [NotNullWhen(false)] out string? errorMessage) {
+			var function = functionProvider.GetFunction(dllName, IsDebuggerPresentConstants.FuncName);
 			var clrDllName = Path.GetFileName(clrFilename);
 			if (!functionProvider.TryGetModuleAddress(clrDllName, out var clrAddress, out var clrEndAddress)) {
 				errorMessage = $"Couldn't get the address of {clrDllName}";
@@ -123,7 +124,7 @@ namespace dnSpy.Debugger.DotNet.CorDebug.AntiAntiDebug {
 			instructions.Add(Instruction.Create(II.Code.Retnq));
 
 			var block = new InstructionBlock(new CodeWriterImpl(function), instructions, function.NewCodeAddress);
-			if (!BlockEncoder.TryEncode(process.Bitness, block, out var encErrMsg)) {
+			if (!BlockEncoder.TryEncode(process.Bitness, block, out var encErrMsg, out _)) {
 				errorMessage = $"Failed to encode: {encErrMsg}";
 				return false;
 			}

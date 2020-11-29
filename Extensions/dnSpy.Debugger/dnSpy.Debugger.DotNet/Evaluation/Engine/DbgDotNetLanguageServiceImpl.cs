@@ -21,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using dnSpy.Contracts.Debugger.DotNet.Evaluation.Engine;
 using dnSpy.Contracts.Debugger.DotNet.Evaluation.ExpressionCompiler;
@@ -104,12 +105,12 @@ namespace dnSpy.Debugger.DotNet.Evaluation.Engine {
 				else if (decompilerGuid == visualBasicDecompilerGuid)
 					decompilerGuid = DecompilerConstants.LANGUAGE_VISUALBASIC;
 				var decompiler = decompilerService.Find(decompilerGuid);
-				Debug.Assert(decompiler != null);
-				if (decompiler == null)
+				Debug2.Assert(decompiler is not null);
+				if (decompiler is null)
 					continue;
 
 				var valueNodeFactory = dbgDotNetEngineValueNodeFactoryService.Value.Create(lz.Metadata.LanguageGuid, formatter.Value);
-				if (valueNodeFactory == null)
+				if (valueNodeFactory is null)
 					continue;
 
 				var languageDisplayName = ResourceHelper.GetString(lz.Value, lz.Metadata.LanguageDisplayName);
@@ -117,7 +118,7 @@ namespace dnSpy.Debugger.DotNet.Evaluation.Engine {
 			}
 		}
 
-		bool TryGetFormatter(string guidString, out Lazy<DbgDotNetFormatter, IDbgDotNetFormatterMetadata> formatter) {
+		bool TryGetFormatter(string guidString, [NotNullWhen(true)] out Lazy<DbgDotNetFormatter, IDbgDotNetFormatterMetadata>? formatter) {
 			formatter = null;
 			bool b = Guid.TryParse(guidString, out var languageGuid);
 			Debug.Assert(b);
@@ -131,7 +132,7 @@ namespace dnSpy.Debugger.DotNet.Evaluation.Engine {
 
 			Debug.Fail($"Default formatter ({LanguageConstants.DefaultLanguageGuid.ToString()}) wasn't exported");
 			formatter = formattersDict.Values.FirstOrDefault();
-			return formatter != null;
+			return formatter is not null;
 		}
 
 		public override DbgEngineObjectIdFactory GetEngineObjectIdFactory(Guid runtimeGuid) =>

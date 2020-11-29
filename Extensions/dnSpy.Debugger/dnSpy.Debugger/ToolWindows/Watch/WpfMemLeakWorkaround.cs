@@ -37,8 +37,8 @@ namespace dnSpy.Debugger.ToolWindows.Watch {
 
 		void IDbgManagerStartListener.OnStart(DbgManager dbgManager) => dbgManager.IsDebuggingChanged += DbgManager_IsDebuggingChanged;
 
-		void DbgManager_IsDebuggingChanged(object sender, EventArgs e) {
-			var dbgManager = (DbgManager)sender;
+		void DbgManager_IsDebuggingChanged(object? sender, EventArgs e) {
+			var dbgManager = (DbgManager)sender!;
 			if (!dbgManager.IsDebugging)
 				uiDispatcher.UIBackground(() => MemLeakFix());
 		}
@@ -48,7 +48,7 @@ namespace dnSpy.Debugger.ToolWindows.Watch {
 			for (int i = 0; i < WatchWindowsHelper.NUMBER_OF_WATCH_WINDOWS; i++) {
 				if (watchContentFactory.TryGetContent(i, out var watchContent)) {
 					var listView = watchContent.VariablesWindowControl.ListView;
-					if (listView != null)
+					if (listView is not null)
 						AutomationPeerMemoryLeakWorkaround.ClearAll(listView);
 				}
 			}

@@ -24,74 +24,74 @@ using dnSpy.Contracts.Settings;
 
 namespace dnSpy.Disassembly.X86 {
 	abstract class DisassemblySettings : IX86DisassemblySettings {
-		public event PropertyChangedEventHandler PropertyChanged;
+		public event PropertyChangedEventHandler? PropertyChanged;
 		protected void OnPropertyChanged(string propName) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propName));
 
-		public bool UpperCasePrefixes {
-			get => upperCasePrefixes;
+		public bool UppercasePrefixes {
+			get => uppercasePrefixes;
 			set {
-				if (value != upperCasePrefixes) {
-					upperCasePrefixes = value;
-					OnPropertyChanged(nameof(UpperCasePrefixes));
+				if (value != uppercasePrefixes) {
+					uppercasePrefixes = value;
+					OnPropertyChanged(nameof(UppercasePrefixes));
 				}
 			}
 		}
-		bool upperCasePrefixes;
+		bool uppercasePrefixes;
 
-		public bool UpperCaseMnemonics {
-			get => upperCaseMnemonics;
+		public bool UppercaseMnemonics {
+			get => uppercaseMnemonics;
 			set {
-				if (value != upperCaseMnemonics) {
-					upperCaseMnemonics = value;
-					OnPropertyChanged(nameof(UpperCaseMnemonics));
+				if (value != uppercaseMnemonics) {
+					uppercaseMnemonics = value;
+					OnPropertyChanged(nameof(UppercaseMnemonics));
 				}
 			}
 		}
-		bool upperCaseMnemonics;
+		bool uppercaseMnemonics;
 
-		public bool UpperCaseRegisters {
-			get => upperCaseRegisters;
+		public bool UppercaseRegisters {
+			get => uppercaseRegisters;
 			set {
-				if (value != upperCaseRegisters) {
-					upperCaseRegisters = value;
-					OnPropertyChanged(nameof(UpperCaseRegisters));
+				if (value != uppercaseRegisters) {
+					uppercaseRegisters = value;
+					OnPropertyChanged(nameof(UppercaseRegisters));
 				}
 			}
 		}
-		bool upperCaseRegisters;
+		bool uppercaseRegisters;
 
-		public bool UpperCaseKeywords {
-			get => upperCaseKeywords;
+		public bool UppercaseKeywords {
+			get => uppercaseKeywords;
 			set {
-				if (value != upperCaseKeywords) {
-					upperCaseKeywords = value;
-					OnPropertyChanged(nameof(UpperCaseKeywords));
+				if (value != uppercaseKeywords) {
+					uppercaseKeywords = value;
+					OnPropertyChanged(nameof(UppercaseKeywords));
 				}
 			}
 		}
-		bool upperCaseKeywords;
+		bool uppercaseKeywords;
 
-		public bool UpperCaseDecorators {
-			get => upperCaseDecorators;
+		public bool UppercaseDecorators {
+			get => uppercaseDecorators;
 			set {
-				if (value != upperCaseDecorators) {
-					upperCaseDecorators = value;
-					OnPropertyChanged(nameof(UpperCaseDecorators));
+				if (value != uppercaseDecorators) {
+					uppercaseDecorators = value;
+					OnPropertyChanged(nameof(UppercaseDecorators));
 				}
 			}
 		}
-		bool upperCaseDecorators;
+		bool uppercaseDecorators;
 
-		public bool UpperCaseAll {
-			get => upperCaseAll;
+		public bool UppercaseAll {
+			get => uppercaseAll;
 			set {
-				if (value != upperCaseAll) {
-					upperCaseAll = value;
-					OnPropertyChanged(nameof(UpperCaseAll));
+				if (value != uppercaseAll) {
+					uppercaseAll = value;
+					OnPropertyChanged(nameof(UppercaseAll));
 				}
 			}
 		}
-		bool upperCaseAll;
+		bool uppercaseAll;
 
 		public int FirstOperandCharIndex {
 			get => firstOperandCharIndex;
@@ -203,7 +203,7 @@ namespace dnSpy.Disassembly.X86 {
 		}
 		bool showZeroDisplacements;
 
-		public string HexPrefix {
+		public string? HexPrefix {
 			get => hexPrefix;
 			set {
 				if (value != hexPrefix) {
@@ -212,9 +212,9 @@ namespace dnSpy.Disassembly.X86 {
 				}
 			}
 		}
-		string hexPrefix;
+		string? hexPrefix;
 
-		public string HexSuffix {
+		public string? HexSuffix {
 			get => hexSuffix;
 			set {
 				if (value != hexSuffix) {
@@ -223,7 +223,7 @@ namespace dnSpy.Disassembly.X86 {
 				}
 			}
 		}
-		string hexSuffix;
+		string? hexSuffix;
 
 		public int HexDigitGroupSize {
 			get => hexDigitGroupSize;
@@ -236,7 +236,7 @@ namespace dnSpy.Disassembly.X86 {
 		}
 		int hexDigitGroupSize = 4;
 
-		public string DecimalPrefix {
+		public string? DecimalPrefix {
 			get => decimalPrefix;
 			set {
 				if (value != decimalPrefix) {
@@ -245,9 +245,9 @@ namespace dnSpy.Disassembly.X86 {
 				}
 			}
 		}
-		string decimalPrefix;
+		string? decimalPrefix;
 
-		public string DecimalSuffix {
+		public string? DecimalSuffix {
 			get => decimalSuffix;
 			set {
 				if (value != decimalSuffix) {
@@ -256,7 +256,7 @@ namespace dnSpy.Disassembly.X86 {
 				}
 			}
 		}
-		string decimalSuffix;
+		string? decimalSuffix;
 
 		public int DecimalDigitGroupSize {
 			get => decimalDigitGroupSize;
@@ -269,7 +269,7 @@ namespace dnSpy.Disassembly.X86 {
 		}
 		int decimalDigitGroupSize = 3;
 
-		public string OctalPrefix {
+		public string? OctalPrefix {
 			get => octalPrefix;
 			set {
 				if (value != octalPrefix) {
@@ -278,9 +278,9 @@ namespace dnSpy.Disassembly.X86 {
 				}
 			}
 		}
-		string octalPrefix;
+		string? octalPrefix;
 
-		public string OctalSuffix {
+		public string? OctalSuffix {
 			get => octalSuffix;
 			set {
 				if (value != octalSuffix) {
@@ -289,7 +289,7 @@ namespace dnSpy.Disassembly.X86 {
 				}
 			}
 		}
-		string octalSuffix;
+		string? octalSuffix;
 
 		public int OctalDigitGroupSize {
 			get => octalDigitGroupSize;
@@ -302,7 +302,7 @@ namespace dnSpy.Disassembly.X86 {
 		}
 		int octalDigitGroupSize = 4;
 
-		public string BinaryPrefix {
+		public string? BinaryPrefix {
 			get => binaryPrefix;
 			set {
 				if (value != binaryPrefix) {
@@ -311,9 +311,9 @@ namespace dnSpy.Disassembly.X86 {
 				}
 			}
 		}
-		string binaryPrefix;
+		string? binaryPrefix;
 
-		public string BinarySuffix {
+		public string? BinarySuffix {
 			get => binarySuffix;
 			set {
 				if (value != binarySuffix) {
@@ -322,7 +322,7 @@ namespace dnSpy.Disassembly.X86 {
 				}
 			}
 		}
-		string binarySuffix;
+		string? binarySuffix;
 
 		public int BinaryDigitGroupSize {
 			get => binaryDigitGroupSize;
@@ -335,7 +335,7 @@ namespace dnSpy.Disassembly.X86 {
 		}
 		int binaryDigitGroupSize = 4;
 
-		public string DigitSeparator {
+		public string? DigitSeparator {
 			get => digitSeparator;
 			set {
 				if (value != digitSeparator) {
@@ -344,7 +344,7 @@ namespace dnSpy.Disassembly.X86 {
 				}
 			}
 		}
-		string digitSeparator = null;
+		string? digitSeparator = null;
 
 		public bool LeadingZeroes {
 			get => leadingZeroes;
@@ -357,16 +357,16 @@ namespace dnSpy.Disassembly.X86 {
 		}
 		bool leadingZeroes;
 
-		public bool UpperCaseHex {
-			get => upperCaseHex;
+		public bool UppercaseHex {
+			get => uppercaseHex;
 			set {
-				if (value != upperCaseHex) {
-					upperCaseHex = value;
-					OnPropertyChanged(nameof(UpperCaseHex));
+				if (value != uppercaseHex) {
+					uppercaseHex = value;
+					OnPropertyChanged(nameof(UppercaseHex));
 				}
 			}
 		}
-		bool upperCaseHex = true;
+		bool uppercaseHex = true;
 
 		public bool SmallHexNumbersInDecimal {
 			get => smallHexNumbersInDecimal;
@@ -437,16 +437,16 @@ namespace dnSpy.Disassembly.X86 {
 		}
 		bool signedMemoryDisplacements = true;
 
-		public bool SignExtendMemoryDisplacements {
-			get => signExtendMemoryDisplacements;
+		public bool DisplacementLeadingZeroes {
+			get => displacementLeadingZeroes;
 			set {
-				if (value != signExtendMemoryDisplacements) {
-					signExtendMemoryDisplacements = value;
-					OnPropertyChanged(nameof(SignExtendMemoryDisplacements));
+				if (value != displacementLeadingZeroes) {
+					displacementLeadingZeroes = value;
+					OnPropertyChanged(nameof(DisplacementLeadingZeroes));
 				}
 			}
 		}
-		bool signExtendMemoryDisplacements;
+		bool displacementLeadingZeroes;
 
 		public MemorySizeOptions MemorySizeOptions {
 			get => memorySizeOptions;
@@ -503,13 +503,90 @@ namespace dnSpy.Disassembly.X86 {
 		}
 		bool showSymbolAddress = true;
 
+		public bool GasNakedRegisters {
+			get => gasNakedRegisters;
+			set {
+				if (value != gasNakedRegisters) {
+					gasNakedRegisters = value;
+					OnPropertyChanged(nameof(GasNakedRegisters));
+				}
+			}
+		}
+		bool gasNakedRegisters;
+
+		public bool GasShowMnemonicSizeSuffix {
+			get => gasShowMnemonicSizeSuffix;
+			set {
+				if (value != gasShowMnemonicSizeSuffix) {
+					gasShowMnemonicSizeSuffix = value;
+					OnPropertyChanged(nameof(GasShowMnemonicSizeSuffix));
+				}
+			}
+		}
+		bool gasShowMnemonicSizeSuffix;
+
+		public bool GasSpaceAfterMemoryOperandComma {
+			get => gasSpaceAfterMemoryOperandComma;
+			set {
+				if (value != gasSpaceAfterMemoryOperandComma) {
+					gasSpaceAfterMemoryOperandComma = value;
+					OnPropertyChanged(nameof(GasSpaceAfterMemoryOperandComma));
+				}
+			}
+		}
+		bool gasSpaceAfterMemoryOperandComma;
+
+		public bool MasmAddDsPrefix32 {
+			get => masmAddDsPrefix32;
+			set {
+				if (value != masmAddDsPrefix32) {
+					masmAddDsPrefix32 = value;
+					OnPropertyChanged(nameof(MasmAddDsPrefix32));
+				}
+			}
+		}
+		bool masmAddDsPrefix32 = true;
+
+		public bool MasmSymbolDisplInBrackets {
+			get => masmSymbolDisplInBrackets;
+			set {
+				if (value != masmSymbolDisplInBrackets) {
+					masmSymbolDisplInBrackets = value;
+					OnPropertyChanged(nameof(MasmSymbolDisplInBrackets));
+				}
+			}
+		}
+		bool masmSymbolDisplInBrackets = true;
+
+		public bool MasmDisplInBrackets {
+			get => masmDisplInBrackets;
+			set {
+				if (value != masmDisplInBrackets) {
+					masmDisplInBrackets = value;
+					OnPropertyChanged(nameof(MasmDisplInBrackets));
+				}
+			}
+		}
+		bool masmDisplInBrackets = true;
+
+		public bool NasmShowSignExtendedImmediateSize {
+			get => nasmShowSignExtendedImmediateSize;
+			set {
+				if (value != nasmShowSignExtendedImmediateSize) {
+					nasmShowSignExtendedImmediateSize = value;
+					OnPropertyChanged(nameof(NasmShowSignExtendedImmediateSize));
+				}
+			}
+		}
+		bool nasmShowSignExtendedImmediateSize;
+
 		protected void ReadSettings(ISettingsSection sect) {
-			UpperCasePrefixes = sect.Attribute<bool?>(nameof(UpperCasePrefixes)) ?? UpperCasePrefixes;
-			UpperCaseMnemonics = sect.Attribute<bool?>(nameof(UpperCaseMnemonics)) ?? UpperCaseMnemonics;
-			UpperCaseRegisters = sect.Attribute<bool?>(nameof(UpperCaseRegisters)) ?? UpperCaseRegisters;
-			UpperCaseKeywords = sect.Attribute<bool?>(nameof(UpperCaseKeywords)) ?? UpperCaseKeywords;
-			UpperCaseDecorators = sect.Attribute<bool?>(nameof(UpperCaseDecorators)) ?? UpperCaseDecorators;
-			UpperCaseAll = sect.Attribute<bool?>(nameof(UpperCaseAll)) ?? UpperCaseAll;
+			UppercasePrefixes = sect.Attribute<bool?>(nameof(UppercasePrefixes)) ?? UppercasePrefixes;
+			UppercaseMnemonics = sect.Attribute<bool?>(nameof(UppercaseMnemonics)) ?? UppercaseMnemonics;
+			UppercaseRegisters = sect.Attribute<bool?>(nameof(UppercaseRegisters)) ?? UppercaseRegisters;
+			UppercaseKeywords = sect.Attribute<bool?>(nameof(UppercaseKeywords)) ?? UppercaseKeywords;
+			UppercaseDecorators = sect.Attribute<bool?>(nameof(UppercaseDecorators)) ?? UppercaseDecorators;
+			UppercaseAll = sect.Attribute<bool?>(nameof(UppercaseAll)) ?? UppercaseAll;
 			FirstOperandCharIndex = sect.Attribute<int?>(nameof(FirstOperandCharIndex)) ?? FirstOperandCharIndex;
 			TabSize = sect.Attribute<int?>(nameof(TabSize)) ?? TabSize;
 			SpaceAfterOperandSeparator = sect.Attribute<bool?>(nameof(SpaceAfterOperandSeparator)) ?? SpaceAfterOperandSeparator;
@@ -534,28 +611,35 @@ namespace dnSpy.Disassembly.X86 {
 			BinaryDigitGroupSize = sect.Attribute<int?>(nameof(BinaryDigitGroupSize)) ?? BinaryDigitGroupSize;
 			DigitSeparator = sect.Attribute<string>(nameof(DigitSeparator)) ?? DigitSeparator;
 			LeadingZeroes = sect.Attribute<bool?>(nameof(LeadingZeroes)) ?? LeadingZeroes;
-			UpperCaseHex = sect.Attribute<bool?>(nameof(UpperCaseHex)) ?? UpperCaseHex;
+			UppercaseHex = sect.Attribute<bool?>(nameof(UppercaseHex)) ?? UppercaseHex;
 			SmallHexNumbersInDecimal = sect.Attribute<bool?>(nameof(SmallHexNumbersInDecimal)) ?? SmallHexNumbersInDecimal;
 			AddLeadingZeroToHexNumbers = sect.Attribute<bool?>(nameof(AddLeadingZeroToHexNumbers)) ?? AddLeadingZeroToHexNumbers;
 			NumberBase = sect.Attribute<NumberBase?>(nameof(NumberBase)) ?? NumberBase;
 			BranchLeadingZeroes = sect.Attribute<bool?>(nameof(BranchLeadingZeroes)) ?? BranchLeadingZeroes;
 			SignedImmediateOperands = sect.Attribute<bool?>(nameof(SignedImmediateOperands)) ?? SignedImmediateOperands;
 			SignedMemoryDisplacements = sect.Attribute<bool?>(nameof(SignedMemoryDisplacements)) ?? SignedMemoryDisplacements;
-			SignExtendMemoryDisplacements = sect.Attribute<bool?>(nameof(SignExtendMemoryDisplacements)) ?? SignExtendMemoryDisplacements;
+			DisplacementLeadingZeroes = sect.Attribute<bool?>(nameof(DisplacementLeadingZeroes)) ?? DisplacementLeadingZeroes;
 			MemorySizeOptions = sect.Attribute<MemorySizeOptions?>(nameof(MemorySizeOptions)) ?? MemorySizeOptions;
 			RipRelativeAddresses = sect.Attribute<bool?>(nameof(RipRelativeAddresses)) ?? RipRelativeAddresses;
 			ShowBranchSize = sect.Attribute<bool?>(nameof(ShowBranchSize)) ?? ShowBranchSize;
 			UsePseudoOps = sect.Attribute<bool?>(nameof(UsePseudoOps)) ?? UsePseudoOps;
 			ShowSymbolAddress = sect.Attribute<bool?>(nameof(ShowSymbolAddress)) ?? ShowSymbolAddress;
+			GasNakedRegisters = sect.Attribute<bool?>(nameof(GasNakedRegisters)) ?? GasNakedRegisters;
+			GasShowMnemonicSizeSuffix = sect.Attribute<bool?>(nameof(GasShowMnemonicSizeSuffix)) ?? GasShowMnemonicSizeSuffix;
+			GasSpaceAfterMemoryOperandComma = sect.Attribute<bool?>(nameof(GasSpaceAfterMemoryOperandComma)) ?? GasSpaceAfterMemoryOperandComma;
+			MasmAddDsPrefix32 = sect.Attribute<bool?>(nameof(MasmAddDsPrefix32)) ?? MasmAddDsPrefix32;
+			MasmSymbolDisplInBrackets = sect.Attribute<bool?>(nameof(MasmSymbolDisplInBrackets)) ?? MasmSymbolDisplInBrackets;
+			MasmDisplInBrackets = sect.Attribute<bool?>(nameof(MasmDisplInBrackets)) ?? MasmDisplInBrackets;
+			NasmShowSignExtendedImmediateSize = sect.Attribute<bool?>(nameof(NasmShowSignExtendedImmediateSize)) ?? NasmShowSignExtendedImmediateSize;
 		}
 
 		protected void WriteSettings(ISettingsSection sect) {
-			sect.Attribute(nameof(UpperCasePrefixes), UpperCasePrefixes);
-			sect.Attribute(nameof(UpperCaseMnemonics), UpperCaseMnemonics);
-			sect.Attribute(nameof(UpperCaseRegisters), UpperCaseRegisters);
-			sect.Attribute(nameof(UpperCaseKeywords), UpperCaseKeywords);
-			sect.Attribute(nameof(UpperCaseDecorators), UpperCaseDecorators);
-			sect.Attribute(nameof(UpperCaseAll), UpperCaseAll);
+			sect.Attribute(nameof(UppercasePrefixes), UppercasePrefixes);
+			sect.Attribute(nameof(UppercaseMnemonics), UppercaseMnemonics);
+			sect.Attribute(nameof(UppercaseRegisters), UppercaseRegisters);
+			sect.Attribute(nameof(UppercaseKeywords), UppercaseKeywords);
+			sect.Attribute(nameof(UppercaseDecorators), UppercaseDecorators);
+			sect.Attribute(nameof(UppercaseAll), UppercaseAll);
 			sect.Attribute(nameof(FirstOperandCharIndex), FirstOperandCharIndex);
 			sect.Attribute(nameof(TabSize), TabSize);
 			sect.Attribute(nameof(SpaceAfterOperandSeparator), SpaceAfterOperandSeparator);
@@ -580,30 +664,37 @@ namespace dnSpy.Disassembly.X86 {
 			sect.Attribute(nameof(BinaryDigitGroupSize), BinaryDigitGroupSize);
 			sect.Attribute(nameof(DigitSeparator), DigitSeparator);
 			sect.Attribute(nameof(LeadingZeroes), LeadingZeroes);
-			sect.Attribute(nameof(UpperCaseHex), UpperCaseHex);
+			sect.Attribute(nameof(UppercaseHex), UppercaseHex);
 			sect.Attribute(nameof(SmallHexNumbersInDecimal), SmallHexNumbersInDecimal);
 			sect.Attribute(nameof(AddLeadingZeroToHexNumbers), AddLeadingZeroToHexNumbers);
 			sect.Attribute(nameof(NumberBase), NumberBase);
 			sect.Attribute(nameof(BranchLeadingZeroes), BranchLeadingZeroes);
 			sect.Attribute(nameof(SignedImmediateOperands), SignedImmediateOperands);
 			sect.Attribute(nameof(SignedMemoryDisplacements), SignedMemoryDisplacements);
-			sect.Attribute(nameof(SignExtendMemoryDisplacements), SignExtendMemoryDisplacements);
+			sect.Attribute(nameof(DisplacementLeadingZeroes), DisplacementLeadingZeroes);
 			sect.Attribute(nameof(MemorySizeOptions), MemorySizeOptions);
 			sect.Attribute(nameof(RipRelativeAddresses), RipRelativeAddresses);
 			sect.Attribute(nameof(ShowBranchSize), ShowBranchSize);
 			sect.Attribute(nameof(UsePseudoOps), UsePseudoOps);
 			sect.Attribute(nameof(ShowSymbolAddress), ShowSymbolAddress);
+			sect.Attribute(nameof(GasNakedRegisters), GasNakedRegisters);
+			sect.Attribute(nameof(GasShowMnemonicSizeSuffix), GasShowMnemonicSizeSuffix);
+			sect.Attribute(nameof(GasSpaceAfterMemoryOperandComma), GasSpaceAfterMemoryOperandComma);
+			sect.Attribute(nameof(MasmAddDsPrefix32), MasmAddDsPrefix32);
+			sect.Attribute(nameof(MasmSymbolDisplInBrackets), MasmSymbolDisplInBrackets);
+			sect.Attribute(nameof(MasmDisplInBrackets), MasmDisplInBrackets);
+			sect.Attribute(nameof(NasmShowSignExtendedImmediateSize), NasmShowSignExtendedImmediateSize);
 		}
 
 		protected DisassemblySettings CopyTo(DisassemblySettings other) {
-			if (other == null)
+			if (other is null)
 				throw new ArgumentNullException(nameof(other));
-			other.UpperCasePrefixes = UpperCasePrefixes;
-			other.UpperCaseMnemonics = UpperCaseMnemonics;
-			other.UpperCaseRegisters = UpperCaseRegisters;
-			other.UpperCaseKeywords = UpperCaseKeywords;
-			other.UpperCaseDecorators = UpperCaseDecorators;
-			other.UpperCaseAll = UpperCaseAll;
+			other.UppercasePrefixes = UppercasePrefixes;
+			other.UppercaseMnemonics = UppercaseMnemonics;
+			other.UppercaseRegisters = UppercaseRegisters;
+			other.UppercaseKeywords = UppercaseKeywords;
+			other.UppercaseDecorators = UppercaseDecorators;
+			other.UppercaseAll = UppercaseAll;
 			other.FirstOperandCharIndex = FirstOperandCharIndex;
 			other.TabSize = TabSize;
 			other.SpaceAfterOperandSeparator = SpaceAfterOperandSeparator;
@@ -628,19 +719,26 @@ namespace dnSpy.Disassembly.X86 {
 			other.BinaryDigitGroupSize = BinaryDigitGroupSize;
 			other.DigitSeparator = DigitSeparator;
 			other.LeadingZeroes = LeadingZeroes;
-			other.UpperCaseHex = UpperCaseHex;
+			other.UppercaseHex = UppercaseHex;
 			other.SmallHexNumbersInDecimal = SmallHexNumbersInDecimal;
 			other.AddLeadingZeroToHexNumbers = AddLeadingZeroToHexNumbers;
 			other.NumberBase = NumberBase;
 			other.BranchLeadingZeroes = BranchLeadingZeroes;
 			other.SignedImmediateOperands = SignedImmediateOperands;
 			other.SignedMemoryDisplacements = SignedMemoryDisplacements;
-			other.SignExtendMemoryDisplacements = SignExtendMemoryDisplacements;
+			other.DisplacementLeadingZeroes = DisplacementLeadingZeroes;
 			other.MemorySizeOptions = MemorySizeOptions;
 			other.RipRelativeAddresses = RipRelativeAddresses;
 			other.ShowBranchSize = ShowBranchSize;
 			other.UsePseudoOps = UsePseudoOps;
 			other.ShowSymbolAddress = ShowSymbolAddress;
+			other.GasNakedRegisters = GasNakedRegisters;
+			other.GasShowMnemonicSizeSuffix = GasShowMnemonicSizeSuffix;
+			other.GasSpaceAfterMemoryOperandComma = GasSpaceAfterMemoryOperandComma;
+			other.MasmAddDsPrefix32 = MasmAddDsPrefix32;
+			other.MasmSymbolDisplInBrackets = MasmSymbolDisplInBrackets;
+			other.MasmDisplInBrackets = MasmDisplInBrackets;
+			other.NasmShowSignExtendedImmediateSize = NasmShowSignExtendedImmediateSize;
 			return other;
 		}
 	}

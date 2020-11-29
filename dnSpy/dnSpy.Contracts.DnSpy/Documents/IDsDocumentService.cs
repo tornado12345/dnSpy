@@ -36,7 +36,7 @@ namespace dnSpy.Contracts.Documents {
 		/// <summary>
 		/// Notified when the collection gets changed
 		/// </summary>
-		event EventHandler<NotifyDocumentCollectionChangedEventArgs> CollectionChanged;
+		event EventHandler<NotifyDocumentCollectionChangedEventArgs>? CollectionChanged;
 
 		/// <summary>
 		/// Gets all documents. Doesn't include any children.
@@ -60,7 +60,7 @@ namespace dnSpy.Contracts.Documents {
 		/// <param name="delayLoad">true to delay load</param>
 		/// <param name="data">Data passed to listeners</param>
 		/// <returns></returns>
-		IDsDocument ForceAdd(IDsDocument document, bool delayLoad, object data);
+		IDsDocument ForceAdd(IDsDocument document, bool delayLoad, object? data);
 
 		/// <summary>
 		/// Creates a new <see cref="IDsDocument"/> instance or returns an existing one. null is
@@ -70,7 +70,7 @@ namespace dnSpy.Contracts.Documents {
 		/// <param name="isAutoLoaded">New value of <see cref="IDsDocument.IsAutoLoaded"/> if the
 		/// document gets created.</param>
 		/// <returns></returns>
-		IDsDocument TryGetOrCreate(DsDocumentInfo info, bool isAutoLoaded = false);
+		IDsDocument? TryGetOrCreate(DsDocumentInfo info, bool isAutoLoaded = false);
 
 		/// <summary>
 		/// Tries to create a new <see cref="IDsDocument"/> without adding it to the list. null is
@@ -78,7 +78,7 @@ namespace dnSpy.Contracts.Documents {
 		/// </summary>
 		/// <param name="info">Document info</param>
 		/// <returns></returns>
-		IDsDocument TryCreateOnly(DsDocumentInfo info);
+		IDsDocument? TryCreateOnly(DsDocumentInfo info);
 
 		/// <summary>
 		/// Resolves an assembly. Returns null if it couldn't be resolved.
@@ -86,14 +86,14 @@ namespace dnSpy.Contracts.Documents {
 		/// <param name="asm">Assembly</param>
 		/// <param name="sourceModule">The module that needs to resolve an assembly or null</param>
 		/// <returns></returns>
-		IDsDocument Resolve(IAssembly asm, ModuleDef sourceModule);
+		IDsDocument? Resolve(IAssembly asm, ModuleDef? sourceModule);
 
 		/// <summary>
 		/// Returns an assembly or null if it's not in the list
 		/// </summary>
 		/// <param name="assembly">Assembly</param>
 		/// <returns></returns>
-		IDsDocument FindAssembly(IAssembly assembly);
+		IDsDocument? FindAssembly(IAssembly assembly);
 
 		/// <summary>
 		/// Returns an assembly or null if it's not in the list
@@ -101,14 +101,14 @@ namespace dnSpy.Contracts.Documents {
 		/// <param name="assembly">Assembly</param>
 		/// <param name="options">Options</param>
 		/// <returns></returns>
-		IDsDocument FindAssembly(IAssembly assembly, FindAssemblyOptions options);
+		IDsDocument? FindAssembly(IAssembly assembly, FindAssemblyOptions options);
 
 		/// <summary>
 		/// Returns an inserted <see cref="IDsDocument"/> instance or null
 		/// </summary>
 		/// <param name="key">Key</param>
 		/// <returns></returns>
-		IDsDocument Find(IDsDocumentNameKey key);
+		IDsDocument? Find(IDsDocumentNameKey key);
 
 		/// <summary>
 		/// Removes a document
@@ -129,7 +129,7 @@ namespace dnSpy.Contracts.Documents {
 
 		/// <summary>
 		/// Can be called once to set a delegate instance that will execute code in a certain
-		/// thread. <see cref="CollectionChanged"/> can be called in any thread unless this method
+		/// thread. <see cref="CollectionChanged"/> can be called on any thread unless this method
 		/// gets called.
 		/// </summary>
 		/// <param name="action">Action</param>
@@ -143,6 +143,17 @@ namespace dnSpy.Contracts.Documents {
 		/// <param name="isModule">true if it's a module, false if it's an assembly</param>
 		/// <returns></returns>
 		IDsDocument CreateDocument(DsDocumentInfo documentInfo, string filename, bool isModule = false);
+
+		/// <summary>
+		/// Creates a <see cref="IDsDocument"/>
+		/// </summary>
+		/// <param name="documentInfo">Document info</param>
+		/// <param name="fileData">File data</param>
+		/// <param name="filename">Filename or null/empty string if it's unknown</param>
+		/// <param name="isFileLayout">true if it's file layout, false if it's memory layout</param>
+		/// <param name="isModule">true if it's a module, false if it's an assembly</param>
+		/// <returns></returns>
+		IDsDocument CreateDocument(DsDocumentInfo documentInfo, byte[] fileData, string? filename, bool isFileLayout, bool isModule = false);
 
 		/// <summary>
 		/// The assembly resolver it uses

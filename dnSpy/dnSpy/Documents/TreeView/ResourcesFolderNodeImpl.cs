@@ -34,7 +34,7 @@ namespace dnSpy.Documents.TreeView {
 		protected override ImageReference? GetExpandedIcon(IDotNetImageService dnImgMgr) => DsImages.FolderOpened;
 		public override NodePathName NodePathName => new NodePathName(Guid);
 		public override void Initialize() => TreeNode.LazyLoading = true;
-		public override ITreeNodeGroup TreeNodeGroup { get; }
+		public override ITreeNodeGroup? TreeNodeGroup { get; }
 
 		readonly ModuleDef module;
 
@@ -43,8 +43,13 @@ namespace dnSpy.Documents.TreeView {
 			this.module = module;
 		}
 
-		protected override void WriteCore(ITextColorWriter output, IDecompiler decompiler, DocumentNodeWriteOptions options) =>
+		protected override void WriteCore(ITextColorWriter output, IDecompiler decompiler, DocumentNodeWriteOptions options) {
 			output.Write(BoxedTextColor.Text, dnSpy_Resources.ResourcesFolder);
+			if ((options & DocumentNodeWriteOptions.ToolTip) != 0) {
+				output.WriteLine();
+				WriteFilename(output);
+			}
+		}
 
 		public override IEnumerable<TreeNodeData> CreateChildren() {
 			var treeNodeGroup = Context.DocumentTreeView.DocumentTreeNodeGroups.GetGroup(DocumentTreeNodeGroupType.ResourceTreeNodeGroup);

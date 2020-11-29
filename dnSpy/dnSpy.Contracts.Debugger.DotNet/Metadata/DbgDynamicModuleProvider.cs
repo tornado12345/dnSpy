@@ -30,7 +30,7 @@ namespace dnSpy.Contracts.Debugger.DotNet.Metadata {
 		/// <summary>
 		/// Raised when a new class has been loaded in a dynamic assembly
 		/// </summary>
-		public abstract event EventHandler<ClassLoadedEventArgs> ClassLoaded;
+		public abstract event EventHandler<ClassLoadedEventArgs>? ClassLoaded;
 
 		/// <summary>
 		/// Executes <paramref name="action"/> asynchronously on the thread required to load dynamic modules.
@@ -44,7 +44,7 @@ namespace dnSpy.Contracts.Debugger.DotNet.Metadata {
 		/// <param name="module">Module</param>
 		/// <param name="moduleId">Module id</param>
 		/// <returns></returns>
-		public abstract ModuleDef GetDynamicMetadata(DbgModule module, out ModuleId moduleId);
+		public abstract ModuleDef? GetDynamicMetadata(DbgModule module, out ModuleId moduleId);
 
 		/// <summary>
 		/// Gets all modified types. This method is called on the engine thread (see <see cref="BeginInvoke(Action)"/>)

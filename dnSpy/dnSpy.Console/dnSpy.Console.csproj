@@ -1,4 +1,10 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+<!-- Target dir is the same as dnSpy.exe so we'll overwrite some files when creating
+a self-contained .NET app (System.Security.Permissions (wrong lower version), WindowsBase
+(wrong file (15KB, should be 1.1MB))).
+
+The workaround is to add WindowsDesktop above.
+-->
 
   <Import Project="..\..\DnSpyCommon.props" />
 
@@ -10,12 +16,19 @@
     <SignAssembly>True</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\dnSpy.snk</AssemblyOriginatorKeyFile>
     <OutputPath>..\dnSpy\bin\$(Configuration)\</OutputPath>
+    <Nullable>enable</Nullable>
 
+    <RuntimeIdentifiers>$(DnSpyRuntimeIdentifiers)</RuntimeIdentifiers>
     <OutputType>Exe</OutputType>
     <Prefer32Bit>false</Prefer32Bit>
     <PlatformTarget>AnyCPU</PlatformTarget>
-    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\dnSpy\MainApp\DotNetAssemblyLoader.cs" Link="DotNetAssemblyLoader.cs" />
+  </ItemGroup>
 
   <ItemGroup>
     <Compile Update="Properties\dnSpy.Console.Resources.Designer.cs">
@@ -33,7 +46,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="..\dnSpy\app.config">
+    <None Include="..\dnSpy\app.config" Condition=" '$(IsDotNetFramework)' == 'true' " >
       <Link>app.config</Link>
     </None>
     <None Include="..\dnSpy\app.manifest">

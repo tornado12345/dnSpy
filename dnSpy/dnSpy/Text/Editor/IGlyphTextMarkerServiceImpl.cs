@@ -32,10 +32,10 @@ namespace dnSpy.Text.Editor {
 		IEditorFormatMapService EditorFormatMapService { get; }
 		IEnumerable<IGlyphTextMarkerImpl> AllMarkers { get; }
 		Lazy<IGlyphTextMarkerMouseProcessorProvider, IGlyphTextMarkerMouseProcessorProviderMetadata>[] GlyphTextMarkerMouseProcessorProviders { get; }
-		event EventHandler<GlyphTextMarkerAddedEventArgs> MarkerAdded;
-		event EventHandler<GlyphTextMarkerRemovedEventArgs> MarkerRemoved;
-		event EventHandler<GlyphTextMarkersRemovedEventArgs> MarkersRemoved;
-		event EventHandler<GetGlyphTextMarkerAndSpanEventArgs> GetGlyphTextMarkerAndSpan;
+		event EventHandler<GlyphTextMarkerAddedEventArgs>? MarkerAdded;
+		event EventHandler<GlyphTextMarkerRemovedEventArgs>? MarkerRemoved;
+		event EventHandler<GlyphTextMarkersRemovedEventArgs>? MarkersRemoved;
+		event EventHandler<GetGlyphTextMarkerAndSpanEventArgs>? GetGlyphTextMarkerAndSpan;
 	}
 
 	abstract class GlyphTextMarkerEventArgs : EventArgs {
@@ -65,9 +65,9 @@ namespace dnSpy.Text.Editor {
 	sealed class GetGlyphTextMarkerAndSpanEventArgs : EventArgs {
 		public ITextView TextView { get; }
 		public SnapshotSpan Span { get; }
-		public GlyphTextMarkerAndSpan[] Result { get; set; }
+		public GlyphTextMarkerAndSpan[]? Result { get; set; }
 		public GetGlyphTextMarkerAndSpanEventArgs(ITextView textView, SnapshotSpan span) {
-			if (span.Snapshot == null)
+			if (span.Snapshot is null)
 				throw new ArgumentException();
 			TextView = textView ?? throw new ArgumentNullException(nameof(textView));
 			Span = span;
@@ -79,7 +79,7 @@ namespace dnSpy.Text.Editor {
 		public SnapshotSpan Span { get; }
 		public GlyphTextMarkerAndSpan? Result { get; set; }
 		public GetFirstGlyphTextMarkerAndSpanEventArgs(ITextView textView, SnapshotSpan span) {
-			if (span.Snapshot == null)
+			if (span.Snapshot is null)
 				throw new ArgumentException();
 			TextView = textView ?? throw new ArgumentNullException(nameof(textView));
 			Span = span;

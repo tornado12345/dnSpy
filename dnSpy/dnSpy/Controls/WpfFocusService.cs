@@ -36,8 +36,8 @@ namespace dnSpy.Controls {
 		WpfFocusService([ImportMany] IEnumerable<Lazy<IWpfFocusChecker>> checkers) => this.checkers = checkers.ToArray();
 
 		public void Focus(IInputElement element) {
-			Debug.Assert(element != null && element.Focusable);
-			if (element == null || !element.Focusable)
+			Debug2.Assert(element is not null && element.Focusable);
+			if (element is null || !element.Focusable)
 				return;
 			if (CanFocus)
 				element.Focus();

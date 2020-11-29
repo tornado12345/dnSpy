@@ -22,9 +22,6 @@ using dnSpy.Debugger.DotNet.Metadata;
 
 namespace dnSpy.Roslyn.Debugger.Formatters {
 	static class KeyValuePairTypeUtils {
-		const string KeyFieldName = "key";
-		const string ValueFieldName = "value";
-
 		public static bool IsKeyValuePair(DmdType type) {
 			if (type.MetadataName != "KeyValuePair`2" || type.MetadataNamespace != "System.Collections.Generic")
 				return false;
@@ -34,26 +31,26 @@ namespace dnSpy.Roslyn.Debugger.Formatters {
 			return type == type.AppDomain.GetWellKnownType(DmdWellKnownType.System_Collections_Generic_KeyValuePair_T2, isOptional: true);
 		}
 
-		public static (DmdFieldInfo keyField, DmdFieldInfo valueField) TryGetFields(DmdType type) {
+		public static (DmdFieldInfo? keyField, DmdFieldInfo? valueField) TryGetFields(DmdType type) {
 			Debug.Assert(IsKeyValuePair(type));
-			return TryGetFields(type, KeyFieldName, ValueFieldName);
+			return TryGetFields(type, KnownMemberNames.KeyValuePair_Key_FieldName, KnownMemberNames.KeyValuePair_Value_FieldName);
 		}
 
-		public static (DmdFieldInfo keyField, DmdFieldInfo valueField) TryGetFields(DmdType type, string keyFieldName, string valueFieldName) {
-			DmdFieldInfo keyField = null;
-			DmdFieldInfo valueField = null;
+		public static (DmdFieldInfo? keyField, DmdFieldInfo? valueField) TryGetFields(DmdType type, string keyFieldName, string valueFieldName) {
+			DmdFieldInfo? keyField = null;
+			DmdFieldInfo? valueField = null;
 			var fields = type.DeclaredFields;
 			for (int i = 0; i < fields.Count; i++) {
 				var field = fields[i];
 				if (field.IsStatic || field.IsLiteral)
 					continue;
 				if (field.Name == keyFieldName) {
-					if ((object)keyField != null)
+					if (keyField is not null)
 						return (null, null);
 					keyField = field;
 				}
 				else if (field.Name == valueFieldName) {
-					if ((object)valueField != null)
+					if (valueField is not null)
 						return (null, null);
 					valueField = field;
 				}
@@ -61,7 +58,7 @@ namespace dnSpy.Roslyn.Debugger.Formatters {
 					return (null, null);
 			}
 
-			if ((object)keyField == null || (object)valueField == null)
+			if (keyField is null || valueField is null)
 				return (null, null);
 			return (keyField, valueField);
 		}

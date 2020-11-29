@@ -22,18 +22,15 @@ using dnSpy.Debugger.DotNet.Metadata;
 
 namespace dnSpy.Roslyn.Debugger.Formatters {
 	static class DictionaryEntryTypeUtils {
-		const string KeyFieldName = "_key";
-		const string ValueFieldName = "_value";
-
 		public static bool IsDictionaryEntry(DmdType type) {
 			if (type.MetadataName != "DictionaryEntry" || type.MetadataNamespace != "System.Collections")
 				return false;
 			return type == type.AppDomain.GetWellKnownType(DmdWellKnownType.System_Collections_DictionaryEntry, isOptional: true);
 		}
 
-		public static (DmdFieldInfo keyField, DmdFieldInfo valueField) TryGetFields(DmdType type) {
+		public static (DmdFieldInfo? keyField, DmdFieldInfo? valueField) TryGetFields(DmdType type) {
 			Debug.Assert(IsDictionaryEntry(type));
-			return KeyValuePairTypeUtils.TryGetFields(type, KeyFieldName, ValueFieldName);
+			return KeyValuePairTypeUtils.TryGetFields(type, KnownMemberNames.DictionaryEntry_Key_FieldName, KnownMemberNames.DictionaryEntry_Value_FieldName);
 		}
 	}
 }

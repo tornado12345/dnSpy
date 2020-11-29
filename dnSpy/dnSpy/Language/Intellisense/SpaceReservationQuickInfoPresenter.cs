@@ -28,16 +28,16 @@ namespace dnSpy.Language.Intellisense {
 		UIElement IPopupIntellisensePresenter.SurfaceElement => control;
 		PopupStyles IPopupIntellisensePresenter.PopupStyles => PopupStyles.PositionClosest;
 		string IPopupIntellisensePresenter.SpaceReservationManagerName => IntellisenseSpaceReservationManagerNames.QuickInfoSpaceReservationManagerName;
-		event EventHandler IPopupIntellisensePresenter.SurfaceElementChanged { add { } remove { } }
-		event EventHandler<ValueChangedEventArgs<PopupStyles>> IPopupIntellisensePresenter.PopupStylesChanged { add { } remove { } }
-		public event EventHandler PresentationSpanChanged;
+		event EventHandler? IPopupIntellisensePresenter.SurfaceElementChanged { add { } remove { } }
+		event EventHandler<ValueChangedEventArgs<PopupStyles>>? IPopupIntellisensePresenter.PopupStylesChanged { add { } remove { } }
+		public event EventHandler? PresentationSpanChanged;
 
 		public double Opacity {
 			get => control.Opacity;
 			set => control.Opacity = value;
 		}
 
-		public ITrackingSpan PresentationSpan {
+		public ITrackingSpan? PresentationSpan {
 			get => presentationSpan;
 			private set {
 				if (!TrackingSpanHelpers.IsSameTrackingSpan(presentationSpan, value)) {
@@ -46,7 +46,7 @@ namespace dnSpy.Language.Intellisense {
 				}
 			}
 		}
-		ITrackingSpan presentationSpan;
+		ITrackingSpan? presentationSpan;
 
 		public SpaceReservationQuickInfoPresenter(IQuickInfoSession session)
 			: base(session) {
@@ -54,7 +54,7 @@ namespace dnSpy.Language.Intellisense {
 			session.ApplicableToSpanChanged += Session_ApplicableToSpanChanged;
 		}
 
-		void Session_ApplicableToSpanChanged(object sender, EventArgs e) {
+		void Session_ApplicableToSpanChanged(object? sender, EventArgs e) {
 			if (session.IsDismissed)
 				return;
 			PresentationSpan = session.ApplicableToSpan;

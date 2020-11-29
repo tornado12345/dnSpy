@@ -24,8 +24,8 @@ using dnSpy.Contracts.Disassembly;
 using Iced.Intel;
 
 namespace dnSpy.Disassembly.X86 {
-	static class FormatterOutputTextKindExtensions {
-		public const FormatterOutputTextKind UnknownSymbol = (FormatterOutputTextKind)(-1);
+	static class FormatterTextKindExtensions {
+		public const FormatterTextKind UnknownSymbol = (FormatterTextKind)(-1);
 	}
 
 	static class BlockFactory {
@@ -50,9 +50,9 @@ namespace dnSpy.Disassembly.X86 {
 			public readonly TargetKind TargetKind;
 			public readonly NativeCodeBlockKind Kind;
 			public readonly ulong Address;
-			public readonly string Comment;
+			public readonly string? Comment;
 			public readonly List<X86InstructionInfo> Instructions;
-			public BlockInfo(TargetKind targetKind, NativeCodeBlockKind kind, ulong address, string comment) {
+			public BlockInfo(TargetKind targetKind, NativeCodeBlockKind kind, ulong address, string? comment) {
 				TargetKind = targetKind;
 				Kind = kind;
 				Address = address;
@@ -68,7 +68,7 @@ namespace dnSpy.Disassembly.X86 {
 
 		static ArraySegment<byte> GetBytes(ArraySegment<byte> code, ulong address, ref Instruction instr) {
 			int index = (int)(instr.IP - address);
-			return new ArraySegment<byte>(code.Array, code.Offset + index, instr.ByteLength);
+			return new ArraySegment<byte>(code.Array!, code.Offset + index, instr.Length);
 		}
 
 		static string GetLabel(int index) => LABEL_PREFIX + index.ToString();
@@ -144,7 +144,7 @@ namespace dnSpy.Disassembly.X86 {
 						switch (instr.MemoryDisplSize) {
 						case 2:
 						case 4: displ = instr.MemoryDisplacement; break;
-						case 8: displ = (ulong)(int)instr.MemoryDisplacement; break;
+						case 8: displ = instr.MemoryDisplacement64; break;
 						default:
 							Debug.Fail($"Unknown mem displ size: {instr.MemoryDisplSize}");
 							goto case 8;
@@ -174,6 +174,8 @@ namespace dnSpy.Disassembly.X86 {
 					currentBlock = new BlockInfo(targetKind, origBlock.Kind, instr.IP, origBlock.Address == instr.IP ? origBlock.Comment : null);
 					newBlocks.Add(currentBlock);
 				}
+				// The addr of each block is always in the dictionary so currentBlock is initialized
+				Debug2.Assert(currentBlock.Instructions is not null);
 				currentBlock.Instructions.Add(new X86InstructionInfo(info.code, instr));
 			}
 
@@ -188,8 +190,8 @@ namespace dnSpy.Disassembly.X86 {
 				for (int j = 0; j < instructions.Count; j++)
 					x86Instructions[j] = instructions[j];
 
-				string label;
-				FormatterOutputTextKind labelKind;
+				string? label;
+				FormatterTextKind labelKind;
 				switch (block.TargetKind) {
 				case TargetKind.Unknown:
 					label = null;
@@ -198,18 +200,18 @@ namespace dnSpy.Disassembly.X86 {
 
 				case TargetKind.Data:
 					label = GetLabel(labelIndex++);
-					labelKind = FormatterOutputTextKind.Data;
+					labelKind = FormatterTextKind.Data;
 					break;
 
 				case TargetKind.BlockStart:
 				case TargetKind.Branch:
 					label = GetLabel(labelIndex++);
-					labelKind = FormatterOutputTextKind.Label;
+					labelKind = FormatterTextKind.Label;
 					break;
 
 				case TargetKind.Call:
 					label = GetFunc(methodIndex++);
-					labelKind = FormatterOutputTextKind.Function;
+					labelKind = FormatterTextKind.Function;
 					break;
 
 				default:

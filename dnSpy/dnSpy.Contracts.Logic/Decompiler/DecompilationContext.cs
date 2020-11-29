@@ -40,7 +40,7 @@ namespace dnSpy.Contracts.Decompiler {
 		/// <summary>
 		/// Disables assembly loading until Dispose() gets called
 		/// </summary>
-		public Func<IDisposable> GetDisableAssemblyLoad { get; set; }
+		public Func<IDisposable>? GetDisableAssemblyLoad { get; set; }
 
 		/// <summary>
 		/// true to calculate ILSpans. Used when debugging
@@ -64,7 +64,7 @@ namespace dnSpy.Contracts.Decompiler {
 		}
 
 		/// <summary />
-		public IDisposable DisableAssemblyLoad() => GetDisableAssemblyLoad?.Invoke();
+		public IDisposable? DisableAssemblyLoad() => GetDisableAssemblyLoad?.Invoke();
 
 		/// <summary>
 		/// Gets or creates a cached object
@@ -73,7 +73,7 @@ namespace dnSpy.Contracts.Decompiler {
 		/// <returns></returns>
 		public T GetOrCreate<T>() where T : class, new() {
 			lock (lockObj) {
-				if (cachedObjs.TryGetValue(typeof(T), out object obj))
+				if (cachedObjs.TryGetValue(typeof(T), out var obj))
 					return (T)obj;
 				T res = new T();
 				cachedObjs.Add(typeof(T), res);
@@ -91,7 +91,7 @@ namespace dnSpy.Contracts.Decompiler {
 		/// <returns></returns>
 		public T GetOrCreate<T>(Func<T> creator) where T : class {
 			lock (lockObj) {
-				if (cachedObjs.TryGetValue(typeof(T), out object obj))
+				if (cachedObjs.TryGetValue(typeof(T), out var obj))
 					return (T)obj;
 				T res = creator();
 				cachedObjs.Add(typeof(T), res);

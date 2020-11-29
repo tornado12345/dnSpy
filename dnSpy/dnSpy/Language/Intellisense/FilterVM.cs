@@ -24,7 +24,7 @@ using dnSpy.Contracts.Language.Intellisense;
 
 namespace dnSpy.Language.Intellisense {
 	sealed class FilterVM : INotifyPropertyChanged {
-		public event PropertyChangedEventHandler PropertyChanged;
+		public event PropertyChangedEventHandler? PropertyChanged;
 
 		public ImageReference ImageReference { get; }
 
@@ -49,8 +49,8 @@ namespace dnSpy.Language.Intellisense {
 			}
 		}
 
-		public string ToolTip => filter.ToolTip;
-		public string AccessKey => filter.AccessKey;
+		public string? ToolTip => filter.ToolTip;
+		public string? AccessKey => filter.AccessKey;
 
 		readonly CompletionPresenter owner;
 		readonly DsIntellisenseFilter filter;

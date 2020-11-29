@@ -23,6 +23,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.ComponentModel.Composition;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using dnSpy.Bookmarks.Impl;
 using dnSpy.Bookmarks.UI;
 using dnSpy.Contracts.Bookmarks;
@@ -44,8 +45,8 @@ namespace dnSpy.Bookmarks.ToolWindows.Bookmarks {
 		ObservableCollection<BookmarkVM> SelectedItems { get; }
 		void ResetSearchSettings();
 		string GetSearchHelpText();
-		event EventHandler OnShowChanged;
-		event EventHandler AllItemsFiltered;
+		event EventHandler? OnShowChanged;
+		event EventHandler? AllItemsFiltered;
 		IEnumerable<BookmarkVM> Sort(IEnumerable<BookmarkVM> bookmarks);
 	}
 
@@ -93,25 +94,25 @@ namespace dnSpy.Bookmarks.ToolWindows.Bookmarks {
 		IEditValueProvider NameEditValueProvider {
 			get {
 				bookmarkContext.UIDispatcher.VerifyAccess();
-				if (nameEditValueProvider == null)
+				if (nameEditValueProvider is null)
 					nameEditValueProvider = editValueProviderService.Create(ContentTypes.BookmarksWindowName, Array.Empty<string>());
 				return nameEditValueProvider;
 			}
 		}
-		IEditValueProvider nameEditValueProvider;
+		IEditValueProvider? nameEditValueProvider;
 
 		IEditValueProvider LabelsEditValueProvider {
 			get {
 				bookmarkContext.UIDispatcher.VerifyAccess();
-				if (labelsEditValueProvider == null)
+				if (labelsEditValueProvider is null)
 					labelsEditValueProvider = editValueProviderService.Create(ContentTypes.BookmarksWindowLabels, Array.Empty<string>());
 				return labelsEditValueProvider;
 			}
 		}
-		IEditValueProvider labelsEditValueProvider;
+		IEditValueProvider? labelsEditValueProvider;
 
-		public event EventHandler OnShowChanged;
-		public event EventHandler AllItemsFiltered;
+		public event EventHandler? OnShowChanged;
+		public event EventHandler? AllItemsFiltered;
 
 		readonly UIDispatcher uiDispatcher;
 		readonly BookmarkContext bookmarkContext;
@@ -143,9 +144,8 @@ namespace dnSpy.Bookmarks.ToolWindows.Bookmarks {
 			this.bookmarkLocationFormatterService = bookmarkLocationFormatterService;
 			this.editValueProviderService = editValueProviderService;
 			var classificationFormatMap = classificationFormatMapService.GetClassificationFormatMap(AppearanceCategoryConstants.UIMisc);
-			bookmarkContext = new BookmarkContext(uiDispatcher, classificationFormatMap, textElementProvider, new SearchMatcher(searchColumnDefinitions)) {
+			bookmarkContext = new BookmarkContext(uiDispatcher, classificationFormatMap, textElementProvider, new SearchMatcher(searchColumnDefinitions), bookmarkFormatterProvider.Create()) {
 				SyntaxHighlight = bookmarksSettings.SyntaxHighlight,
-				Formatter = bookmarkFormatterProvider.Create(),
 			};
 			Descs = new GridViewColumnDescs {
 				Columns = new GridViewColumnDesc[] {
@@ -227,17 +227,17 @@ namespace dnSpy.Bookmarks.ToolWindows.Bookmarks {
 		}
 
 		// UI thread
-		void ClassificationFormatMap_ClassificationFormatMappingChanged(object sender, EventArgs e) {
+		void ClassificationFormatMap_ClassificationFormatMappingChanged(object? sender, EventArgs e) {
 			bookmarkContext.UIDispatcher.VerifyAccess();
 			RefreshThemeFields_UI();
 		}
 
 		// random thread
-		void BookmarksSettings_PropertyChanged(object sender, PropertyChangedEventArgs e) =>
+		void BookmarksSettings_PropertyChanged(object? sender, PropertyChangedEventArgs e) =>
 			UI(() => BookmarksSettings_PropertyChanged_UI(e.PropertyName));
 
 		// UI thread
-		void BookmarksSettings_PropertyChanged_UI(string propertyName) {
+		void BookmarksSettings_PropertyChanged_UI(string? propertyName) {
 			bookmarkContext.UIDispatcher.VerifyAccess();
 			if (propertyName == nameof(BookmarksSettings.SyntaxHighlight)) {
 				bookmarkContext.SyntaxHighlight = bookmarksSettings.SyntaxHighlight;
@@ -246,11 +246,11 @@ namespace dnSpy.Bookmarks.ToolWindows.Bookmarks {
 		}
 
 		// random thread
-		void BookmarkDisplaySettings_PropertyChanged(object sender, PropertyChangedEventArgs e) =>
+		void BookmarkDisplaySettings_PropertyChanged(object? sender, PropertyChangedEventArgs e) =>
 			UI(() => BookmarkDisplaySettings_PropertyChanged_UI(e.PropertyName));
 
 		// UI thread
-		void BookmarkDisplaySettings_PropertyChanged_UI(string propertyName) {
+		void BookmarkDisplaySettings_PropertyChanged_UI(string? propertyName) {
 			bookmarkContext.UIDispatcher.VerifyAccess();
 			switch (propertyName) {
 			case nameof(BookmarkDisplaySettings.ShowTokens):
@@ -322,7 +322,7 @@ namespace dnSpy.Bookmarks.ToolWindows.Bookmarks {
 		void UI(Action callback) => bookmarkContext.UIDispatcher.UI(callback);
 
 		// BM thread
-		void BookmarksService_BookmarksChanged(object sender, CollectionChangedEventArgs<Bookmark> e) {
+		void BookmarksService_BookmarksChanged(object? sender, CollectionChangedEventArgs<Bookmark> e) {
 			BMThread_VerifyAccess();
 			if (e.Added)
 				UI(() => AddItems_UI(e.Objects));
@@ -339,14 +339,14 @@ namespace dnSpy.Bookmarks.ToolWindows.Bookmarks {
 		}
 
 		// BM thread
-		void BookmarksService_BookmarksModified(object sender, BookmarksModifiedEventArgs e) {
+		void BookmarksService_BookmarksModified(object? sender, BookmarksModifiedEventArgs e) {
 			BMThread_VerifyAccess();
 			UI(() => {
 				foreach (var info in e.Bookmarks) {
 					bool b = bmToVM.TryGetValue(info.Bookmark, out var vm);
 					Debug.Assert(b);
 					if (b)
-						vm.UpdateSettings_UI(info.Bookmark.Settings);
+						vm!.UpdateSettings_UI(info.Bookmark.Settings);
 				}
 			});
 		}
@@ -424,12 +424,18 @@ namespace dnSpy.Bookmarks.ToolWindows.Bookmarks {
 		void InitializeNothingMatched(string filterText) =>
 			NothingMatched = AllItems.Count == 0 && !string.IsNullOrWhiteSpace(filterText);
 
-		public int Compare(BookmarkVM x, BookmarkVM y) {
+		public int Compare([AllowNull] BookmarkVM x, [AllowNull] BookmarkVM y) {
 			Debug.Assert(bookmarkContext.UIDispatcher.CheckAccess());
+			if ((object?)x == y)
+				return 0;
+			if (x is null)
+				return -1;
+			if (y is null)
+				return 1;
 			var (desc, dir) = Descs.SortedColumn;
 
 			int id;
-			if (desc == null || dir == GridViewSortDirection.Default) {
+			if (desc is null || dir == GridViewSortDirection.Default) {
 				id = BookmarksWindowColumnIds.Default_Order;
 				dir = GridViewSortDirection.Ascending;
 			}

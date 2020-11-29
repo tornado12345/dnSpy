@@ -23,6 +23,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.ComponentModel.Composition;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using dnSpy.Contracts.Debugger;
 using dnSpy.Contracts.Debugger.Text;
@@ -64,17 +65,17 @@ namespace dnSpy.Debugger.ToolWindows.Modules {
 		public object ProcessCollection => processes;
 		readonly ObservableCollection<SimpleProcessVM> processes;
 
-		public object SelectedProcess {
+		public object? SelectedProcess {
 			get => selectedProcess;
 			set {
 				if (selectedProcess != value) {
-					selectedProcess = (SimpleProcessVM)value;
+					selectedProcess = (SimpleProcessVM?)value;
 					OnPropertyChanged(nameof(SelectedProcess));
 					FilterList_UI(filterText, selectedProcess);
 				}
 			}
 		}
-		SimpleProcessVM selectedProcess;
+		SimpleProcessVM? selectedProcess;
 
 		public string FilterText {
 			get => filterText;
@@ -112,6 +113,7 @@ namespace dnSpy.Debugger.ToolWindows.Modules {
 		[ImportingConstructor]
 		ModulesVM(Lazy<DbgManager> dbgManager, DebuggerSettings debuggerSettings, UIDispatcher uiDispatcher, ModuleFormatterProvider moduleFormatterProvider, IClassificationFormatMapService classificationFormatMapService, ITextElementProvider textElementProvider) {
 			uiDispatcher.VerifyAccess();
+			selectedProcess = null!;
 			realAllItems = new List<ModuleVM>();
 			AllItems = new BulkObservableCollection<ModuleVM>();
 			SelectedItems = new ObservableCollection<ModuleVM>();
@@ -121,9 +123,8 @@ namespace dnSpy.Debugger.ToolWindows.Modules {
 			this.debuggerSettings = debuggerSettings;
 			lazyToolWindowVMHelper = new DebuggerLazyToolWindowVMHelper(this, uiDispatcher, dbgManager);
 			var classificationFormatMap = classificationFormatMapService.GetClassificationFormatMap(AppearanceCategoryConstants.UIMisc);
-			moduleContext = new ModuleContext(uiDispatcher, classificationFormatMap, textElementProvider, new SearchMatcher(searchColumnDefinitions)) {
+			moduleContext = new ModuleContext(uiDispatcher, classificationFormatMap, textElementProvider, new SearchMatcher(searchColumnDefinitions), moduleFormatterProvider.Create()) {
 				SyntaxHighlight = debuggerSettings.SyntaxHighlight,
-				Formatter = moduleFormatterProvider.Create(),
 			};
 			Descs = new GridViewColumnDescs {
 				Columns = new GridViewColumnDesc[] {
@@ -286,17 +287,17 @@ namespace dnSpy.Debugger.ToolWindows.Modules {
 		}
 
 		// UI thread
-		void ClassificationFormatMap_ClassificationFormatMappingChanged(object sender, EventArgs e) {
+		void ClassificationFormatMap_ClassificationFormatMappingChanged(object? sender, EventArgs e) {
 			moduleContext.UIDispatcher.VerifyAccess();
 			RefreshThemeFields_UI();
 		}
 
 		// random thread
-		void DebuggerSettings_PropertyChanged(object sender, PropertyChangedEventArgs e) =>
+		void DebuggerSettings_PropertyChanged(object? sender, PropertyChangedEventArgs e) =>
 			UI(() => DebuggerSettings_PropertyChanged_UI(e.PropertyName));
 
 		// UI thread
-		void DebuggerSettings_PropertyChanged_UI(string propertyName) {
+		void DebuggerSettings_PropertyChanged_UI(string? propertyName) {
 			moduleContext.UIDispatcher.VerifyAccess();
 			if (propertyName == nameof(DebuggerSettings.UseHexadecimal))
 				RefreshHexFields_UI();
@@ -333,7 +334,7 @@ namespace dnSpy.Debugger.ToolWindows.Modules {
 		void UI(Action callback) => moduleContext.UIDispatcher.UI(callback);
 
 		// DbgManager thread
-		void DbgManager_ProcessesChanged(object sender, DbgCollectionChangedEventArgs<DbgProcess> e) {
+		void DbgManager_ProcessesChanged(object? sender, DbgCollectionChangedEventArgs<DbgProcess> e) {
 			if (e.Added) {
 				foreach (var p in e.Objects)
 					InitializeProcess_DbgThread(p);
@@ -361,7 +362,7 @@ namespace dnSpy.Debugger.ToolWindows.Modules {
 		}
 
 		// DbgManager thread
-		void DbgProcess_RuntimesChanged(object sender, DbgCollectionChangedEventArgs<DbgRuntime> e) {
+		void DbgProcess_RuntimesChanged(object? sender, DbgCollectionChangedEventArgs<DbgRuntime> e) {
 			if (e.Added) {
 				foreach (var r in e.Objects)
 					InitializeRuntime_DbgThread(r);
@@ -386,7 +387,7 @@ namespace dnSpy.Debugger.ToolWindows.Modules {
 		}
 
 		// DbgManager thread
-		void DbgRuntime_AppDomainsChanged(object sender, DbgCollectionChangedEventArgs<DbgAppDomain> e) {
+		void DbgRuntime_AppDomainsChanged(object? sender, DbgCollectionChangedEventArgs<DbgAppDomain> e) {
 			if (e.Added) {
 				foreach (var a in e.Objects)
 					InitializeAppDomain_DbgThread(a);
@@ -398,7 +399,7 @@ namespace dnSpy.Debugger.ToolWindows.Modules {
 					var coll = realAllItems;
 					for (int i = coll.Count - 1; i >= 0; i--) {
 						var moduleAppDomain = coll[i].Module.AppDomain;
-						if (moduleAppDomain == null)
+						if (moduleAppDomain is null)
 							continue;
 						foreach (var a in e.Objects) {
 							if (a == moduleAppDomain) {
@@ -413,7 +414,7 @@ namespace dnSpy.Debugger.ToolWindows.Modules {
 		}
 
 		// DbgManager thread
-		void DbgRuntime_ModulesChanged(object sender, DbgCollectionChangedEventArgs<DbgModule> e) {
+		void DbgRuntime_ModulesChanged(object? sender, DbgCollectionChangedEventArgs<DbgModule> e) {
 			if (e.Added)
 				UI(() => AddItems_UI(e.Objects));
 			else {
@@ -426,10 +427,10 @@ namespace dnSpy.Debugger.ToolWindows.Modules {
 		}
 
 		// DbgManager thread
-		void DbgAppDomain_PropertyChanged(object sender, PropertyChangedEventArgs e) {
+		void DbgAppDomain_PropertyChanged(object? sender, PropertyChangedEventArgs e) {
 			if (e.PropertyName == nameof(DbgAppDomain.Name) || e.PropertyName == nameof(DbgAppDomain.Id)) {
 				UI(() => {
-					var appDomain = (DbgAppDomain)sender;
+					var appDomain = (DbgAppDomain)sender!;
 					foreach (var vm in realAllItems)
 						vm.RefreshAppDomainNames_UI(appDomain);
 				});
@@ -471,7 +472,7 @@ namespace dnSpy.Debugger.ToolWindows.Modules {
 		}
 
 		// UI thread
-		void FilterList_UI(string filterText, SimpleProcessVM selectedProcess) {
+		void FilterList_UI(string filterText, SimpleProcessVM? selectedProcess) {
 			moduleContext.UIDispatcher.VerifyAccess();
 			if (string.IsNullOrWhiteSpace(filterText))
 				filterText = string.Empty;
@@ -486,7 +487,7 @@ namespace dnSpy.Debugger.ToolWindows.Modules {
 		}
 
 		// UI thread
-		void SortList(string filterText, SimpleProcessVM selectedProcess) {
+		void SortList(string filterText, SimpleProcessVM? selectedProcess) {
 			moduleContext.UIDispatcher.VerifyAccess();
 			var newList = new List<ModuleVM>(GetFilteredItems_UI(filterText, selectedProcess));
 			newList.Sort(this);
@@ -503,15 +504,21 @@ namespace dnSpy.Debugger.ToolWindows.Modules {
 		}
 
 		void InitializeNothingMatched() => InitializeNothingMatched(filterText, selectedProcess);
-		void InitializeNothingMatched(string filterText, SimpleProcessVM selectedProcess) =>
-			NothingMatched = AllItems.Count == 0 && !(string.IsNullOrWhiteSpace(filterText) && selectedProcess?.Process == null);
+		void InitializeNothingMatched(string filterText, SimpleProcessVM? selectedProcess) =>
+			NothingMatched = AllItems.Count == 0 && string.IsNullOrWhiteSpace(filterText) && selectedProcess?.Process is not null;
 
-		public int Compare(ModuleVM x, ModuleVM y) {
+		public int Compare([AllowNull] ModuleVM x, [AllowNull] ModuleVM y) {
 			Debug.Assert(moduleContext.UIDispatcher.CheckAccess());
+			if ((object?)x == y)
+				return 0;
+			if (x is null)
+				return -1;
+			if (y is null)
+				return 1;
 			var (desc, dir) = Descs.SortedColumn;
 
 			int id;
-			if (desc == null || dir == GridViewSortDirection.Default) {
+			if (desc is null || dir == GridViewSortDirection.Default) {
 				id = ModulesWindowColumnIds.Default_Order;
 				dir = GridViewSortDirection.Ascending;
 			}
@@ -588,7 +595,7 @@ namespace dnSpy.Debugger.ToolWindows.Modules {
 		}
 
 		// UI thread
-		IEnumerable<ModuleVM> GetFilteredItems_UI(string filterText, SimpleProcessVM selectedProcess) {
+		IEnumerable<ModuleVM> GetFilteredItems_UI(string filterText, SimpleProcessVM? selectedProcess) {
 			moduleContext.UIDispatcher.VerifyAccess();
 			foreach (var vm in realAllItems) {
 				if (IsMatch_UI(vm, filterText, selectedProcess))
@@ -597,9 +604,9 @@ namespace dnSpy.Debugger.ToolWindows.Modules {
 		}
 
 		// UI thread
-		bool IsMatch_UI(ModuleVM vm, string filterText, SimpleProcessVM selectedProcess) {
+		bool IsMatch_UI(ModuleVM vm, string filterText, SimpleProcessVM? selectedProcess) {
 			Debug.Assert(moduleContext.UIDispatcher.CheckAccess());
-			if (selectedProcess?.Process != null && selectedProcess.Process != vm.Module.Process)
+			if (selectedProcess?.Process is not null && selectedProcess.Process != vm.Module.Process)
 				return false;
 			// Common case check, we don't need to allocate any strings
 			if (filterText == string.Empty)
@@ -761,7 +768,7 @@ namespace dnSpy.Debugger.ToolWindows.Modules {
 					break;
 				}
 			}
-			if (selectedProcess == null || selectedProcess.Process == process)
+			if (selectedProcess is null || selectedProcess.Process == process)
 				SelectedProcess = processes.FirstOrDefault();
 		}
 
@@ -788,9 +795,15 @@ namespace dnSpy.Debugger.ToolWindows.Modules {
 		sealed class SimpleProcessVMComparer : IComparer<SimpleProcessVM> {
 			public static readonly SimpleProcessVMComparer Instance = new SimpleProcessVMComparer();
 			SimpleProcessVMComparer() { }
-			public int Compare(SimpleProcessVM x, SimpleProcessVM y) {
-				bool x1 = x.Process == null;
-				bool y1 = y.Process == null;
+			public int Compare([AllowNull] SimpleProcessVM x, [AllowNull] SimpleProcessVM y) {
+				if ((object?)x == y)
+					return 0;
+				if (x is null)
+					return -1;
+				if (y is null)
+					return 1;
+				bool x1 = x.Process is null;
+				bool y1 = y.Process is null;
 				if (x1 != y1) {
 					if (x1)
 						return -1;
@@ -799,7 +812,7 @@ namespace dnSpy.Debugger.ToolWindows.Modules {
 				else if (x1)
 					return 0;
 
-				int c = StringComparer.OrdinalIgnoreCase.Compare(x.Process.Name, y.Process.Name);
+				int c = StringComparer.OrdinalIgnoreCase.Compare(x.Process!.Name, y.Process!.Name);
 				if (c != 0)
 					return c;
 				return x.Process.Id.CompareTo(y.Process.Id);

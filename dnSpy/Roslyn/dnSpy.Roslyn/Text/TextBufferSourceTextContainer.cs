@@ -27,11 +27,11 @@ namespace dnSpy.Roslyn.Text {
 		public override SourceText CurrentText => TextBuffer.CurrentSnapshot.AsText();
 
 		readonly object lockObj = new object();
-		EventHandler<TextChangeEventArgs> realTextChangedEvent;
-		public override event EventHandler<TextChangeEventArgs> TextChanged {
+		EventHandler<TextChangeEventArgs>? realTextChangedEvent;
+		public override event EventHandler<TextChangeEventArgs>? TextChanged {
 			add {
 				lock (lockObj) {
-					if (realTextChangedEvent == null)
+					if (realTextChangedEvent is null)
 						TextBuffer.Changed += TextBuffer_Changed;
 					realTextChangedEvent += value;
 				}
@@ -39,13 +39,13 @@ namespace dnSpy.Roslyn.Text {
 			remove {
 				lock (lockObj) {
 					realTextChangedEvent -= value;
-					if (realTextChangedEvent == null)
+					if (realTextChangedEvent is null)
 						TextBuffer.Changed -= TextBuffer_Changed;
 				}
 			}
 		}
 
-		void TextBuffer_Changed(object sender, TextContentChangedEventArgs e) =>
+		void TextBuffer_Changed(object? sender, TextContentChangedEventArgs e) =>
 			realTextChangedEvent?.Invoke(this, e.ToTextChangeEventArgs());
 
 		public TextBufferSourceTextContainer(ITextBuffer textBuffer) => TextBuffer = textBuffer;

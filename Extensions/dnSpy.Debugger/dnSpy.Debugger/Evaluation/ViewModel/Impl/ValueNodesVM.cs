@@ -46,8 +46,8 @@ namespace dnSpy.Debugger.Evaluation.ViewModel.Impl {
 
 		sealed class RootNode : TreeNodeData {
 			public override Guid Guid => Guid.Empty;
-			public override object Text => null;
-			public override object ToolTip => null;
+			public override object? Text => null;
+			public override object? ToolTip => null;
 			public override ImageReference Icon => ImageReference.None;
 			public override void OnRefreshUI() { }
 		}
@@ -69,7 +69,7 @@ namespace dnSpy.Debugger.Evaluation.ViewModel.Impl {
 		bool isOpen;
 		SelectNodeKind selectNodeKind;
 		Guid? lastRuntimeKindGuid;
-		DbgLanguage lastLanguage;
+		DbgLanguage? lastLanguage;
 
 		sealed class GuidObjectsProvider : IGuidObjectsProvider {
 			readonly IValueNodesVM vm;
@@ -80,7 +80,7 @@ namespace dnSpy.Debugger.Evaluation.ViewModel.Impl {
 			}
 		}
 
-		internal event EventHandler OnVariableChanged;
+		internal event EventHandler? OnVariableChanged;
 
 		public ValueNodesVM(UIDispatcher uiDispatcher, ValueNodesVMOptions options, ITreeViewService treeViewService, LanguageEditValueProviderFactory languageEditValueProviderFactory, DbgValueNodeImageReferenceService dbgValueNodeImageReferenceService, DebuggerSettings debuggerSettings, DbgEvalFormatterSettings dbgEvalFormatterSettings, DbgObjectIdService dbgObjectIdService, IClassificationFormatMapService classificationFormatMapService, ITextBlockContentInfoFactory textBlockContentInfoFactory, IMenuService menuService, IWpfCommandService wpfCommandService) {
 			uiDispatcher.VerifyAccess();
@@ -107,9 +107,9 @@ namespace dnSpy.Debugger.Evaluation.ViewModel.Impl {
 		}
 
 		// UI thread
-		void OnValueNodeAssigned(string errorMessage, bool retry) {
+		void OnValueNodeAssigned(string? errorMessage, bool retry) {
 			valueNodesContext.UIDispatcher.VerifyAccess();
-			if (errorMessage != null)
+			if (errorMessage is not null)
 				valueNodesContext.ShowMessageBox(errorMessage, ShowMessageBoxButtons.OK);
 			if (!retry) {
 				OnVariableChanged?.Invoke(this, EventArgs.Empty);
@@ -118,20 +118,20 @@ namespace dnSpy.Debugger.Evaluation.ViewModel.Impl {
 		}
 
 		// UI thread
-		void ValueNodesProvider_NodesChanged(object sender, EventArgs e) {
+		void ValueNodesProvider_NodesChanged(object? sender, EventArgs e) {
 			valueNodesContext.UIDispatcher.VerifyAccess();
 			RecreateRootChildren_UI();
 		}
 
 		// UI thread
-		void ValueNodesProvider_IsReadOnlyChanged(object sender, EventArgs e) {
+		void ValueNodesProvider_IsReadOnlyChanged(object? sender, EventArgs e) {
 			valueNodesContext.UIDispatcher.VerifyAccess();
 			valueNodesContext.IsWindowReadOnly = valueNodesProvider.IsReadOnly;
 			RefreshThemeFields_UI();
 		}
 
 		// UI thread
-		void ValueNodesProvider_LanguageChanged(object sender, EventArgs e) {
+		void ValueNodesProvider_LanguageChanged(object? sender, EventArgs e) {
 			valueNodesContext.UIDispatcher.VerifyAccess();
 			valueNodesContext.NameEditValueProvider.Language = valueNodesProvider.Language;
 			valueNodesContext.ValueEditValueProvider.Language = valueNodesProvider.Language;
@@ -139,7 +139,7 @@ namespace dnSpy.Debugger.Evaluation.ViewModel.Impl {
 		}
 
 		// random thread
-		void DbgObjectIdService_ObjectIdsChanged(object sender, EventArgs e) {
+		void DbgObjectIdService_ObjectIdsChanged(object? sender, EventArgs e) {
 			if (refreshNameFields)
 				return;
 			refreshNameFields = true;
@@ -163,7 +163,7 @@ namespace dnSpy.Debugger.Evaluation.ViewModel.Impl {
 		DbgValueNodeInfo EvaluateExpression(DbgEvaluationInfo evalInfo, string expression) {
 			valueNodesContext.UIDispatcher.VerifyAccess();
 			var frame = valueNodesProvider.TryGetFrame();
-			if (frame == null)
+			if (frame is null)
 				return new DbgValueNodeInfo(expression, expression, dnSpy_Debugger_Resources.ErrorEvaluatingExpression, causesSideEffects: false);
 			var res = evalInfo.Context.Language.ValueNodeFactory.Create(evalInfo, expression, valueNodesContext.ValueNodeEvaluationOptions,
 				valueNodesContext.EvaluationOptions, evalInfo.Context.Language.ExpressionEvaluator.CreateExpressionEvaluatorState());
@@ -189,8 +189,8 @@ namespace dnSpy.Debugger.Evaluation.ViewModel.Impl {
 			refreshNameFields = false;
 			Guid? runtimeKindGuid;
 			DbgValueNodeInfo[] nodes;
-			DbgEvaluationInfo evalInfo;
-			DbgLanguage language;
+			DbgEvaluationInfo? evalInfo;
+			DbgLanguage? language;
 			bool forceRecreateAllNodes;
 			if (isOpen) {
 				var nodeInfo = valueNodesProvider.GetNodes(valueNodesContext.EvaluationOptions, valueNodesContext.ValueNodeEvaluationOptions, valueNodesContext.ValueNodeFormatParameters.NameFormatterOptions);
@@ -220,11 +220,11 @@ namespace dnSpy.Debugger.Evaluation.ViewModel.Impl {
 			VerifyChildren_UI(nodes);
 #if DEBUG
 			// PERF: make sure edit node was re-used
-			Debug.Assert(origEditNode == null || origEditNode == TryGetEditNode());
+			Debug2.Assert(origEditNode is null || origEditNode == TryGetEditNode());
 #endif
 
 			if (selectNodeKind != SelectNodeKind.None) {
-				ITreeNode node;
+				ITreeNode? node;
 				switch (selectNodeKind) {
 				case SelectNodeKind.Open:
 					node = rootNode.TreeNode.Children.FirstOrDefault();
@@ -237,7 +237,7 @@ namespace dnSpy.Debugger.Evaluation.ViewModel.Impl {
 				default: throw new InvalidOperationException();
 				}
 				selectNodeKind = SelectNodeKind.None;
-				if (node != null) {
+				if (node is not null) {
 					treeView.SelectItems(new[] { node.Data });
 					treeView.ScrollIntoView();
 				}
@@ -245,7 +245,7 @@ namespace dnSpy.Debugger.Evaluation.ViewModel.Impl {
 		}
 
 		// UI thread
-		ValueNodeImpl TryGetEditNode() {
+		ValueNodeImpl? TryGetEditNode() {
 			var children = rootNode.TreeNode.Children;
 			if (children.Count == 0)
 				return null;
@@ -263,18 +263,18 @@ namespace dnSpy.Debugger.Evaluation.ViewModel.Impl {
 					var node = (ValueNodeImpl)children[i].Data;
 					if (node.RawNode is DbgValueRawNode rootNode)
 						Debug.Assert(rootNode.DebuggerValueNode == infos[i].Node);
-					else if (infos[i].Node != null && infos[i].CausesSideEffects && infos[i].Node.HasError) {
+					else if (infos[i].Node is not null && infos[i].CausesSideEffects && infos[i].Node!.HasError) {
 					}
 					else
-						Debug.Assert(infos[i].Node == null);
-					Debug.Assert(!valueNodesProvider.CanAddRemoveExpressions || infos[i].Id != null, "Root IDs are required");
+						Debug2.Assert(infos[i].Node is null);
+					Debug2.Assert(!valueNodesProvider.CanAddRemoveExpressions || infos[i].Id is not null, "Root IDs are required");
 					Debug.Assert(infos[i].Id == node.RootId);
 				}
 			}
 		}
 
 		// UI thread
-		void RecreateRootChildrenCore_UI(DbgValueNodeInfo[] infos, Guid? runtimeKindGuid, DbgLanguage language, bool forceRecreateAllNodes) {
+		void RecreateRootChildrenCore_UI(DbgValueNodeInfo[] infos, Guid? runtimeKindGuid, DbgLanguage? language, bool forceRecreateAllNodes) {
 			valueNodesContext.UIDispatcher.VerifyAccess();
 
 			bool recreateAllNodes = forceRecreateAllNodes || runtimeKindGuid != lastRuntimeKindGuid || language != lastLanguage;
@@ -355,14 +355,14 @@ namespace dnSpy.Debugger.Evaluation.ViewModel.Impl {
 			}
 			while (updateIndex < children.Count && !((ValueNodeImpl)children[updateIndex].Data).IsEditNode)
 				children.RemoveAt(updateIndex);
-			if (valueNodesContext.EditValueNodeExpression.SupportsEditExpression && TryGetEditNode() == null)
+			if (valueNodesContext.EditValueNodeExpression.SupportsEditExpression && TryGetEditNode() is null)
 				children.Add(treeView.Create(ValueNodeImpl.CreateEditNode(valueNodesContext)));
 		}
 
 		static (int newIndex, int oldIndex) GetOldIndex(Dictionary<string, List<int>> dict, DbgValueNodeInfo[] newNodes, int newIndex, int minOldIndex) {
 			for (; newIndex < newNodes.Length; newIndex++) {
 				var info = newNodes[newIndex];
-				if (dict.TryGetValue(info.Id ?? info.Node.Expression, out var list)) {
+				if (dict.TryGetValue(info.Id ?? info.Node!.Expression, out var list)) {
 					for (int i = 0; i < list.Count; i++) {
 						int oldIndex = list[i];
 						if (oldIndex >= minOldIndex)
@@ -387,7 +387,7 @@ namespace dnSpy.Debugger.Evaluation.ViewModel.Impl {
 			if (valueNodesContext.EditValueNodeExpression.SupportsEditExpression) {
 				var children = rootNode.TreeNode.Children;
 				var editNode = TryGetEditNode();
-				if (infos.Length == 0 && children.Count == 1 && editNode != null)
+				if (infos.Length == 0 && children.Count == 1 && editNode is not null)
 					return;
 				if (children.Count < 30) {
 					while (children.Count > 0 && editNode != children[0].Data)
@@ -396,7 +396,7 @@ namespace dnSpy.Debugger.Evaluation.ViewModel.Impl {
 						var info = infos[i];
 						children.Insert(i, treeView.Create(new ValueNodeImpl(valueNodesContext, info.Node, info.Id, info.Expression, info.ErrorMessage)));
 					}
-					if (editNode == null)
+					if (editNode is null)
 						rootNode.TreeNode.AddChild(treeView.Create(ValueNodeImpl.CreateEditNode(valueNodesContext)));
 				}
 				else {
@@ -475,18 +475,18 @@ namespace dnSpy.Debugger.Evaluation.ViewModel.Impl {
 		void UI(Action callback) => valueNodesContext.UIDispatcher.UI(callback);
 
 		// UI thread
-		void ClassificationFormatMap_ClassificationFormatMappingChanged(object sender, EventArgs e) {
+		void ClassificationFormatMap_ClassificationFormatMappingChanged(object? sender, EventArgs e) {
 			valueNodesContext.UIDispatcher.VerifyAccess();
 			valueNodesContext.UIVersion++;
 			RefreshThemeFields_UI();
 		}
 
 		// random thread
-		void DebuggerSettings_PropertyChanged(object sender, PropertyChangedEventArgs e) =>
+		void DebuggerSettings_PropertyChanged(object? sender, PropertyChangedEventArgs e) =>
 			UI(() => DebuggerSettings_PropertyChanged_UI(e.PropertyName));
 
 		// UI thread
-		void DebuggerSettings_PropertyChanged_UI(string propertyName) {
+		void DebuggerSettings_PropertyChanged_UI(string? propertyName) {
 			valueNodesContext.UIDispatcher.VerifyAccess();
 			switch (propertyName) {
 			case nameof(DebuggerSettings.UseHexadecimal):
@@ -519,11 +519,11 @@ namespace dnSpy.Debugger.Evaluation.ViewModel.Impl {
 		}
 
 		// random thread
-		void DbgEvalFormatterSettings_PropertyChanged(object sender, PropertyChangedEventArgs e) =>
+		void DbgEvalFormatterSettings_PropertyChanged(object? sender, PropertyChangedEventArgs e) =>
 			UI(() => DbgEvalFormatterSettings_PropertyChanged_UI(e.PropertyName));
 
 		// UI thread
-		void DbgEvalFormatterSettings_PropertyChanged_UI(string propertyName) {
+		void DbgEvalFormatterSettings_PropertyChanged_UI(string? propertyName) {
 			valueNodesContext.UIDispatcher.VerifyAccess();
 			switch (propertyName) {
 			case nameof(DbgEvalFormatterSettings.ShowNamespaces):
@@ -672,7 +672,7 @@ namespace dnSpy.Debugger.Evaluation.ViewModel.Impl {
 			RecreateRootChildrenDelay_UI();
 		}
 
-		void IValueNodesVM.EditExpression(string id, string expression) {
+		void IValueNodesVM.EditExpression(string? id, string expression) {
 			valueNodesContext.UIDispatcher.VerifyAccess();
 			if (!valueNodesProvider.CanAddRemoveExpressions)
 				throw new InvalidOperationException();
@@ -697,7 +697,7 @@ namespace dnSpy.Debugger.Evaluation.ViewModel.Impl {
 		}
 
 		bool IEditValueNodeExpression.SupportsEditExpression => ((IValueNodesVM)this).CanAddRemoveExpressions;
-		void IEditValueNodeExpression.EditExpression(string id, string expression) => ((IValueNodesVM)this).EditExpression(id, expression);
+		void IEditValueNodeExpression.EditExpression(string? id, string expression) => ((IValueNodesVM)this).EditExpression(id, expression);
 		void IEditValueNodeExpression.AddExpressions(string[] expressions) => ((IValueNodesVM)this).AddExpressions(expressions);
 
 		void IDisposable.Dispose() {

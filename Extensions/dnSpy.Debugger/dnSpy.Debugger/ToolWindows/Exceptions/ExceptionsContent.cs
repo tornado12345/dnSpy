@@ -44,9 +44,9 @@ namespace dnSpy.Debugger.ToolWindows.Exceptions {
 
 	[Export(typeof(IExceptionsContent))]
 	sealed class ExceptionsContent : IExceptionsContent {
-		public object UIObject => exceptionsControl;
-		public IInputElement FocusedElement => exceptionsControl.ListView;
-		public FrameworkElement ZoomElement => exceptionsControl;
+		public object? UIObject => exceptionsControl;
+		public IInputElement? FocusedElement => exceptionsControl.ListView;
+		public FrameworkElement? ZoomElement => exceptionsControl;
 		public ListView ListView => exceptionsControl.ListView;
 		public ExceptionsOperations Operations { get; }
 
@@ -105,7 +105,7 @@ namespace dnSpy.Debugger.ToolWindows.Exceptions {
 			wpfCommandService.Add(ControlConstants.GUID_DEBUGGER_EXCEPTIONS_LISTVIEW, exceptionsControl.ListView);
 		}
 
-		void AddExceptionControl_IsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e) {
+		void AddExceptionControl_IsVisibleChanged(object? sender, DependencyPropertyChangedEventArgs e) {
 			((AddExceptionVM)exceptionsControl.addExceptionControl.DataContext).IsVisible = exceptionsControl.addExceptionControl.IsVisible;
 			if (!exceptionsControl.addExceptionControl.IsVisible)
 				Focus();
@@ -117,7 +117,7 @@ namespace dnSpy.Debugger.ToolWindows.Exceptions {
 			}
 		}
 
-		void ExceptionsControl_ExceptionsListViewDoubleClick(object sender, EventArgs e) {
+		void ExceptionsControl_ExceptionsListViewDoubleClick(object? sender, EventArgs e) {
 			if (Operations.CanEditConditions)
 				Operations.EditConditions();
 		}

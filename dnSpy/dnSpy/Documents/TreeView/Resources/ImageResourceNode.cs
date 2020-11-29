@@ -19,6 +19,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Windows.Media;
 using dnlib.DotNet;
@@ -36,9 +37,9 @@ using dnSpy.Properties;
 namespace dnSpy.Documents.TreeView.Resources {
 	[ExportResourceNodeProvider(Order = DocumentTreeViewConstants.ORDER_RSRCPROVIDER_IMAGE_RESOURCE_NODE)]
 	sealed class ImageResourceNodeProvider : IResourceNodeProvider {
-		public ResourceNode Create(ModuleDef module, Resource resource, ITreeNodeGroup treeNodeGroup) {
+		public DocumentTreeNodeData? Create(ModuleDef module, Resource resource, ITreeNodeGroup treeNodeGroup) {
 			var er = resource as EmbeddedResource;
-			if (er == null)
+			if (er is null)
 				return null;
 
 			var reader = er.CreateReader();
@@ -48,7 +49,7 @@ namespace dnSpy.Documents.TreeView.Resources {
 			return new ImageResourceNodeImpl(treeNodeGroup, er);
 		}
 
-		public ResourceElementNode Create(ModuleDef module, ResourceElement resourceElement, ITreeNodeGroup treeNodeGroup) {
+		public DocumentTreeNodeData? Create(ModuleDef module, ResourceElement resourceElement, ITreeNodeGroup treeNodeGroup) {
 			if (resourceElement.ResourceData.Code != ResourceTypeCode.ByteArray && resourceElement.ResourceData.Code != ResourceTypeCode.Stream)
 				return null;
 
@@ -134,7 +135,7 @@ namespace dnSpy.Documents.TreeView.Resources {
 
 		public override void WriteShort(IDecompilerOutput output, IDecompiler decompiler, bool showOffset) {
 			var documentViewerOutput = output as IDocumentViewerOutput;
-			if (documentViewerOutput != null) {
+			if (documentViewerOutput is not null) {
 				documentViewerOutput.AddUIElement(() => {
 					return new System.Windows.Controls.Image {
 						Source = imageSource,
@@ -143,7 +144,7 @@ namespace dnSpy.Documents.TreeView.Resources {
 			}
 
 			base.WriteShort(output, decompiler, showOffset);
-			if (documentViewerOutput != null) {
+			if (documentViewerOutput is not null) {
 				documentViewerOutput.AddButton(dnSpy_Resources.SaveResourceButton, () => Save());
 				documentViewerOutput.WriteLine();
 				documentViewerOutput.WriteLine();
@@ -157,8 +158,8 @@ namespace dnSpy.Documents.TreeView.Resources {
 	}
 
 	sealed class ImageResourceElementNodeImpl : ImageResourceElementNode {
-		ImageSource imageSource;
-		byte[] imageData;
+		ImageSource? imageSource;
+		byte[]? imageData;
 
 		public override Guid Guid => new Guid(DocumentTreeViewConstants.IMAGE_RESOURCE_ELEMENT_NODE_GUID);
 		protected override ImageReference GetIcon() => DsImages.Image;
@@ -193,10 +194,11 @@ namespace dnSpy.Documents.TreeView.Resources {
 
 		protected override IEnumerable<ResourceData> GetDeserializedData() {
 			var id = imageData;
+			Debug2.Assert(id is not null);
 			yield return new ResourceData(ResourceElement.Name, token => new MemoryStream(id));
 		}
 
-		public override string CheckCanUpdateData(ResourceElement newResElem) {
+		public override string? CheckCanUpdateData(ResourceElement newResElem) {
 			var res = base.CheckCanUpdateData(newResElem);
 			if (!string.IsNullOrEmpty(res))
 				return res;

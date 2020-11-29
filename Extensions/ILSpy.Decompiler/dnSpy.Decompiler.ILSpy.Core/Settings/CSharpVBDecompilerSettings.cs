@@ -32,15 +32,15 @@ namespace dnSpy.Decompiler.ILSpy.Core.Settings {
 		readonly DecompilerSettings decompilerSettings;
 
 		public override int Version => decompilerSettings.SettingsVersion;
-		public override event EventHandler VersionChanged;
+		public override event EventHandler? VersionChanged;
 
-		public CSharpVBDecompilerSettings(DecompilerSettings decompilerSettings = null) {
+		public CSharpVBDecompilerSettings(DecompilerSettings? decompilerSettings = null) {
 			this.decompilerSettings = decompilerSettings ?? new DecompilerSettings();
 			options = CreateOptions().ToArray();
 			this.decompilerSettings.SettingsVersionChanged += DecompilerSettings_SettingsVersionChanged;
 		}
 
-		void DecompilerSettings_SettingsVersionChanged(object sender, EventArgs e) => VersionChanged?.Invoke(this, EventArgs.Empty);
+		void DecompilerSettings_SettingsVersionChanged(object? sender, EventArgs e) => VersionChanged?.Invoke(this, EventArgs.Empty);
 
 		public override DecompilerSettingsBase Clone() => new CSharpVBDecompilerSettings(decompilerSettings.Clone());
 
@@ -223,6 +223,11 @@ namespace dnSpy.Decompiler.ILSpy.Core.Settings {
 				Description = dnSpy_Decompiler_ILSpy_Core_Resources.DecompilerSettings_RemoveNewDelegateClass,
 				Name = DecompilerOptionConstants.RemoveNewDelegateClass_NAME,
 			};
+			yield return new DecompilerOption<bool>(DecompilerOptionConstants.HexadecimalNumbers_GUID,
+						() => decompilerSettings.HexadecimalNumbers, a => decompilerSettings.HexadecimalNumbers = a) {
+				Description = dnSpy_Decompiler_ILSpy_Core_Resources.DecompilerSettings_HexadecimalNumbers,
+				Name = DecompilerOptionConstants.HexadecimalNumbers_NAME,
+			};
 		}
 
 		string GetMemberOrder() =>
@@ -246,7 +251,7 @@ namespace dnSpy.Decompiler.ILSpy.Core.Settings {
 		}
 
 		void SetMemberOrder(string s) {
-			if (s == null || s.Length != 5)
+			if (s is null || s.Length != 5)
 				return;
 			decompilerSettings.DecompilationObject0 = GetDecompilationObject(s[0]) ?? decompilerSettings.DecompilationObject0;
 			decompilerSettings.DecompilationObject1 = GetDecompilationObject(s[1]) ?? decompilerSettings.DecompilationObject1;
@@ -266,9 +271,9 @@ namespace dnSpy.Decompiler.ILSpy.Core.Settings {
 			return null;
 		}
 
-		public override bool Equals(object obj) {
+		public override bool Equals(object? obj) {
 			var other = obj as CSharpVBDecompilerSettings;
-			return other != null && decompilerSettings.Equals(other.decompilerSettings);
+			return other is not null && decompilerSettings.Equals(other.decompilerSettings);
 		}
 
 		public override int GetHashCode() => decompilerSettings.GetHashCode();

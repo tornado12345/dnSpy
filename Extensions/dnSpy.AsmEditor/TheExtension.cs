@@ -36,8 +36,8 @@ namespace dnSpy.AsmEditor {
 			Initialize(themeFontSettings.Active);
 		}
 
-		void ThemeFontSettings_PropertyChanged(object sender, PropertyChangedEventArgs e) {
-			var themeFontSettings = (ThemeFontSettings)sender;
+		void ThemeFontSettings_PropertyChanged(object? sender, PropertyChangedEventArgs e) {
+			var themeFontSettings = (ThemeFontSettings)sender!;
 			if (e.PropertyName == nameof(themeFontSettings.Active))
 				Initialize(themeFontSettings.Active);
 		}
@@ -45,19 +45,19 @@ namespace dnSpy.AsmEditor {
 		void Initialize(FontSettings fontSettings) {
 			if (prevFontSettings == fontSettings)
 				return;
-			if (prevFontSettings != null)
+			if (prevFontSettings is not null)
 				prevFontSettings.PropertyChanged -= FontSettings_PropertyChanged;
 			prevFontSettings = fontSettings;
 			fontSettings.PropertyChanged += FontSettings_PropertyChanged;
 			UpdateFont(fontSettings);
 		}
-		FontSettings prevFontSettings;
+		FontSettings? prevFontSettings;
 
 		void UpdateFont(FontSettings fontSettings) =>
 			Application.Current.Resources["TextEditorFontFamily"] = fontSettings.FontFamily;
 
-		void FontSettings_PropertyChanged(object sender, PropertyChangedEventArgs e) {
-			var fontSettings = (FontSettings)sender;
+		void FontSettings_PropertyChanged(object? sender, PropertyChangedEventArgs e) {
+			var fontSettings = (FontSettings)sender!;
 			if (e.PropertyName == nameof(fontSettings.FontFamily))
 				UpdateFont(fontSettings);
 		}
@@ -77,7 +77,7 @@ namespace dnSpy.AsmEditor {
 			}
 		}
 
-		public void OnEvent(ExtensionEvent @event, object obj) {
+		public void OnEvent(ExtensionEvent @event, object? obj) {
 		}
 	}
 }

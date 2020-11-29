@@ -51,10 +51,10 @@ namespace dnSpy.Analyzer.TreeNodes {
 				// ignore chained constructors
 				// (since object is the root of everything, we can short circuit the test in this case)
 				if (method.Name == ".ctor" &&
-					(isSystemObject || analyzedType == type || TypesHierarchyHelpers.IsBaseType(analyzedType, type, false)))
+					(isSystemObject || new SigComparer().Equals(analyzedType, type) || TypesHierarchyHelpers.IsBaseType(analyzedType, type, false)))
 					continue;
 
-				Instruction foundInstr = null;
+				Instruction? foundInstr = null;
 				foreach (Instruction instr in method.Body.Instructions) {
 					if (instr.Operand is IMethod mr && !mr.IsField && mr.Name == ".ctor") {
 						if (Helpers.IsReferencedBy(analyzedType, mr.DeclaringType)) {
@@ -64,11 +64,11 @@ namespace dnSpy.Analyzer.TreeNodes {
 					}
 				}
 
-				if (foundInstr != null)
+				if (foundInstr is not null)
 					yield return new MethodNode(method) { Context = Context, SourceRef = new SourceRef(method, foundInstr.Offset, foundInstr.Operand as IMDTokenProvider) };
 			}
 		}
 
-		public static bool CanShow(TypeDef type) => (type.IsClass && !(type.IsAbstract && type.IsSealed) && !type.IsEnum);
+		public static bool CanShow(TypeDef type) => type.IsClass && !type.IsAbstract && !type.IsEnum;
 	}
 }

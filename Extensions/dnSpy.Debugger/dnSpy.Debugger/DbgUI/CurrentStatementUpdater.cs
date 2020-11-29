@@ -28,31 +28,34 @@ namespace dnSpy.Debugger.DbgUI {
 	abstract class CurrentStatementUpdater : IDbgManagerStartListener {
 		readonly DbgCallStackService dbgCallStackService;
 		readonly Lazy<ReferenceNavigatorService> referenceNavigatorService;
+		readonly Lazy<DebuggerSettings> debuggerSettings;
 
-		protected CurrentStatementUpdater(DbgCallStackService dbgCallStackService, Lazy<ReferenceNavigatorService> referenceNavigatorService) {
+		protected CurrentStatementUpdater(DbgCallStackService dbgCallStackService, Lazy<ReferenceNavigatorService> referenceNavigatorService, Lazy<DebuggerSettings> debuggerSettings) {
 			this.dbgCallStackService = dbgCallStackService;
 			this.referenceNavigatorService = referenceNavigatorService;
+			this.debuggerSettings = debuggerSettings;
 		}
 
 		void IDbgManagerStartListener.OnStart(DbgManager dbgManager) => dbgManager.ProcessPaused += DbgManager_ProcessPaused;
 
 		protected abstract void ActivateMainWindow();
 
-		void DbgManager_ProcessPaused(object sender, ProcessPausedEventArgs e) {
+		void DbgManager_ProcessPaused(object? sender, ProcessPausedEventArgs e) {
 			Debug.Assert(dbgCallStackService.Thread == e.Thread);
 			var info = GetLocation();
-			if (info.location != null) {
+			if (info.location is not null) {
 				dbgCallStackService.ActiveFrameIndex = info.frameIndex;
 				referenceNavigatorService.Value.GoTo(info.location);
 			}
-			ActivateMainWindow();
+			if (debuggerSettings.Value.FocusDebuggerWhenProcessBreaks)
+				ActivateMainWindow();
 		}
 
-		(DbgCodeLocation location, int frameIndex) GetLocation() {
+		(DbgCodeLocation? location, int frameIndex) GetLocation() {
 			var frames = dbgCallStackService.Frames.Frames;
 			for (int i = 0; i < frames.Count; i++) {
 				var location = frames[i].Location;
-				if (location != null)
+				if (location is not null)
 					return (location, i);
 			}
 			return (null, -1);

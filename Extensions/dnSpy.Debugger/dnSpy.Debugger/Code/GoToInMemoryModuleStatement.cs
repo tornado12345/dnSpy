@@ -39,9 +39,9 @@ namespace dnSpy.Debugger.Code {
 
 		void IDbgManagerStartListener.OnStart(DbgManager dbgManager) { }
 
-		void DebuggerSettings_PropertyChanged(object sender, PropertyChangedEventArgs e) {
+		void DebuggerSettings_PropertyChanged(object? sender, PropertyChangedEventArgs e) {
 			if (e.PropertyName == nameof(DebuggerSettings.UseMemoryModules)) {
-				var debuggerSettings = (DebuggerSettings)sender;
+				var debuggerSettings = (DebuggerSettings)sender!;
 				if (debuggerSettings.UseMemoryModules)
 					UpdateLocation();
 			}
@@ -49,7 +49,7 @@ namespace dnSpy.Debugger.Code {
 
 		void UpdateLocation() {
 			var location = dbgCallStackService.Value.ActiveFrame?.Location;
-			if (location == null)
+			if (location is null)
 				return;
 			referenceNavigatorService.Value.GoTo(location);
 		}

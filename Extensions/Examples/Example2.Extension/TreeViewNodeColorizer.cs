@@ -23,12 +23,12 @@ namespace Example2.Extension {
 		[Export(typeof(ClassificationTypeDefinition))]
 		[Name(UnderlineClassificationType)]
 		[BaseDefinition(PredefinedClassificationTypeNames.FormalLanguage)]
-		static ClassificationTypeDefinition UnderlineClassificationTypeDefinition;
+		static ClassificationTypeDefinition? UnderlineClassificationTypeDefinition;
 
 		[Export(typeof(ClassificationTypeDefinition))]
 		[Name(LightgreenBackgroundClassificationType)]
 		[BaseDefinition(PredefinedClassificationTypeNames.FormalLanguage)]
-		static ClassificationTypeDefinition LightgreenBackgroundClassificationTypeDefinition;
+		static ClassificationTypeDefinition? LightgreenBackgroundClassificationTypeDefinition;
 #pragma warning restore CS0169
 
 		// Export the classes that define the colors and order
@@ -60,7 +60,7 @@ namespace Example2.Extension {
 		[ImportingConstructor]
 		TreeViewNodeColorizerProvider(IClassificationTypeRegistryService classificationTypeRegistryService) => this.classificationTypeRegistryService = classificationTypeRegistryService;
 
-		public ITextClassifier Create(IContentType contentType) => new TreeViewNodeColorizer(classificationTypeRegistryService);
+		public ITextClassifier? Create(IContentType contentType) => new TreeViewNodeColorizer(classificationTypeRegistryService);
 	}
 
 	sealed class TreeViewNodeColorizer : ITextClassifier {
@@ -70,7 +70,7 @@ namespace Example2.Extension {
 
 		public IEnumerable<TextClassificationTag> GetTags(TextClassifierContext context) {
 			var tvContext = context as TreeViewNodeClassifierContext;
-			if (tvContext == null)
+			if (tvContext is null)
 				yield break;
 
 			// Don't do a thing if it's a tooltip

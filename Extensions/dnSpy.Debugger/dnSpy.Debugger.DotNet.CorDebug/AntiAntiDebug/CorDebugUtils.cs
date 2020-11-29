@@ -18,21 +18,22 @@
 */
 
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using dnSpy.Contracts.Debugger;
 using dnSpy.Contracts.Debugger.DotNet.CorDebug;
 
 namespace dnSpy.Debugger.DotNet.CorDebug.AntiAntiDebug {
 	static class CorDebugUtils {
-		public static bool TryGetInternalRuntime(DbgProcess process, out DbgCorDebugInternalRuntime runtime) {
+		public static bool TryGetInternalRuntime(DbgProcess process, [NotNullWhen(true)] out DbgCorDebugInternalRuntime? runtime) {
 			runtime = null;
 			var dbgRuntime = process.Runtimes.FirstOrDefault();
-			Debug.Assert(dbgRuntime != null);
-			if (dbgRuntime == null)
+			Debug2.Assert(dbgRuntime is not null);
+			if (dbgRuntime is null)
 				return false;
 
 			runtime = dbgRuntime.InternalRuntime as DbgCorDebugInternalRuntime;
-			return runtime != null;
+			return runtime is not null;
 		}
 	}
 }

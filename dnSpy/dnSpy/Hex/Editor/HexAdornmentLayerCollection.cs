@@ -44,7 +44,7 @@ namespace dnSpy.Hex.Editor {
 
 		public HexAdornmentLayer GetAdornmentLayer(MetadataAndOrder<IAdornmentLayersMetadata> info) {
 			var layer = adornmentLayers.FirstOrDefault(a => a.Info.Metadata == info.Metadata);
-			if (layer == null)
+			if (layer is null)
 				layer = Create(info);
 			return layer;
 		}
@@ -65,7 +65,7 @@ namespace dnSpy.Hex.Editor {
 			return adornmentLayers.Count;
 		}
 
-		void WpfHexView_LayoutChanged(object sender, HexViewLayoutChangedEventArgs e) {
+		void WpfHexView_LayoutChanged(object? sender, HexViewLayoutChangedEventArgs e) {
 			if (Width != wpfHexView.VisualElement.ActualWidth || Height != wpfHexView.VisualElement.ActualHeight) {
 				Width = wpfHexView.VisualElement.ActualWidth;
 				Height = wpfHexView.VisualElement.ActualHeight;
@@ -85,7 +85,7 @@ namespace dnSpy.Hex.Editor {
 			}
 		}
 
-		void WpfHexView_Closed(object sender, EventArgs e) {
+		void WpfHexView_Closed(object? sender, EventArgs e) {
 			wpfHexView.Closed -= WpfHexView_Closed;
 			wpfHexView.LayoutChanged -= WpfHexView_LayoutChanged;
 		}

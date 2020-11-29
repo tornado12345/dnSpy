@@ -135,12 +135,6 @@
   <data name="DoubleClick" xml:space="preserve">
     <value>Double clique</value>
   </data>
-  <data name="EventAdderTreeNodeName" xml:space="preserve">
-    <value>Ajouter</value>
-  </data>
-  <data name="EventRemoverTreeNodeName" xml:space="preserve">
-    <value>supprimer</value>
-  </data>
   <data name="ExposedByTreeNode" xml:space="preserve">
     <value>Exposés par</value>
   </data>
@@ -177,12 +171,6 @@
   <data name="Plugin_ShortDescription" xml:space="preserve">
     <value>Analyser les Assembly</value>
   </data>
-  <data name="PropertyGetterTreeNode" xml:space="preserve">
-    <value>récupérer</value>
-  </data>
-  <data name="PropertySetterTreeNode" xml:space="preserve">
-    <value>Fixer</value>
-  </data>
   <data name="RaisedByTreeNode" xml:space="preserve">
     <value>Déclenché par</value>
   </data>
@@ -209,6 +197,9 @@
   </data>
   <data name="ShowMetadataTokensCommand" xml:space="preserve">
     <value>Motrer les tokens</value>
+  </data>
+  <data name="SingleClickExpandNodes" xml:space="preserve">
+    <value>Un clic simple ouvre les noeuds</value>
   </data>
   <data name="SyntaxHighlightCommand" xml:space="preserve">
     <value>Coloration syntaxique</value>

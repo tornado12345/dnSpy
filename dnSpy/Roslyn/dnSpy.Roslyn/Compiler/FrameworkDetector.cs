@@ -27,7 +27,7 @@ namespace dnSpy.Roslyn.Compiler {
 		Unknown,
 		DotNetFramework2,
 		DotNetFramework4,
-		DotNetCore,
+		DotNet,
 		Unity2,
 		Unity4,
 	}
@@ -36,13 +36,13 @@ namespace dnSpy.Roslyn.Compiler {
 		public static FrameworkKind GetFrameworkKind(ModuleDef module) {
 			var corlib = module.CorLibTypes.AssemblyRef;
 			var moduleLocation = module.Location;
-			if (File.Exists(moduleLocation) && File.Exists(Path.Combine(Path.GetDirectoryName(moduleLocation), "UnityEngine.dll"))) {
+			if (File.Exists(moduleLocation) && File.Exists(Path.Combine(Path.GetDirectoryName(moduleLocation)!, "UnityEngine.dll"))) {
 				Debug.Assert(corlib.Version.Major == 2 || corlib.Version.Major == 4);
 				return corlib.Version.Major == 2 ? FrameworkKind.Unity2 : FrameworkKind.Unity4;
 			}
 
 			var info = TryGetTargetFrameworkAttribute(module.Assembly);
-			if (info.framework != null) {
+			if (info.framework is not null) {
 				if (info.framework == ".NETFramework") {
 					if (info.version.StartsWith("2.") || info.version.StartsWith("3."))
 						return FrameworkKind.DotNetFramework2;
@@ -52,7 +52,7 @@ namespace dnSpy.Roslyn.Compiler {
 					return FrameworkKind.Unknown;
 				}
 				if (info.framework == ".NETCoreApp")
-					return FrameworkKind.DotNetCore;
+					return FrameworkKind.DotNet;
 
 				return FrameworkKind.Unknown;
 			}
@@ -67,16 +67,16 @@ namespace dnSpy.Roslyn.Compiler {
 			switch (corlib.Name) {
 			case "System.Runtime":
 				if (corlib.Version >= new Version(4, 1, 0, 0))
-					return FrameworkKind.DotNetCore;
+					return FrameworkKind.DotNet;
 				break;
 			}
 
 			return FrameworkKind.Unknown;
 		}
 
-		static (string framework, string version, string profile) TryGetTargetFrameworkAttribute(AssemblyDef asm) {
+		static (string framework, string version, string? profile) TryGetTargetFrameworkAttribute(AssemblyDef asm) {
 			var ca = asm?.CustomAttributes.Find("System.Runtime.Versioning.TargetFrameworkAttribute");
-			if (ca == null)
+			if (ca is null)
 				return default;
 
 			if (ca.ConstructorArguments.Count != 1)
@@ -97,8 +97,8 @@ namespace dnSpy.Roslyn.Compiler {
 			if (framework.Length == 0)
 				return default;
 
-			string versionStr = null;
-			string profile = null;
+			string? versionStr = null;
+			string? profile = null;
 			for (int i = 1; i < values.Length; i++) {
 				var kvp = values[i].Split('=');
 				if (kvp.Length != 2)
@@ -119,7 +119,7 @@ namespace dnSpy.Roslyn.Compiler {
 						profile = value;
 				}
 			}
-			if (versionStr == null || versionStr.Length == 0)
+			if (versionStr is null || versionStr.Length == 0)
 				return default;
 
 			return (framework, versionStr, profile);

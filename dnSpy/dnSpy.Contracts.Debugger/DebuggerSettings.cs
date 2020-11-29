@@ -30,7 +30,7 @@ namespace dnSpy.Contracts.Debugger {
 		/// <summary>
 		/// Raised when a property is changed
 		/// </summary>
-		public event PropertyChangedEventHandler PropertyChanged;
+		public event PropertyChangedEventHandler? PropertyChanged;
 
 		/// <summary>
 		/// Raises <see cref="PropertyChanged"/>
@@ -171,6 +171,11 @@ namespace dnSpy.Contracts.Debugger {
 		/// Give focus to the active process
 		/// </summary>
 		public abstract bool FocusActiveProcess { get; set; }
+
+		/// <summary>
+		/// Give focus to the debugger when eg. a breakpoint is hit
+		/// </summary>
+		public abstract bool FocusDebuggerWhenProcessBreaks { get; set; }
 
 		/// <summary>
 		/// Show return values in Locals window

@@ -20,6 +20,7 @@
 using System;
 using System.ComponentModel.Composition;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 
 namespace dnSpy.Contracts.Debugger.StartDebugging {
 	/// <summary>
@@ -56,7 +57,7 @@ namespace dnSpy.Contracts.Debugger.StartDebugging {
 		/// <param name="filename">Filename</param>
 		/// <param name="error">Updated with an error message</param>
 		/// <returns></returns>
-		public abstract bool TryStart(string filename, out string error);
+		public abstract bool TryStart(string filename, [NotNullWhen(false)] out string? error);
 	}
 
 	/// <summary>Metadata</summary>
@@ -88,9 +89,9 @@ namespace dnSpy.Contracts.Debugger.StartDebugging {
 	/// </summary>
 	public static class PredefinedDbgProcessStarterOrders {
 		/// <summary>
-		/// .NET Core
+		/// .NET
 		/// </summary>
-		public const double DotNetCore = 1000000;
+		public const double DotNet = 1000000;
 
 		/// <summary>
 		/// Default process starter that calls <see cref="Process.Start(string)"/>

@@ -135,12 +135,6 @@
   <data name="DoubleClick" xml:space="preserve">
     <value>دابل کلیک</value>
   </data>
-  <data name="EventAdderTreeNodeName" xml:space="preserve">
-    <value>اضافه کردن</value>
-  </data>
-  <data name="EventRemoverTreeNodeName" xml:space="preserve">
-    <value>حذف</value>
-  </data>
   <data name="ExposedByTreeNode" xml:space="preserve">
     <value>در معرض</value>
   </data>
@@ -177,12 +171,6 @@
   <data name="Plugin_ShortDescription" xml:space="preserve">
     <value>تجزیه و تحلیل assemblis</value>
   </data>
-  <data name="PropertyGetterTreeNode" xml:space="preserve">
-    <value>get</value>
-  </data>
-  <data name="PropertySetterTreeNode" xml:space="preserve">
-    <value>set</value>
-  </data>
   <data name="RaisedByTreeNode" xml:space="preserve">
     <value>شروع شده توسط</value>
   </data>
@@ -209,6 +197,9 @@
   </data>
   <data name="ShowMetadataTokensCommand" xml:space="preserve">
     <value>نمایش توکن ها(Tokens)</value>
+  </data>
+  <data name="SingleClickExpandNodes" xml:space="preserve">
+    <value>تک کلیک برای گسترش گره ها</value>
   </data>
   <data name="SyntaxHighlightCommand" xml:space="preserve">
     <value>قالب برجسته</value>

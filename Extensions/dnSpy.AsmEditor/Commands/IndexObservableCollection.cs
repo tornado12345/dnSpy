@@ -26,26 +26,26 @@ using dnSpy.Contracts.MVVM;
 
 namespace dnSpy.AsmEditor.Commands {
 	class IndexObservableCollection<T> : ObservableCollection<T> where T : class, IIndexedItem {
-		public ICommand AddItemBeforeCommand => new RelayCommand(a => AddItemBefore((T[])a), a => AddItemBeforeCanExecute((T[])a));
-		public ICommand AddItemAfterCommand => new RelayCommand(a => AddItemAfter((T[])a), a => AddItemAfterCanExecute((T[])a));
-		public ICommand AppendItemCommand => new RelayCommand(a => AppendItem((T[])a), a => AppendItemCanExecute((T[])a));
-		public ICommand ItemMoveUpCommand => new RelayCommand(a => ItemMoveUp((T[])a), a => ItemMoveUpCanExecute((T[])a));
-		public ICommand ItemMoveDownCommand => new RelayCommand(a => ItemMoveDown((T[])a), a => ItemMoveDownCanExecute((T[])a));
-		public ICommand RemoveItemCommand => new RelayCommand(a => RemoveItem((T[])a), a => RemoveItemCanExecute((T[])a));
-		public ICommand RemoveAllItemsCommand => new RelayCommand(a => RemoveAllItems((T[])a), a => RemoveAllItemsCanExecute((T[])a));
+		public ICommand AddItemBeforeCommand => new RelayCommand(a => AddItemBefore((T[])a!), a => AddItemBeforeCanExecute((T[])a!));
+		public ICommand AddItemAfterCommand => new RelayCommand(a => AddItemAfter((T[])a!), a => AddItemAfterCanExecute((T[])a!));
+		public ICommand AppendItemCommand => new RelayCommand(a => AppendItem((T[])a!), a => AppendItemCanExecute((T[])a!));
+		public ICommand ItemMoveUpCommand => new RelayCommand(a => ItemMoveUp((T[])a!), a => ItemMoveUpCanExecute((T[])a!));
+		public ICommand ItemMoveDownCommand => new RelayCommand(a => ItemMoveDown((T[])a!), a => ItemMoveDownCanExecute((T[])a!));
+		public ICommand RemoveItemCommand => new RelayCommand(a => RemoveItem((T[])a!), a => RemoveItemCanExecute((T[])a!));
+		public ICommand RemoveAllItemsCommand => new RelayCommand(a => RemoveAllItems((T[])a!), a => RemoveAllItemsCanExecute((T[])a!));
 		public bool DisableAutoUpdateProps { get; set; }
-		public Action<int> UpdateIndexesDelegate { get; set; }
-		public bool CanCreateNewItems => createNewItem != null;
+		public Action<int>? UpdateIndexesDelegate { get; set; }
+		public bool CanCreateNewItems => createNewItem is not null;
 		public bool CanRemoveItems => true;
 		public bool CanMoveItems => true;
 
-		readonly Func<T> createNewItem;
+		readonly Func<T>? createNewItem;
 
 		public IndexObservableCollection()
 			: this(null) {
 		}
 
-		public IndexObservableCollection(Func<T> createNewItem) => this.createNewItem = createNewItem;
+		public IndexObservableCollection(Func<T>? createNewItem) => this.createNewItem = createNewItem;
 
 		protected override void OnCollectionChanged(NotifyCollectionChangedEventArgs e) {
 			if (!DisableAutoUpdateProps) {
@@ -91,7 +91,7 @@ namespace dnSpy.AsmEditor.Commands {
 		}
 
 		public void UpdateIndexes(int index) {
-			if (UpdateIndexesDelegate != null)
+			if (UpdateIndexesDelegate is not null)
 				UpdateIndexesDelegate(index);
 			else
 				DefaultUpdateIndexes(index);
@@ -112,7 +112,12 @@ namespace dnSpy.AsmEditor.Commands {
 			AddNewItem(index + indexDisp);
 		}
 
-		void AddNewItem(int index) => Insert(index, createNewItem());
+		void AddNewItem(int index) {
+			if (createNewItem is null)
+				throw new InvalidOperationException();
+			Insert(index, createNewItem());
+		}
+
 		void AddItemBefore(T[] items) => AddNewItem(items, 0);
 		bool AddItemBeforeCanExecute(T[] items) => CanCreateNewItems && items.Length == 1;
 		void AddItemAfter(T[] items) => AddNewItem(items, 1);

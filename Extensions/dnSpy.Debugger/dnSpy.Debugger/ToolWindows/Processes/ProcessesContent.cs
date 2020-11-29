@@ -42,9 +42,9 @@ namespace dnSpy.Debugger.ToolWindows.Processes {
 
 	[Export(typeof(IProcessesContent))]
 	sealed class ProcessesContent : IProcessesContent {
-		public object UIObject => processesControl;
-		public IInputElement FocusedElement => processesControl.ListView;
-		public FrameworkElement ZoomElement => processesControl;
+		public object? UIObject => processesControl;
+		public IInputElement? FocusedElement => processesControl.ListView;
+		public FrameworkElement? ZoomElement => processesControl;
 		public ListView ListView => processesControl.ListView;
 		public ProcessesOperations Operations { get; }
 
@@ -103,7 +103,7 @@ namespace dnSpy.Debugger.ToolWindows.Processes {
 			wpfCommandService.Add(ControlConstants.GUID_DEBUGGER_PROCESSES_LISTVIEW, processesControl.ListView);
 		}
 
-		void ProcessesControl_ProcessesListViewDoubleClick(object sender, EventArgs e) {
+		void ProcessesControl_ProcessesListViewDoubleClick(object? sender, EventArgs e) {
 			bool newTab = Keyboard.Modifiers == ModifierKeys.Shift || Keyboard.Modifiers == ModifierKeys.Control;
 			if (Operations.CanSetCurrentProcess)
 				Operations.SetCurrentProcess(newTab);

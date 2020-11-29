@@ -33,7 +33,7 @@ namespace dnSpy.AsmEditor.DnlibDialogs {
 		public TypeSigCreatorVM TypeSigCreator { get; }
 		public CustomAttributesVM CustomAttributesVM { get; }
 
-		public TypeDefOrRefAndCAVM(TypeDefOrRefAndCAOptions options, ModuleDef ownerModule, IDecompilerService decompilerService, TypeDef ownerType, MethodDef ownerMethod) {
+		public TypeDefOrRefAndCAVM(TypeDefOrRefAndCAOptions options, ModuleDef ownerModule, IDecompilerService decompilerService, TypeDef? ownerType, MethodDef? ownerMethod) {
 			origOptions = options;
 
 			var typeSigCreatorOptions = new TypeSigCreatorOptions(ownerModule, decompilerService) {
@@ -43,9 +43,9 @@ namespace dnSpy.AsmEditor.DnlibDialogs {
 				OwnerType = ownerType,
 				OwnerMethod = ownerMethod,
 			};
-			if (ownerType != null && ownerType.GenericParameters.Count == 0)
+			if (ownerType is not null && ownerType.GenericParameters.Count == 0)
 				typeSigCreatorOptions.CanAddGenericTypeVar = false;
-			if (ownerMethod != null && ownerMethod.GenericParameters.Count > 0)
+			if (ownerMethod is not null && ownerMethod.GenericParameters.Count > 0)
 				typeSigCreatorOptions.CanAddGenericMethodVar = true;
 
 			TypeSigCreator = new TypeSigCreatorVM(typeSigCreatorOptions);
@@ -55,7 +55,7 @@ namespace dnSpy.AsmEditor.DnlibDialogs {
 			Reinitialize();
 		}
 
-		void TypeSigCreator_PropertyChanged(object sender, PropertyChangedEventArgs e) {
+		void TypeSigCreator_PropertyChanged(object? sender, PropertyChangedEventArgs e) {
 			if (e.PropertyName == nameof(TypeSigCreator.TypeSigDnlibFullName))
 				OnPropertyChanged(nameof(FullName));
 			HasErrorUpdated();

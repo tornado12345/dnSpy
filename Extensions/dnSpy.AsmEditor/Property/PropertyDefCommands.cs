@@ -56,7 +56,7 @@ namespace dnSpy.AsmEditor.Property {
 
 			public override bool IsVisible(AsmEditorContext context) => DeletePropertyDefCommand.CanExecute(context.Nodes);
 			public override void Execute(AsmEditorContext context) => DeletePropertyDefCommand.Execute(undoCommandService, context.Nodes);
-			public override string GetHeader(AsmEditorContext context) => DeletePropertyDefCommand.GetHeader(context.Nodes);
+			public override string? GetHeader(AsmEditorContext context) => DeletePropertyDefCommand.GetHeader(context.Nodes);
 		}
 
 		[Export, ExportMenuItem(OwnerGuid = MenuConstants.APP_MENU_EDIT_GUID, Header = "res:DeletePropertyCommand", Icon = DsImagesAttribute.Cancel, InputGestureText = "res:DeleteCommandKey", Group = MenuConstants.GROUP_APP_MENU_EDIT_ASMED_DELETE, Order = 50)]
@@ -69,7 +69,7 @@ namespace dnSpy.AsmEditor.Property {
 
 			public override bool IsVisible(AsmEditorContext context) => DeletePropertyDefCommand.CanExecute(context.Nodes);
 			public override void Execute(AsmEditorContext context) => DeletePropertyDefCommand.Execute(undoCommandService, context.Nodes);
-			public override string GetHeader(AsmEditorContext context) => DeletePropertyDefCommand.GetHeader(context.Nodes);
+			public override string? GetHeader(AsmEditorContext context) => DeletePropertyDefCommand.GetHeader(context.Nodes);
 		}
 
 		[Export, ExportMenuItem(Header = "res:DeletePropertyCommand", Icon = DsImagesAttribute.Cancel, InputGestureText = "res:DeleteCommandKey", Group = MenuConstants.GROUP_CTX_DOCVIEWER_ASMED_DELETE, Order = 50)]
@@ -82,7 +82,7 @@ namespace dnSpy.AsmEditor.Property {
 
 			public override bool IsEnabled(CodeContext context) => context.IsDefinition && DeletePropertyDefCommand.CanExecute(context.Nodes);
 			public override void Execute(CodeContext context) => DeletePropertyDefCommand.Execute(undoCommandService, context.Nodes);
-			public override string GetHeader(CodeContext context) => DeletePropertyDefCommand.GetHeader(context.Nodes);
+			public override string? GetHeader(CodeContext context) => DeletePropertyDefCommand.GetHeader(context.Nodes);
 		}
 
 		static string GetHeader(DocumentTreeNodeData[] nodes) {
@@ -102,7 +102,7 @@ namespace dnSpy.AsmEditor.Property {
 		}
 
 		struct DeleteModelNodes {
-			ModelInfo[] infos;
+			ModelInfo[]? infos;
 
 			readonly struct ModelInfo {
 				public readonly TypeDef OwnerType;
@@ -126,8 +126,8 @@ namespace dnSpy.AsmEditor.Property {
 			}
 
 			public void Delete(PropertyNode[] nodes) {
-				Debug.Assert(infos == null);
-				if (infos != null)
+				Debug2.Assert(infos is null);
+				if (infos is not null)
 					throw new InvalidOperationException();
 
 				infos = new ModelInfo[nodes.Length];
@@ -151,8 +151,8 @@ namespace dnSpy.AsmEditor.Property {
 			}
 
 			public void Restore(PropertyNode[] nodes) {
-				Debug.Assert(infos != null);
-				if (infos == null)
+				Debug2.Assert(infos is not null);
+				if (infos is null)
 					throw new InvalidOperationException();
 				Debug.Assert(infos.Length == nodes.Length);
 				if (infos.Length != nodes.Length)
@@ -246,7 +246,7 @@ namespace dnSpy.AsmEditor.Property {
 
 		static bool CanExecute(DocumentTreeNodeData[] nodes) =>
 			nodes.Length == 1 &&
-			(nodes[0] is TypeNode || (nodes[0].TreeNode.Parent != null && nodes[0].TreeNode.Parent.Data is TypeNode));
+			(nodes[0] is TypeNode || (nodes[0].TreeNode.Parent is not null && nodes[0].TreeNode.Parent!.Data is TypeNode));
 
 		static void Execute(Lazy<IUndoCommandService> undoCommandService, IAppService appService, DocumentTreeNodeData[] nodes) {
 			if (!CanExecute(nodes))
@@ -254,15 +254,15 @@ namespace dnSpy.AsmEditor.Property {
 
 			var ownerNode = nodes[0];
 			if (!(ownerNode is TypeNode))
-				ownerNode = (DocumentTreeNodeData)ownerNode.TreeNode.Parent.Data;
+				ownerNode = (DocumentTreeNodeData)ownerNode.TreeNode.Parent!.Data;
 			var typeNode = ownerNode as TypeNode;
-			Debug.Assert(typeNode != null);
-			if (typeNode == null)
+			Debug2.Assert(typeNode is not null);
+			if (typeNode is null)
 				throw new InvalidOperationException();
 
 			var module = typeNode.GetModule();
-			Debug.Assert(module != null);
-			if (module == null)
+			Debug2.Assert(module is not null);
+			if (module is null)
 				throw new InvalidOperationException();
 
 			bool isInstance = !(typeNode.TypeDef.IsAbstract && typeNode.TypeDef.IsSealed);
@@ -368,8 +368,8 @@ namespace dnSpy.AsmEditor.Property {
 			var propNode = (PropertyNode)nodes[0];
 
 			var module = nodes[0].GetModule();
-			Debug.Assert(module != null);
-			if (module == null)
+			Debug2.Assert(module is not null);
+			if (module is null)
 				throw new InvalidOperationException();
 
 			var data = new PropertyOptionsVM(new PropertyDefOptions(propNode.PropertyDef), module, appService.DecompilerService, propNode.PropertyDef.DeclaringType);
@@ -394,7 +394,7 @@ namespace dnSpy.AsmEditor.Property {
 			newOptions = options;
 			origOptions = new PropertyDefOptions(propNode.PropertyDef);
 
-			origParentNode = (DocumentTreeNodeData)propNode.TreeNode.Parent.Data;
+			origParentNode = (DocumentTreeNodeData)propNode.TreeNode.Parent!.Data;
 			origParentChildIndex = origParentNode.TreeNode.Children.IndexOf(propNode.TreeNode);
 			Debug.Assert(origParentChildIndex >= 0);
 			if (origParentChildIndex < 0)
@@ -411,11 +411,15 @@ namespace dnSpy.AsmEditor.Property {
 				Debug.Assert(b);
 				if (!b)
 					throw new InvalidOperationException();
+
+				var isNodeSelected = propNode.TreeNode.TreeView.SelectedItem == propNode;
+
 				origParentNode.TreeNode.Children.RemoveAt(origParentChildIndex);
 				newOptions.CopyTo(propNode.PropertyDef);
-
 				origParentNode.TreeNode.AddChild(propNode.TreeNode);
-				origParentNode.TreeNode.TreeView.SelectItems(new[] { propNode });
+
+				if (isNodeSelected)
+					origParentNode.TreeNode.TreeView.SelectItems(new[] { propNode });
 			}
 			else
 				newOptions.CopyTo(propNode.PropertyDef);
@@ -424,6 +428,8 @@ namespace dnSpy.AsmEditor.Property {
 
 		public void Undo() {
 			if (nameChanged) {
+				var isNodeSelected = propNode.TreeNode.TreeView.SelectedItem == propNode;
+
 				bool b = origParentNode.TreeNode.Children.Remove(propNode.TreeNode);
 				Debug.Assert(b);
 				if (!b)
@@ -431,7 +437,9 @@ namespace dnSpy.AsmEditor.Property {
 
 				origOptions.CopyTo(propNode.PropertyDef);
 				origParentNode.TreeNode.Children.Insert(origParentChildIndex, propNode.TreeNode);
-				origParentNode.TreeNode.TreeView.SelectItems(new[] { propNode });
+
+				if (isNodeSelected)
+					origParentNode.TreeNode.TreeView.SelectItems(new[] { propNode });
 			}
 			else
 				origOptions.CopyTo(propNode.PropertyDef);

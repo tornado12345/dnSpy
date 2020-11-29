@@ -22,7 +22,7 @@ using dnSpy.Contracts.Debugger;
 
 namespace dnSpy.Debugger.DotNet.CorDebug.Impl.Attach {
 	/// <summary>
-	/// Debugging options base class shared by .NET Framework code and .NET Core code
+	/// Debugging options base class shared by .NET Framework code and .NET code
 	/// </summary>
 	abstract class CorDebugAttachToProgramOptions : AttachToProgramOptions {
 		/// <summary>
@@ -35,7 +35,7 @@ namespace dnSpy.Debugger.DotNet.CorDebug.Impl.Attach {
 		/// </summary>
 		/// <param name="other">Destination</param>
 		protected void CopyTo(CorDebugAttachToProgramOptions other) {
-			if (other == null)
+			if (other is null)
 				throw new ArgumentNullException(nameof(other));
 			base.CopyTo(other);
 			other.ProcessId = ProcessId;

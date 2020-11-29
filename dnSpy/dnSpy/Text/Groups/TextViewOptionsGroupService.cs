@@ -39,7 +39,7 @@ namespace dnSpy.Text.Groups {
 			textEditorFactoryService.TextViewCreated += TextEditorFactoryService_TextViewCreated;
 		}
 
-		void TextEditorFactoryService_TextViewCreated(object sender, TextViewCreatedEventArgs e) =>
+		void TextEditorFactoryService_TextViewCreated(object? sender, TextViewCreatedEventArgs e) =>
 			textViewOptionsGroupService.Value.TextViewCreated(e.TextView);
 	}
 
@@ -66,7 +66,7 @@ namespace dnSpy.Text.Groups {
 
 		ITextViewOptionsGroup ITextViewOptionsGroupService.GetGroup(string name) => GetGroup(name);
 		TextViewOptionsGroup GetGroup(string name) {
-			if (name == null)
+			if (name is null)
 				throw new ArgumentNullException(nameof(name));
 			if (!nameToGroup.TryGetValue(name, out var group)) {
 				var defaultOptions = GetDefaultOptions(name);
@@ -82,13 +82,13 @@ namespace dnSpy.Text.Groups {
 					continue;
 				options.AddRange(lz.Value.GetOptions());
 			}
-			return options.Where(a => a.ContentType != null && a.Name != null && a.Type != null).ToArray();
+			return options.Where(a => a.ContentType is not null && a.Name is not null && a.Type is not null).ToArray();
 		}
 
 		void ITextViewOptionsGroupServiceImpl.TextViewCreated(ITextView textView) {
 			var wpfTextView = textView as IWpfTextView;
-			Debug.Assert(wpfTextView != null);
-			if (wpfTextView == null)
+			Debug2.Assert(wpfTextView is not null);
+			if (wpfTextView is null)
 				return;
 
 			Debug.Assert(!wpfTextView.IsClosed);
@@ -97,7 +97,7 @@ namespace dnSpy.Text.Groups {
 
 			foreach (var lz in textViewOptionsGroupNameProviders) {
 				var name = lz.Value.TryGetGroupName(wpfTextView);
-				if (name != null) {
+				if (name is not null) {
 					var group = GetGroup(name);
 					group.TextViewCreated(wpfTextView);
 					break;

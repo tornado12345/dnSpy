@@ -20,27 +20,50 @@
 using System;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Text;
 using dnSpy.Contracts.Disassembly;
 using dnSpy.Contracts.Disassembly.Viewer;
 using dnSpy.Disassembly.X86;
+using dnSpy.Properties;
 using Iced.Intel;
 
 namespace dnSpy.Disassembly.Viewer.X86 {
 	sealed class DisassemblyContentProviderImpl : DisassemblyContentProvider {
+		public override string? Title => shortMethodName ?? methodName;
+
+		public override string? Description {
+			get {
+				if (methodName is null)
+					return null;
+				var sb = new StringBuilder();
+				if (optimization == NativeCodeOptimization.Unoptimized) {
+					sb.AppendLine(DisassemblyContentGenerator.LINE);
+					sb.AppendLine(dnSpy_Resources.Disassembly_MethodIsNotOptimized);
+					sb.AppendLine(DisassemblyContentGenerator.LINE);
+				}
+				if (moduleName is not null)
+					sb.AppendLine(moduleName);
+				sb.AppendLine(methodName);
+				sb.Append(DisassemblyContentGenerator.GetCodeSizeString(blocks));
+				return sb.ToString();
+			}
+		}
+
 		readonly int bitness;
 		readonly CachedSymbolResolver cachedSymbolResolver;
 		readonly DisassemblyContentSettings disasmSettings;
-		readonly IMasmDisassemblySettings masmSettings;
-		readonly INasmDisassemblySettings nasmSettings;
-		readonly IGasDisassemblySettings gasSettings;
+		readonly IX86DisassemblySettings masmSettings;
+		readonly IX86DisassemblySettings nasmSettings;
+		readonly IX86DisassemblySettings gasSettings;
 		readonly DisassemblyContentFormatterOptions formatterOptions;
-		readonly string header;
+		readonly string? header;
 		readonly NativeCodeOptimization optimization;
 		readonly Block[] blocks;
-		readonly X86NativeCodeInfo codeInfo;
-		readonly NativeVariableInfo[] variableInfo;
-		readonly string methodName;
-		readonly string moduleName;
+		readonly X86NativeCodeInfo? codeInfo;
+		readonly NativeVariableInfo[]? variableInfo;
+		readonly string? methodName;
+		readonly string? shortMethodName;
+		readonly string? moduleName;
 		readonly SymbolResolverImpl symbolResolver;
 		bool hasRegisteredEvents;
 		bool closed;
@@ -62,13 +85,13 @@ namespace dnSpy.Disassembly.Viewer.X86 {
 		const string NASM_COMMENT = ";";
 		const string GAS_COMMENT = "//";
 
-		public override event EventHandler OnContentChanged;
+		public override event EventHandler? OnContentChanged;
 
 		sealed class SymbolResolverImpl : Iced.Intel.ISymbolResolver {
 			readonly DisassemblyContentProviderImpl owner;
 			public SymbolResolverImpl(DisassemblyContentProviderImpl owner) => this.owner = owner;
 
-			public bool TryGetSymbol(int operand, int instructionOperand, ref Instruction instruction, ulong address, int addressSize, out SymbolResult symbol) {
+			public bool TryGetSymbol(in Instruction instruction, int operand, int instructionOperand, ulong address, int addressSize, out SymbolResult symbol) {
 				if (owner.cachedSymbolResolver.TryResolve(address, out var symResult, out bool fakeSymbol)) {
 					if (!fakeSymbol || owner.AddLabels) {
 						symbol = new SymbolResult(symResult.Address, symResult.Symbol, SymbolKindUtils.ToFormatterOutputTextKind(symResult.Kind), SymbolFlags.None);
@@ -87,7 +110,7 @@ namespace dnSpy.Disassembly.Viewer.X86 {
 			}
 		}
 
-		public DisassemblyContentProviderImpl(int bitness, CachedSymbolResolver cachedSymbolResolver, DisassemblyContentSettings disasmSettings, IMasmDisassemblySettings masmSettings, INasmDisassemblySettings nasmSettings, IGasDisassemblySettings gasSettings, DisassemblyContentFormatterOptions formatterOptions, string header, NativeCodeOptimization optimization, Block[] blocks, X86NativeCodeInfo codeInfo, NativeVariableInfo[] variableInfo, string methodName, string moduleName) {
+		public DisassemblyContentProviderImpl(int bitness, CachedSymbolResolver cachedSymbolResolver, DisassemblyContentSettings disasmSettings, IX86DisassemblySettings masmSettings, IX86DisassemblySettings nasmSettings, IX86DisassemblySettings gasSettings, DisassemblyContentFormatterOptions formatterOptions, string? header, NativeCodeOptimization optimization, Block[] blocks, X86NativeCodeInfo? codeInfo, NativeVariableInfo[]? variableInfo, string? methodName, string? shortMethodName, string? moduleName) {
 			this.bitness = bitness;
 			this.cachedSymbolResolver = cachedSymbolResolver ?? throw new ArgumentNullException(nameof(cachedSymbolResolver));
 			this.disasmSettings = disasmSettings ?? throw new ArgumentNullException(nameof(disasmSettings));
@@ -101,23 +124,24 @@ namespace dnSpy.Disassembly.Viewer.X86 {
 			this.codeInfo = codeInfo;
 			this.variableInfo = variableInfo;
 			this.methodName = methodName;
+			this.shortMethodName = shortMethodName;
 			this.moduleName = moduleName;
 			symbolResolver = new SymbolResolverImpl(this);
 		}
 
 		public override DisassemblyContentProvider Clone() =>
-			new DisassemblyContentProviderImpl(bitness, cachedSymbolResolver, disasmSettings, masmSettings, nasmSettings, gasSettings, formatterOptions, header, optimization, blocks, codeInfo, variableInfo, methodName, moduleName);
+			new DisassemblyContentProviderImpl(bitness, cachedSymbolResolver, disasmSettings, masmSettings, nasmSettings, gasSettings, formatterOptions, header, optimization, blocks, codeInfo, variableInfo, methodName, shortMethodName, moduleName);
 
 		(Formatter formatter, string commentPrefix, DisassemblyContentKind contentKind) GetDisassemblerInfo(X86Disassembler disasm) {
 			switch (disasm) {
 			case X86Disassembler.Masm:
-				return (new MasmFormatter(masmSettings.ToMasm(), symbolResolver), MASM_COMMENT, DisassemblyContentKind.Masm);
+				return (new MasmFormatter(masmSettings.ToIcedOptions(), symbolResolver), MASM_COMMENT, DisassemblyContentKind.Masm);
 
 			case X86Disassembler.Nasm:
-				return (new NasmFormatter(nasmSettings.ToNasm(), symbolResolver), NASM_COMMENT, DisassemblyContentKind.Nasm);
+				return (new NasmFormatter(nasmSettings.ToIcedOptions(), symbolResolver), NASM_COMMENT, DisassemblyContentKind.Nasm);
 
 			case X86Disassembler.Gas:
-				return (new GasFormatter(gasSettings.ToGas(), symbolResolver), GAS_COMMENT, DisassemblyContentKind.ATT);
+				return (new GasFormatter(gasSettings.ToIcedOptions(), symbolResolver), GAS_COMMENT, DisassemblyContentKind.ATT);
 
 			default:
 				Debug.Fail($"Unknown disassembler: {disasm}");
@@ -125,7 +149,7 @@ namespace dnSpy.Disassembly.Viewer.X86 {
 			}
 		}
 
-		InternalFormatterOptions GetInternalFormatterOptions(bool upperCaseHex) {
+		InternalFormatterOptions GetInternalFormatterOptions(bool uppercaseHex) {
 			var options = InternalFormatterOptions.None;
 			if (EmptyLineBetweenBasicBlocks)
 				options |= InternalFormatterOptions.EmptyLineBetweenBasicBlocks;
@@ -135,8 +159,8 @@ namespace dnSpy.Disassembly.Viewer.X86 {
 				options |= InternalFormatterOptions.InstructionBytes;
 			if (AddLabels)
 				options |= InternalFormatterOptions.AddLabels;
-			if (upperCaseHex)
-				options |= InternalFormatterOptions.UpperCaseHex;
+			if (uppercaseHex)
+				options |= InternalFormatterOptions.UppercaseHex;
 			return options;
 		}
 
@@ -151,11 +175,11 @@ namespace dnSpy.Disassembly.Viewer.X86 {
 
 			var output = new DisassemblyContentOutput();
 			var disasmInfo = GetDisassemblerInfo(disasmSettings.X86Disassembler);
-			DisassemblyContentGenerator.Write(bitness, output, header, optimization, disasmInfo.formatter, disasmInfo.commentPrefix, GetInternalFormatterOptions(disasmInfo.formatter.Options.UpperCaseHex), blocks, codeInfo, variableInfo, methodName, moduleName);
+			DisassemblyContentGenerator.Write(bitness, output, header, optimization, disasmInfo.formatter, disasmInfo.commentPrefix, GetInternalFormatterOptions(disasmInfo.formatter.Options.UppercaseHex), blocks, codeInfo, variableInfo, methodName, moduleName);
 			return output.Create(disasmInfo.contentKind);
 		}
 
-		void DisassemblyContentSettings_PropertyChanged(object sender, PropertyChangedEventArgs e) {
+		void DisassemblyContentSettings_PropertyChanged(object? sender, PropertyChangedEventArgs e) {
 			bool refresh;
 			switch (e.PropertyName) {
 			case nameof(DisassemblyContentSettings.ShowInstructionAddress):
@@ -194,17 +218,17 @@ namespace dnSpy.Disassembly.Viewer.X86 {
 				RefreshContent();
 		}
 
-		void MasmDisassemblySettings_PropertyChanged(object sender, PropertyChangedEventArgs e) {
+		void MasmDisassemblySettings_PropertyChanged(object? sender, PropertyChangedEventArgs e) {
 			if (disasmSettings.X86Disassembler == X86Disassembler.Masm)
 				RefreshContent();
 		}
 
-		void NasmDisassemblySettings_PropertyChanged(object sender, PropertyChangedEventArgs e) {
+		void NasmDisassemblySettings_PropertyChanged(object? sender, PropertyChangedEventArgs e) {
 			if (disasmSettings.X86Disassembler == X86Disassembler.Nasm)
 				RefreshContent();
 		}
 
-		void GasDisassemblySettings_PropertyChanged(object sender, PropertyChangedEventArgs e) {
+		void GasDisassemblySettings_PropertyChanged(object? sender, PropertyChangedEventArgs e) {
 			if (disasmSettings.X86Disassembler == X86Disassembler.Gas)
 				RefreshContent();
 		}

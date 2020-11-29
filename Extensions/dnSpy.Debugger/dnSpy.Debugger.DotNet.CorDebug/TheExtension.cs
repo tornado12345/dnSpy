@@ -29,9 +29,9 @@ namespace dnSpy.Debugger.DotNet.CorDebug {
 		}
 
 		public ExtensionInfo ExtensionInfo => new ExtensionInfo {
-			ShortDescription = string.Format(dnSpy_Debugger_DotNet_CorDebug_Resources.Plugin_ShortDescription, ".NET Framework, .NET Core"),
+			ShortDescription = string.Format(dnSpy_Debugger_DotNet_CorDebug_Resources.Plugin_ShortDescription, ".NET Framework, .NET"),
 		};
 
-		public void OnEvent(ExtensionEvent @event, object obj) { }
+		public void OnEvent(ExtensionEvent @event, object? obj) { }
 	}
 }

@@ -70,17 +70,17 @@ namespace dnSpy.Text.Editor {
 		public ITextDataModel TextDataModel => TextViewModel.DataModel;
 		public ITextViewModel TextViewModel { get; }
 		public bool IsClosed { get; set; }
-		public ITrackingSpan ProvisionalTextHighlight { get; set; }//TODO: Use this prop
-		public event EventHandler GotAggregateFocus;
-		public event EventHandler LostAggregateFocus;
-		public event EventHandler Closed;
-		public event EventHandler<BackgroundBrushChangedEventArgs> BackgroundBrushChanged;
-		public event EventHandler ViewportLeftChanged;
-		public event EventHandler ViewportHeightChanged;
-		public event EventHandler ViewportWidthChanged;
-		public event EventHandler<TextViewLayoutChangedEventArgs> LayoutChanged;
-		public event EventHandler<ZoomLevelChangedEventArgs> ZoomLevelChanged;
-		public IFormattedLineSource FormattedLineSource { get; private set; }
+		public ITrackingSpan? ProvisionalTextHighlight { get; set; }//TODO: Use this prop
+		public event EventHandler? GotAggregateFocus;
+		public event EventHandler? LostAggregateFocus;
+		public event EventHandler? Closed;
+		public event EventHandler<BackgroundBrushChangedEventArgs>? BackgroundBrushChanged;
+		public event EventHandler? ViewportLeftChanged;
+		public event EventHandler? ViewportHeightChanged;
+		public event EventHandler? ViewportWidthChanged;
+		public event EventHandler<TextViewLayoutChangedEventArgs>? LayoutChanged;
+		public event EventHandler<ZoomLevelChangedEventArgs>? ZoomLevelChanged;
+		public IFormattedLineSource? FormattedLineSource { get; private set; }
 		public bool InLayout { get; private set; }
 		ITextViewLineCollection ITextView.TextViewLines => TextViewLines;
 		IWpfTextViewLineCollection IWpfTextView.TextViewLines => TextViewLines;
@@ -121,47 +121,47 @@ namespace dnSpy.Text.Editor {
 		[Name(PredefinedAdornmentLayers.Text)]
 		[Order(After = PredefinedDsAdornmentLayers.BottomLayer, Before = PredefinedDsAdornmentLayers.TopLayer)]
 		[Order(After = PredefinedAdornmentLayers.Selection, Before = PredefinedAdornmentLayers.Caret)]
-		static readonly AdornmentLayerDefinition textAdornmentLayerDefinition;
+		static readonly AdornmentLayerDefinition? textAdornmentLayerDefinition;
 
 		[Export(typeof(AdornmentLayerDefinition))]
 		[Name(PredefinedAdornmentLayers.Caret)]
 		[Order(After = PredefinedDsAdornmentLayers.BottomLayer, Before = PredefinedDsAdornmentLayers.TopLayer)]
 		[Order(After = PredefinedAdornmentLayers.Text)]
-		static readonly AdornmentLayerDefinition caretAdornmentLayerDefinition;
+		static readonly AdornmentLayerDefinition? caretAdornmentLayerDefinition;
 
 		[Export(typeof(AdornmentLayerDefinition))]
 		[Name(PredefinedAdornmentLayers.Selection)]
 		[Order(After = PredefinedDsAdornmentLayers.BottomLayer, Before = PredefinedDsAdornmentLayers.TopLayer)]
 		[Order(Before = PredefinedAdornmentLayers.Text)]
-		static readonly AdornmentLayerDefinition selectionAdornmentLayerDefinition;
+		static readonly AdornmentLayerDefinition? selectionAdornmentLayerDefinition;
 #pragma warning restore CS0169
 
 		public WpfTextView(ITextViewModel textViewModel, ITextViewRoleSet roles, IEditorOptions parentOptions, IEditorOptionsFactoryService editorOptionsFactoryService, ICommandService commandService, ISmartIndentationService smartIndentationService, IFormattedTextSourceFactoryService formattedTextSourceFactoryService, IViewClassifierAggregatorService viewClassifierAggregatorService, ITextAndAdornmentSequencerFactoryService textAndAdornmentSequencerFactoryService, IClassificationFormatMapService classificationFormatMapService, IEditorFormatMapService editorFormatMapService, IAdornmentLayerDefinitionService adornmentLayerDefinitionService, ILineTransformProviderService lineTransformProviderService, ISpaceReservationStackProvider spaceReservationStackProvider, IWpfTextViewConnectionListenerServiceProvider wpfTextViewConnectionListenerServiceProvider, IBufferGraphFactoryService bufferGraphFactoryService, Lazy<IWpfTextViewCreationListener, IDeferrableContentTypeAndTextViewRoleMetadata>[] wpfTextViewCreationListeners, Lazy<ITextViewCreationListener, IDeferrableContentTypeAndTextViewRoleMetadata>[] textViewCreationListeners) {
-			if (roles == null)
+			if (roles is null)
 				throw new ArgumentNullException(nameof(roles));
-			if (editorOptionsFactoryService == null)
+			if (editorOptionsFactoryService is null)
 				throw new ArgumentNullException(nameof(editorOptionsFactoryService));
-			if (commandService == null)
+			if (commandService is null)
 				throw new ArgumentNullException(nameof(commandService));
-			if (smartIndentationService == null)
+			if (smartIndentationService is null)
 				throw new ArgumentNullException(nameof(smartIndentationService));
-			if (viewClassifierAggregatorService == null)
+			if (viewClassifierAggregatorService is null)
 				throw new ArgumentNullException(nameof(viewClassifierAggregatorService));
-			if (textAndAdornmentSequencerFactoryService == null)
+			if (textAndAdornmentSequencerFactoryService is null)
 				throw new ArgumentNullException(nameof(textAndAdornmentSequencerFactoryService));
-			if (classificationFormatMapService == null)
+			if (classificationFormatMapService is null)
 				throw new ArgumentNullException(nameof(classificationFormatMapService));
-			if (editorFormatMapService == null)
+			if (editorFormatMapService is null)
 				throw new ArgumentNullException(nameof(editorFormatMapService));
-			if (spaceReservationStackProvider == null)
+			if (spaceReservationStackProvider is null)
 				throw new ArgumentNullException(nameof(spaceReservationStackProvider));
-			if (wpfTextViewCreationListeners == null)
+			if (wpfTextViewCreationListeners is null)
 				throw new ArgumentNullException(nameof(wpfTextViewCreationListeners));
-			if (textViewCreationListeners == null)
+			if (textViewCreationListeners is null)
 				throw new ArgumentNullException(nameof(textViewCreationListeners));
-			if (wpfTextViewConnectionListenerServiceProvider == null)
+			if (wpfTextViewConnectionListenerServiceProvider is null)
 				throw new ArgumentNullException(nameof(wpfTextViewConnectionListenerServiceProvider));
-			if (bufferGraphFactoryService == null)
+			if (bufferGraphFactoryService is null)
 				throw new ArgumentNullException(nameof(bufferGraphFactoryService));
 			mouseHoverHelper = new MouseHoverHelper(this);
 			physicalLineCache = new PhysicalLineCache(32);
@@ -230,16 +230,16 @@ namespace dnSpy.Text.Editor {
 			NotifyTextViewCreated(TextViewModel.DataModel.ContentType, null);
 		}
 
-		void NotifyTextViewCreated(IContentType newContentType, IContentType oldContentType) {
+		void NotifyTextViewCreated(IContentType newContentType, IContentType? oldContentType) {
 			foreach (var lz in wpfTextViewCreationListeners) {
-				if (oldContentType != null && oldContentType.IsOfAnyType(lz.Metadata.ContentTypes))
+				if (oldContentType is not null && oldContentType.IsOfAnyType(lz.Metadata.ContentTypes))
 					continue;
 				if (!TextDataModel.ContentType.IsOfAnyType(lz.Metadata.ContentTypes))
 					continue;
 				lz.Value.TextViewCreated(this);
 			}
 			foreach (var lz in textViewCreationListeners) {
-				if (oldContentType != null && oldContentType.IsOfAnyType(lz.Metadata.ContentTypes))
+				if (oldContentType is not null && oldContentType.IsOfAnyType(lz.Metadata.ContentTypes))
 					continue;
 				if (!TextDataModel.ContentType.IsOfAnyType(lz.Metadata.ContentTypes))
 					continue;
@@ -249,7 +249,7 @@ namespace dnSpy.Text.Editor {
 
 		void IDsWpfTextView.InvalidateClassifications(SnapshotSpan span) {
 			Dispatcher.VerifyAccess();
-			if (span.Snapshot == null)
+			if (span.Snapshot is null)
 				throw new ArgumentException();
 			InvalidateSpan(span);
 		}
@@ -257,7 +257,7 @@ namespace dnSpy.Text.Editor {
 		void DelayScreenRefresh() {
 			if (IsClosed)
 				return;
-			if (screenRefreshTimer != null)
+			if (screenRefreshTimer is not null)
 				return;
 			int ms = Options.GetRefreshScreenOnChangeWaitMilliSeconds();
 			if (ms > 0)
@@ -265,10 +265,10 @@ namespace dnSpy.Text.Editor {
 			else
 				RefreshScreen();
 		}
-		DispatcherTimer screenRefreshTimer;
+		DispatcherTimer? screenRefreshTimer;
 
 		void RefreshScreen() => DelayLayoutLines(true);
-		void RefreshScreenHandler(object sender, EventArgs e) {
+		void RefreshScreenHandler(object? sender, EventArgs e) {
 			StopRefreshTimer();
 			RefreshScreen();
 		}
@@ -278,7 +278,7 @@ namespace dnSpy.Text.Editor {
 			screenRefreshTimer = null;
 		}
 
-		void DataModel_ContentTypeChanged(object sender, TextDataModelContentTypeChangedEventArgs e) {
+		void DataModel_ContentTypeChanged(object? sender, TextDataModelContentTypeChangedEventArgs e) {
 			recreateLineTransformProvider = true;
 
 			// Refresh all lines since IFormattedTextSourceFactoryService uses the content type to
@@ -288,7 +288,7 @@ namespace dnSpy.Text.Editor {
 			NotifyTextViewCreated(e.AfterContentType, e.BeforeContentType);
 		}
 
-		void TextBuffer_ChangedLowPriority(object sender, TextContentChangedEventArgs e) {
+		void TextBuffer_ChangedLowPriority(object? sender, TextContentChangedEventArgs e) {
 			foreach (var c in e.Changes) {
 				if (c.OldSpan.Length > 0)
 					InvalidateSpan(new SnapshotSpan(e.Before, c.OldSpan));
@@ -300,17 +300,17 @@ namespace dnSpy.Text.Editor {
 				DelayScreenRefresh();
 		}
 
-		void AggregateClassifier_ClassificationChanged(object sender, ClassificationChangedEventArgs e) =>
+		void AggregateClassifier_ClassificationChanged(object? sender, ClassificationChangedEventArgs e) =>
 			Dispatcher.BeginInvoke(new Action(() => InvalidateSpan(e.ChangeSpan)), DispatcherPriority.Normal);
 
-		void ClassificationFormatMap_ClassificationFormatMappingChanged(object sender, EventArgs e) => Dispatcher.BeginInvoke(new Action(() => {
+		void ClassificationFormatMap_ClassificationFormatMappingChanged(object? sender, EventArgs e) => Dispatcher.BeginInvoke(new Action(() => {
 			if (IsClosed)
 				return;
 			UpdateForceClearTypeIfNeeded();
 			InvalidateFormattedLineSource(true);
 		}), DispatcherPriority.Normal);
 
-		void EditorFormatMap_FormatMappingChanged(object sender, FormatItemsEventArgs e) {
+		void EditorFormatMap_FormatMappingChanged(object? sender, FormatItemsEventArgs e) {
 			if (e.ChangedItems.Contains(EditorFormatMapConstants.TextViewBackgroundId))
 				UpdateBackground();
 		}
@@ -320,7 +320,7 @@ namespace dnSpy.Text.Editor {
 			Background = ResourceDictionaryUtilities.GetBackgroundBrush(bgProps, SystemColors.WindowBrush);
 		}
 
-		void TextAndAdornmentSequencer_SequenceChanged(object sender, TextAndAdornmentSequenceChangedEventArgs e) =>
+		void TextAndAdornmentSequencer_SequenceChanged(object? sender, TextAndAdornmentSequenceChangedEventArgs e) =>
 			Dispatcher.BeginInvoke(new Action(() => InvalidateSpans(e.Span.GetSpans(TextBuffer))), DispatcherPriority.Normal);
 
 		void InvalidateSpans(IEnumerable<SnapshotSpan> spans) {
@@ -365,7 +365,7 @@ namespace dnSpy.Text.Editor {
 
 			SnapshotPoint bufferPosition;
 			double verticalDistance;
-			if (wpfTextViewLineCollection == null) {
+			if (wpfTextViewLineCollection is null) {
 				verticalDistance = 0;
 				bufferPosition = new SnapshotPoint(TextSnapshot, 0);
 			}
@@ -390,7 +390,7 @@ namespace dnSpy.Text.Editor {
 				InvalidateFormattedLineSource(true);
 		}
 
-		void EditorOptions_OptionChanged(object sender, EditorOptionChangedEventArgs e) {
+		void EditorOptions_OptionChanged(object? sender, EditorOptionChangedEventArgs e) {
 			UpdateOption(e.OptionId);
 			if (e.OptionId == DefaultTextViewOptions.WordWrapStyleName) {
 				if ((Options.WordWrapStyle() & WordWrapStyles.WordWrap) != 0)
@@ -457,8 +457,8 @@ namespace dnSpy.Text.Editor {
 			base.OnIsKeyboardFocusWithinChanged(e);
 		}
 
-		void SpaceReservationStack_GotAggregateFocus(object sender, EventArgs e) => UpdateKeyboardFocus();
-		void SpaceReservationStack_LostAggregateFocus(object sender, EventArgs e) => UpdateKeyboardFocus();
+		void SpaceReservationStack_GotAggregateFocus(object? sender, EventArgs e) => UpdateKeyboardFocus();
+		void SpaceReservationStack_LostAggregateFocus(object? sender, EventArgs e) => UpdateKeyboardFocus();
 
 		bool hasKeyboardFocus;
 		bool updateKeyboardFocusInProgress;
@@ -486,7 +486,7 @@ namespace dnSpy.Text.Editor {
 			}));
 		}
 
-		public new Brush Background {
+		public new Brush? Background {
 			get => base.Background;
 			set {
 				if (base.Background != value) {
@@ -529,12 +529,12 @@ namespace dnSpy.Text.Editor {
 				// lines if we're raising LayoutChanged.
 				if (delayLayoutLinesInProgress && !raisingLayoutChanged)
 					DoDelayDisplayLines();
-				return wpfTextViewLineCollection;
+				return wpfTextViewLineCollection!;
 			}
 		}
-		WpfTextViewLineCollection wpfTextViewLineCollection;
+		WpfTextViewLineCollection? wpfTextViewLineCollection;
 
-		public double LineHeight => FormattedLineSource.LineHeight;
+		public double LineHeight => FormattedLineSource!.LineHeight;
 		public double ViewportTop => viewportTop;
 		public double ViewportBottom => ViewportTop + ViewportHeight;
 		public double ViewportRight => ViewportLeft + ViewportWidth;
@@ -632,7 +632,7 @@ namespace dnSpy.Text.Editor {
 			editorFormatMap.FormatMappingChanged -= EditorFormatMap_FormatMappingChanged;
 			spaceReservationStack.GotAggregateFocus -= SpaceReservationStack_GotAggregateFocus;
 			spaceReservationStack.LostAggregateFocus -= SpaceReservationStack_LostAggregateFocus;
-			if (metroWindow != null)
+			if (metroWindow is not null)
 				metroWindow.WindowDpiChanged -= MetroWindow_WindowDpiChanged;
 		}
 
@@ -669,19 +669,19 @@ namespace dnSpy.Text.Editor {
 			if (IsVisiblePhysicalLinesSnapshot(bufferPosition.Snapshot)) {
 				foreach (var pline in visiblePhysicalLines) {
 					var lline = pline.FindFormattedLineByBufferPosition(bufferPosition);
-					if (lline != null)
+					if (lline is not null)
 						return lline;
 				}
 			}
 
 			var cachedLine = physicalLineCache.FindFormattedLineByBufferPosition(bufferPosition);
-			if (cachedLine != null)
+			if (cachedLine is not null)
 				return cachedLine;
 
 			var physLine = CreatePhysicalLineNoCache(bufferPosition, ViewportWidth);
 			physicalLineCache.Add(physLine);
 			var line = physLine.FindFormattedLineByBufferPosition(bufferPosition);
-			if (line == null)
+			if (line is null)
 				throw new InvalidOperationException();
 			return line;
 		}
@@ -689,6 +689,7 @@ namespace dnSpy.Text.Editor {
 		PhysicalLine CreatePhysicalLineNoCache(SnapshotPoint bufferPosition, double viewportWidthOverride) {
 			if (bufferPosition.Snapshot != TextSnapshot)
 				throw new ArgumentException();
+			Debug2.Assert(FormattedLineSource is not null);
 			if (formattedLineSourceIsInvalidated || FormattedLineSource.SourceTextSnapshot != TextSnapshot)
 				CreateFormattedLineSource(viewportWidthOverride);
 			return CreatePhysicalLineNoCache(FormattedLineSource, TextViewModel, VisualSnapshot, bufferPosition);
@@ -738,6 +739,7 @@ namespace dnSpy.Text.Editor {
 			if (invalidatedRegions.Capacity > 100)
 				invalidatedRegions.TrimExcess();
 
+			Debug2.Assert(FormattedLineSource is not null);
 			if (!(FormattedLineSource.SourceTextSnapshot == TextSnapshot && FormattedLineSource.TopTextSnapshot == VisualSnapshot))
 				invalidateAllLines = true;
 			if (invalidateAllLines || formattedLineSourceIsInvalidated) {
@@ -751,11 +753,15 @@ namespace dnSpy.Text.Editor {
 			if (InLayout)
 				throw new InvalidOperationException();
 			InLayout = true;
-			var oldVisibleLines = new HashSet<ITextViewLine>(wpfTextViewLineCollection == null ? (IList<ITextViewLine>)Array.Empty<ITextViewLine>() : wpfTextViewLineCollection);
+			var oldVisibleLines = new HashSet<ITextViewLine>(wpfTextViewLineCollection is null ? (IList<ITextViewLine>)Array.Empty<ITextViewLine>() : wpfTextViewLineCollection);
 			wpfTextViewLineCollection?.Invalidate();
 
 			var layoutHelper = new LayoutHelper(lineTransformProvider, newViewportTop ?? 0, oldVisibleLines, GetValidCachedLines(regionsToInvalidate), FormattedLineSource, TextViewModel, VisualSnapshot, TextSnapshot);
 			layoutHelper.LayoutLines(bufferPosition, relativeTo, verticalDistance, ViewportLeft, viewportWidthOverride, viewportHeightOverride);
+			Debug2.Assert(layoutHelper.AllVisibleLines is not null);
+			Debug2.Assert(layoutHelper.NewOrReformattedLines is not null);
+			Debug2.Assert(layoutHelper.TranslatedLines is not null);
+			Debug2.Assert(layoutHelper.AllVisiblePhysicalLines is not null);
 
 			visiblePhysicalLines.AddRange(layoutHelper.AllVisiblePhysicalLines);
 			wpfTextViewLineCollection = new WpfTextViewLineCollection(this, TextSnapshot, layoutHelper.AllVisibleLines);
@@ -815,11 +821,11 @@ namespace dnSpy.Text.Editor {
 		}
 
 		public IAdornmentLayer GetAdornmentLayer(string name) {
-			if (name == null)
+			if (name is null)
 				throw new ArgumentNullException(nameof(name));
 
 			var info = adornmentLayerDefinitionService.GetLayerDefinition(name);
-			if (info == null)
+			if (info is null)
 				throw new ArgumentException($"Adornment layer {name} doesn't exist");
 
 			switch (GetLayerKind(info.Value.Metadata)) {
@@ -864,7 +870,7 @@ namespace dnSpy.Text.Editor {
 
 		void UpdateVisibleLines() => UpdateVisibleLines(ViewportWidth, ViewportHeight);
 		void UpdateVisibleLines(double viewportWidthOverride, double ViewportHeightOverride) {
-			if (wpfTextViewLineCollection == null)
+			if (wpfTextViewLineCollection is null)
 				return;
 			foreach (IFormattedLine line in wpfTextViewLineCollection)
 				line.SetVisibleArea(new Rect(ViewportLeft, ViewportTop, viewportWidthOverride, ViewportHeightOverride));
@@ -873,9 +879,9 @@ namespace dnSpy.Text.Editor {
 		void InitializeZoom() {
 			var window = Window.GetWindow(this);
 			metroWindow = window as MetroWindow;
-			if (window != null && metroWindow == null)
+			if (window is not null && metroWindow is null)
 				return;
-			if (metroWindow != null) {
+			if (metroWindow is not null) {
 				metroWindow.WindowDpiChanged += MetroWindow_WindowDpiChanged;
 				MetroWindow_WindowDpiChanged(metroWindow, EventArgs.Empty);
 				ZoomLevelChanged?.Invoke(this, new ZoomLevelChangedEventArgs(ZoomLevel, LayoutTransform));
@@ -884,14 +890,14 @@ namespace dnSpy.Text.Editor {
 
 			Loaded += WpfTextView_Loaded;
 		}
-		MetroWindow metroWindow;
+		MetroWindow? metroWindow;
 
-		void WpfTextView_Loaded(object sender, RoutedEventArgs e) {
+		void WpfTextView_Loaded(object? sender, RoutedEventArgs e) {
 			Loaded -= WpfTextView_Loaded;
 			var window = Window.GetWindow(this);
 			metroWindow = window as MetroWindow;
-			Debug.Assert(window != null);
-			if (metroWindow != null) {
+			Debug2.Assert(window is not null);
+			if (metroWindow is not null) {
 				metroWindow.WindowDpiChanged += MetroWindow_WindowDpiChanged;
 				MetroWindow_WindowDpiChanged(metroWindow, EventArgs.Empty);
 				ZoomLevelChanged?.Invoke(this, new ZoomLevelChangedEventArgs(ZoomLevel, LayoutTransform));
@@ -899,8 +905,8 @@ namespace dnSpy.Text.Editor {
 			}
 		}
 
-		void MetroWindow_WindowDpiChanged(object sender, EventArgs e) {
-			Debug.Assert(sender != null && sender == metroWindow);
+		void MetroWindow_WindowDpiChanged(object? sender, EventArgs e) {
+			Debug2.Assert(sender is not null && sender == metroWindow);
 			((MetroWindow)sender).SetScaleTransform(this, ZoomLevel / 100);
 		}
 
@@ -910,10 +916,11 @@ namespace dnSpy.Text.Editor {
 					__lineTransformProvider = lineTransformProviderService.Create(this, removeExtraTextLineVerticalPixels);
 					recreateLineTransformProvider = false;
 				}
+				Debug2.Assert(__lineTransformProvider is not null);
 				return __lineTransformProvider;
 			}
 		}
-		ILineTransformProvider __lineTransformProvider;
+		ILineTransformProvider? __lineTransformProvider;
 		bool recreateLineTransformProvider;
 		bool removeExtraTextLineVerticalPixels;
 
@@ -921,14 +928,14 @@ namespace dnSpy.Text.Editor {
 		LineTransform ILineTransformSource.GetLineTransform(ITextViewLine line, double yPosition, ViewRelativePosition placement) =>
 			LineTransformProvider.GetLineTransform(line, yPosition, placement);
 
-		public event EventHandler<MouseHoverEventArgs> MouseHover {
+		public event EventHandler<MouseHoverEventArgs>? MouseHover {
 			add => mouseHoverHelper.MouseHover += value;
 			remove => mouseHoverHelper.MouseHover -= value;
 		}
 		readonly MouseHoverHelper mouseHoverHelper;
 
 		public ISpaceReservationManager GetSpaceReservationManager(string name) {
-			if (name == null)
+			if (name is null)
 				throw new ArgumentNullException(nameof(name));
 			return spaceReservationStack.GetSpaceReservationManager(name);
 		}
@@ -948,7 +955,7 @@ namespace dnSpy.Text.Editor {
 		}
 		bool queueSpaceReservationStackRefreshInProgress;
 
-		void WpfTextView_IsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e) =>
+		void WpfTextView_IsVisibleChanged(object? sender, DependencyPropertyChangedEventArgs e) =>
 			QueueSpaceReservationStackRefresh();
 
 		public bool IsMouseOverOverlayLayerElement(MouseEventArgs e) => overlayAdornmentLayerCollection.IsMouseOverOverlayLayerElement(e);

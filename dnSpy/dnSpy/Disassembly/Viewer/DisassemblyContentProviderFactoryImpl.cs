@@ -32,19 +32,19 @@ namespace dnSpy.Disassembly.Viewer {
 		[ImportingConstructor]
 		DisassemblyContentProviderFactoryImpl(DisassemblyContentProviderFactoryDependencies x86Deps) => this.x86Deps = x86Deps;
 
-		public override DisassemblyContentProvider Create(NativeCode code, DisassemblyContentFormatterOptions formatterOptions, ISymbolResolver symbolResolver, string header) {
-			if (code.Blocks == null)
+		public override DisassemblyContentProvider Create(NativeCode code, DisassemblyContentFormatterOptions formatterOptions, ISymbolResolver? symbolResolver, string? header) {
+			if (code.Blocks is null)
 				throw new ArgumentException();
 
 			switch (code.Kind) {
 			case NativeCodeKind.X86_16:
-				return new X86.DisassemblyContentProviderFactory(x86Deps, 16, formatterOptions, symbolResolver, header, code.Optimization, code.Blocks, code.CodeInfo, code.VariableInfo, code.MethodName, code.ModuleName).Create();
+				return new X86.DisassemblyContentProviderFactory(x86Deps, 16, formatterOptions, symbolResolver, header, code.Optimization, code.Blocks, code.CodeInfo, code.VariableInfo, code.MethodName, code.ShortMethodName, code.ModuleName).Create();
 
 			case NativeCodeKind.X86_32:
-				return new X86.DisassemblyContentProviderFactory(x86Deps, 32, formatterOptions, symbolResolver, header, code.Optimization, code.Blocks, code.CodeInfo, code.VariableInfo, code.MethodName, code.ModuleName).Create();
+				return new X86.DisassemblyContentProviderFactory(x86Deps, 32, formatterOptions, symbolResolver, header, code.Optimization, code.Blocks, code.CodeInfo, code.VariableInfo, code.MethodName, code.ShortMethodName, code.ModuleName).Create();
 
 			case NativeCodeKind.X86_64:
-				return new X86.DisassemblyContentProviderFactory(x86Deps, 64, formatterOptions, symbolResolver, header, code.Optimization, code.Blocks, code.CodeInfo, code.VariableInfo, code.MethodName, code.ModuleName).Create();
+				return new X86.DisassemblyContentProviderFactory(x86Deps, 64, formatterOptions, symbolResolver, header, code.Optimization, code.Blocks, code.CodeInfo, code.VariableInfo, code.MethodName, code.ShortMethodName, code.ModuleName).Create();
 
 			case NativeCodeKind.ArmThumb:
 			case NativeCodeKind.Arm:

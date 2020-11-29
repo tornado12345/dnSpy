@@ -33,36 +33,36 @@ namespace dnSpy.AsmEditor.Commands {
 			this.documentTabService = documentTabService;
 		}
 
-		CodeContext CreateContext() {
+		CodeContext? CreateContext() {
 			var documentViewer = documentTabService.ActiveTab.TryGetDocumentViewer();
-			if (documentViewer == null)
+			if (documentViewer is null)
 				return null;
 			if (!documentViewer.UIObject.IsKeyboardFocusWithin)
 				return null;
 
 			var refInfo = documentViewer.SelectedReference;
-			if (refInfo == null)
+			if (refInfo is null)
 				return null;
 
 			var node = documentTabService.DocumentTreeView.FindNode(refInfo.Value.Data.Reference);
-			var nodes = node == null ? Array.Empty<DocumentTreeNodeData>() : new DocumentTreeNodeData[] { node };
+			var nodes = node is null ? Array.Empty<DocumentTreeNodeData>() : new DocumentTreeNodeData[] { node };
 			return new CodeContext(nodes, refInfo.Value.Data.IsDefinition, null);
 		}
 
-		event EventHandler ICommand.CanExecuteChanged {
+		event EventHandler? ICommand.CanExecuteChanged {
 			add => CommandManager.RequerySuggested += value;
 			remove => CommandManager.RequerySuggested -= value;
 		}
 
-		bool ICommand.CanExecute(object parameter) {
+		bool ICommand.CanExecute(object? parameter) {
 			var ctx = CreateContext();
-			return ctx != null && command.IsVisible(ctx) && command.IsEnabled(ctx);
+			return ctx is not null && command.IsVisible(ctx) && command.IsEnabled(ctx);
 		}
 
-		void ICommand.Execute(object parameter) {
+		void ICommand.Execute(object? parameter) {
 			var ctx = CreateContext();
-			Debug.Assert(ctx != null);
-			if (ctx != null)
+			Debug2.Assert(ctx is not null);
+			if (ctx is not null)
 				command.Execute(ctx);
 		}
 	}

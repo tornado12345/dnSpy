@@ -211,7 +211,7 @@
     <value>Tipos Derivados</value>
   </data>
   <data name="DotNetExes" xml:space="preserve">
-    <value>Ejecutables .NET</value>
+    <value>_Archivos recientes</value>
   </data>
   <data name="EmptyTabTitle" xml:space="preserve">
     <value>&lt;vacio&gt;</value>
@@ -833,8 +833,8 @@
   <data name="AboutScreen_LoadedFiles" xml:space="preserve">
     <value>Archivos cargados:</value>
   </data>
-  <data name="SearchWindow_SearchGacAssemblies" xml:space="preserve">
-    <value>Buscar en ensamblados GAC</value>
+  <data name="SearchWindow_SearchFrameworkAssemblies" xml:space="preserve">
+    <value>Buscar en ensamblados Framework</value>
   </data>
   <data name="SearchWindow_Where_AllFiles" xml:space="preserve">
     <value>Todos los archivos</value>
@@ -975,7 +975,7 @@
     <value>Imagen al azar</value>
   </data>
   <data name="BgImgSettings_Reset" xml:space="preserve">
-    <value>Restablecer</value>
+    <value>_Restablecer</value>
   </data>
   <data name="BgImgSettings_Zoom" xml:space="preserve">
     <value>Zoom %</value>
@@ -1292,7 +1292,7 @@
     <value>Configuración _Predeterminada</value>
   </data>
   <data name="Button_RestoreSettings" xml:space="preserve">
-    <value>Restablecer</value>
+    <value>_Restablecer</value>
   </data>
   <data name="BytesPerLineCommand" xml:space="preserve">
     <value>Bytes por línea</value>
@@ -1548,7 +1548,7 @@
     <value>Ctrl+Mayús+A</value>
   </data>
   <data name="ShortCutKeyCtrlShiftR" xml:space="preserve">
-    <value>Ctrl+Mayu+R</value>
+    <value>Ctrl+Shift+R</value>
   </data>
   <data name="ShortCutKeyCtrlShiftV" xml:space="preserve">
     <value>Ctrl+Mayús+V</value>
@@ -2038,5 +2038,38 @@
   </data>
   <data name="UnknownValue" xml:space="preserve">
     <value>&lt; desconocido &gt;</value>
+  </data>
+  <data name="TypeReferencesFolder" xml:space="preserve">
+    <value>Tipos de referencias</value>
+  </data>
+  <data name="TreeViewEventsFolder" xml:space="preserve">
+    <value>Eventos</value>
+  </data>
+  <data name="TreeViewFieldsFolder" xml:space="preserve">
+    <value>Campos</value>
+  </data>
+  <data name="TreeViewMethodsFolder" xml:space="preserve">
+    <value>Métodos</value>
+  </data>
+  <data name="TreeViewPropertiesFolder" xml:space="preserve">
+    <value>Propiedades</value>
+  </data>
+  <data name="TreeViewTypesFolder" xml:space="preserve">
+    <value>Tipos</value>
+  </data>
+  <data name="NumberBaseFormatString" xml:space="preserve">
+    <value>Base {0}:</value>
+  </data>
+  <data name="RawValue" xml:space="preserve">
+    <value>En bruto:</value>
+  </data>
+  <data name="RecentFilesCommand" xml:space="preserve">
+    <value>_Archivos recientes</value>
+  </data>
+  <data name="ToolTip_Instruction" xml:space="preserve">
+    <value>Introducción</value>
+  </data>
+  <data name="ToolTip_OpCode" xml:space="preserve">
+    <value>Código de operación</value>
   </data>
 </root>

@@ -23,6 +23,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.ComponentModel.Composition;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using dnSpy.Contracts.Controls.ToolWindows;
 using dnSpy.Contracts.Debugger;
 using dnSpy.Contracts.Debugger.Breakpoints.Code;
@@ -92,12 +93,12 @@ namespace dnSpy.Debugger.ToolWindows.CodeBreakpoints {
 		IEditValueProvider LabelsEditValueProvider {
 			get {
 				codeBreakpointContext.UIDispatcher.VerifyAccess();
-				if (labelsEditValueProvider == null)
+				if (labelsEditValueProvider is null)
 					labelsEditValueProvider = editValueProviderService.Create(ContentTypes.CodeBreakpointsWindowLabels, Array.Empty<string>());
 				return labelsEditValueProvider;
 			}
 		}
-		IEditValueProvider labelsEditValueProvider;
+		IEditValueProvider? labelsEditValueProvider;
 
 		readonly Lazy<DbgManager> dbgManager;
 		readonly CodeBreakpointContext codeBreakpointContext;
@@ -129,9 +130,8 @@ namespace dnSpy.Debugger.ToolWindows.CodeBreakpoints {
 			this.dbgBreakpointLocationFormatterService = dbgBreakpointLocationFormatterService;
 			this.editValueProviderService = editValueProviderService;
 			var classificationFormatMap = classificationFormatMapService.GetClassificationFormatMap(AppearanceCategoryConstants.UIMisc);
-			codeBreakpointContext = new CodeBreakpointContext(uiDispatcher, classificationFormatMap, textElementProvider, breakpointConditionsFormatter, dbgCodeBreakpointHitCountService, new SearchMatcher(searchColumnDefinitions)) {
+			codeBreakpointContext = new CodeBreakpointContext(uiDispatcher, classificationFormatMap, textElementProvider, breakpointConditionsFormatter, dbgCodeBreakpointHitCountService, new SearchMatcher(searchColumnDefinitions), codeBreakpointFormatterProvider.Create()) {
 				SyntaxHighlight = debuggerSettings.SyntaxHighlight,
-				Formatter = codeBreakpointFormatterProvider.Create(),
 			};
 			Descs = new GridViewColumnDescs {
 				Columns = new GridViewColumnDesc[] {
@@ -159,7 +159,7 @@ namespace dnSpy.Debugger.ToolWindows.CodeBreakpoints {
 		};
 
 		// DbgManager thread
-		void DbgCodeBreakpointHitCountService_HitCountChanged(object sender, DbgHitCountChangedEventArgs e) =>
+		void DbgCodeBreakpointHitCountService_HitCountChanged(object? sender, DbgHitCountChangedEventArgs e) =>
 			UI(() => DbgCodeBreakpointHitCountService_HitCountChanged_UI(e.Breakpoints));
 
 		// UI thread
@@ -235,17 +235,17 @@ namespace dnSpy.Debugger.ToolWindows.CodeBreakpoints {
 		}
 
 		// UI thread
-		void ClassificationFormatMap_ClassificationFormatMappingChanged(object sender, EventArgs e) {
+		void ClassificationFormatMap_ClassificationFormatMappingChanged(object? sender, EventArgs e) {
 			codeBreakpointContext.UIDispatcher.VerifyAccess();
 			RefreshThemeFields_UI();
 		}
 
 		// random thread
-		void DebuggerSettings_PropertyChanged(object sender, PropertyChangedEventArgs e) =>
+		void DebuggerSettings_PropertyChanged(object? sender, PropertyChangedEventArgs e) =>
 			UI(() => DebuggerSettings_PropertyChanged_UI(e.PropertyName));
 
 		// UI thread
-		void DebuggerSettings_PropertyChanged_UI(string propertyName) {
+		void DebuggerSettings_PropertyChanged_UI(string? propertyName) {
 			codeBreakpointContext.UIDispatcher.VerifyAccess();
 			switch (propertyName) {
 			case nameof(DebuggerSettings.SyntaxHighlight):
@@ -261,11 +261,11 @@ namespace dnSpy.Debugger.ToolWindows.CodeBreakpoints {
 		}
 
 		// random thread
-		void DbgCodeBreakpointDisplaySettings_PropertyChanged(object sender, PropertyChangedEventArgs e) =>
+		void DbgCodeBreakpointDisplaySettings_PropertyChanged(object? sender, PropertyChangedEventArgs e) =>
 			UI(() => DbgCodeBreakpointDisplaySettings_PropertyChanged_UI(e.PropertyName));
 
 		// UI thread
-		void DbgCodeBreakpointDisplaySettings_PropertyChanged_UI(string propertyName) {
+		void DbgCodeBreakpointDisplaySettings_PropertyChanged_UI(string? propertyName) {
 			codeBreakpointContext.UIDispatcher.VerifyAccess();
 			switch (propertyName) {
 			case nameof(DbgCodeBreakpointDisplaySettings.ShowTokens):
@@ -335,7 +335,7 @@ namespace dnSpy.Debugger.ToolWindows.CodeBreakpoints {
 		void UI(Action callback) => codeBreakpointContext.UIDispatcher.UI(callback);
 
 		// DbgManager thread
-		void DbgCodeBreakpointsService_BreakpointsChanged(object sender, DbgCollectionChangedEventArgs<DbgCodeBreakpoint> e) {
+		void DbgCodeBreakpointsService_BreakpointsChanged(object? sender, DbgCollectionChangedEventArgs<DbgCodeBreakpoint> e) {
 			dbgManager.Value.Dispatcher.VerifyAccess();
 			if (e.Added)
 				UI(() => AddItems_UI(e.Objects));
@@ -352,7 +352,7 @@ namespace dnSpy.Debugger.ToolWindows.CodeBreakpoints {
 		}
 
 		// DbgManager thread
-		void DbgCodeBreakpointsService_BreakpointsModified(object sender, DbgBreakpointsModifiedEventArgs e) {
+		void DbgCodeBreakpointsService_BreakpointsModified(object? sender, DbgBreakpointsModifiedEventArgs e) {
 			dbgManager.Value.Dispatcher.VerifyAccess();
 			UI(() => {
 				foreach (var info in e.Breakpoints) {
@@ -362,13 +362,13 @@ namespace dnSpy.Debugger.ToolWindows.CodeBreakpoints {
 					bool b = bpToVM.TryGetValue(breakpoint, out var vm);
 					Debug.Assert(b);
 					if (b)
-						vm.UpdateSettings_UI(breakpoint.Settings);
+						vm!.UpdateSettings_UI(breakpoint.Settings);
 				}
 			});
 		}
 
 		// DbgManager thread
-		void DbgCodeBreakpointsService_BoundBreakpointsMessageChanged(object sender, DbgBoundBreakpointsMessageChangedEventArgs e) =>
+		void DbgCodeBreakpointsService_BoundBreakpointsMessageChanged(object? sender, DbgBoundBreakpointsMessageChangedEventArgs e) =>
 			UI(() => OnBoundBreakpointsMessageChanged_UI(e.Breakpoints));
 
 		// UI thread
@@ -381,7 +381,7 @@ namespace dnSpy.Debugger.ToolWindows.CodeBreakpoints {
 				Debug.Assert(b);
 				if (!b)
 					continue;
-				vm.UpdateImageAndMessage_UI();
+				vm!.UpdateImageAndMessage_UI();
 			}
 		}
 
@@ -459,12 +459,18 @@ namespace dnSpy.Debugger.ToolWindows.CodeBreakpoints {
 		void InitializeNothingMatched(string filterText) =>
 			NothingMatched = AllItems.Count == 0 && !string.IsNullOrWhiteSpace(filterText);
 
-		public int Compare(CodeBreakpointVM x, CodeBreakpointVM y) {
+		public int Compare([AllowNull] CodeBreakpointVM x, [AllowNull] CodeBreakpointVM y) {
 			Debug.Assert(codeBreakpointContext.UIDispatcher.CheckAccess());
+			if ((object?)x == y)
+				return 0;
+			if (x is null)
+				return -1;
+			if (y is null)
+				return 1;
 			var (desc, dir) = Descs.SortedColumn;
 
 			int id;
-			if (desc == null || dir == GridViewSortDirection.Default) {
+			if (desc is null || dir == GridViewSortDirection.Default) {
 				id = CodeBreakpointsColumnIds.Default_Order;
 				dir = GridViewSortDirection.Ascending;
 			}

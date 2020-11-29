@@ -37,8 +37,8 @@ namespace dnSpy.Analyzer.TreeNodes {
 		}
 
 		public override void Initialize() => TreeNode.LazyLoading = true;
-		public override IMemberRef Member => analyzedEvent;
-		public override IMDTokenProvider Reference => analyzedEvent;
+		public override IMemberRef? Member => analyzedEvent;
+		public override IMDTokenProvider? Reference => analyzedEvent;
 		protected override ImageReference GetIcon(IDotNetImageService dnImgMgr) => dnImgMgr.GetImageReference(analyzedEvent);
 
 		protected override void Write(ITextColorWriter output, IDecompiler decompiler) {
@@ -50,15 +50,18 @@ namespace dnSpy.Analyzer.TreeNodes {
 			}
 			decompiler.WriteType(output, analyzedEvent.DeclaringType, true);
 			output.Write(BoxedTextColor.Operator, ".");
-			new NodePrinter().Write(output, decompiler, analyzedEvent, Context.ShowToken);
+			new NodeFormatter().Write(output, decompiler, analyzedEvent, Context.ShowToken);
 		}
 
 		public override IEnumerable<TreeNodeData> CreateChildren() {
-			if (analyzedEvent.AddMethod != null)
-				yield return new EventAccessorNode(analyzedEvent.AddMethod, dnSpy_Analyzer_Resources.EventAdderTreeNodeName);
+			if (analyzedEvent.AddMethod is not null)
+				yield return new EventAccessorNode(analyzedEvent.AddMethod, "add");
 
-			if (analyzedEvent.RemoveMethod != null)
-				yield return new EventAccessorNode(analyzedEvent.RemoveMethod, dnSpy_Analyzer_Resources.EventRemoverTreeNodeName);
+			if (analyzedEvent.RemoveMethod is not null)
+				yield return new EventAccessorNode(analyzedEvent.RemoveMethod, "remove");
+
+			if (analyzedEvent.InvokeMethod is not null)
+				yield return new EventAccessorNode(analyzedEvent.InvokeMethod, "raise");
 
 			foreach (var accessor in analyzedEvent.OtherMethods)
 				yield return new EventAccessorNode(accessor, null);
@@ -76,13 +79,13 @@ namespace dnSpy.Analyzer.TreeNodes {
 				yield return new InterfaceEventImplementedByNode(analyzedEvent);
 		}
 
-		public static AnalyzerTreeNodeData TryCreateAnalyzer(IMemberRef member, IDecompiler decompiler) {
+		public static AnalyzerTreeNodeData? TryCreateAnalyzer(IMemberRef? member, IDecompiler decompiler) {
 			if (CanShow(member, decompiler))
-				return new EventNode(member as EventDef);
+				return new EventNode((EventDef)member!);
 			else
 				return null;
 		}
 
-		public static bool CanShow(IMemberRef member, IDecompiler decompiler) => member is EventDef;
+		public static bool CanShow(IMemberRef? member, IDecompiler decompiler) => member is EventDef;
 	}
 }

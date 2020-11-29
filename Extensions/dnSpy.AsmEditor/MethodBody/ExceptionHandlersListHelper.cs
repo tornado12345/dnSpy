@@ -57,7 +57,7 @@ namespace dnSpy.AsmEditor.MethodBody {
 			Add(new ContextMenuHandler {
 				Header = "res:CopyMetaDataToken",
 				HeaderPlural = "res:CopyMetaDataTokens",
-				Command = new RelayCommand(a => CopyCatchTypeMDTokens((ExceptionHandlerVM[])a), a => CopyCatchTypeMDTokensCanExecute((ExceptionHandlerVM[])a)),
+				Command = new RelayCommand(a => CopyCatchTypeMDTokens((ExceptionHandlerVM[])a!), a => CopyCatchTypeMDTokensCanExecute((ExceptionHandlerVM[])a!)),
 				InputGestureText = "res:ShortCutKeyCtrlM",
 				Modifiers = ModifierKeys.Control,
 				Key = Key.M,
@@ -70,7 +70,7 @@ namespace dnSpy.AsmEditor.MethodBody {
 			int lines = 0;
 			for (int i = 0; i < ehs.Length; i++) {
 				uint? token = GetCatchTypeToken(ehs[i].CatchType);
-				if (token == null)
+				if (token is null)
 					continue;
 
 				if (lines++ > 0)
@@ -89,17 +89,17 @@ namespace dnSpy.AsmEditor.MethodBody {
 			}
 		}
 
-		bool CopyCatchTypeMDTokensCanExecute(ExceptionHandlerVM[] ehs) => ehs.Any(a => GetCatchTypeToken(a.CatchType) != null);
-		static uint? GetCatchTypeToken(ITypeDefOrRef type) => type == null ? (uint?)null : type.MDToken.Raw;
+		bool CopyCatchTypeMDTokensCanExecute(ExceptionHandlerVM[] ehs) => ehs.Any(a => GetCatchTypeToken(a.CatchType) is not null);
+		static uint? GetCatchTypeToken(ITypeDefOrRef? type) => type is null ? (uint?)null : type.MDToken.Raw;
 
-		void coll_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e) {
-			if (e.NewItems != null)
+		void coll_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e) {
+			if (e.NewItems is not null)
 				InitializeExceptionHandlers(e.NewItems);
 		}
 
 		void InitializeExceptionHandlers(System.Collections.IList list) {
-			foreach (ExceptionHandlerVM eh in list)
-				eh.TypeSigCreator = typeSigCreator;
+			foreach (ExceptionHandlerVM? eh in list)
+				eh!.TypeSigCreator = typeSigCreator;
 		}
 
 		protected override void CopyItemsAsText(ExceptionHandlerVM[] ehs) {

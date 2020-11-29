@@ -28,19 +28,15 @@ namespace dnSpy.Analyzer {
 		bool SyntaxHighlight { get; }
 		bool ShowToken { get; }
 		bool SingleClickExpandsChildren { get; }
-		bool UseNewRenderer { get; }
 	}
 
 	class AnalyzerSettings : ViewModelBase, IAnalyzerSettings {
-		protected virtual void OnModified() { }
-
 		public bool SyntaxHighlight {
 			get => syntaxHighlight;
 			set {
 				if (syntaxHighlight != value) {
 					syntaxHighlight = value;
 					OnPropertyChanged(nameof(SyntaxHighlight));
-					OnModified();
 				}
 			}
 		}
@@ -52,7 +48,6 @@ namespace dnSpy.Analyzer {
 				if (showToken != value) {
 					showToken = value;
 					OnPropertyChanged(nameof(ShowToken));
-					OnModified();
 				}
 			}
 		}
@@ -64,23 +59,10 @@ namespace dnSpy.Analyzer {
 				if (singleClickExpandsChildren != value) {
 					singleClickExpandsChildren = value;
 					OnPropertyChanged(nameof(SingleClickExpandsChildren));
-					OnModified();
 				}
 			}
 		}
 		bool singleClickExpandsChildren = true;
-
-		public bool UseNewRenderer {
-			get => useNewRenderer;
-			set {
-				if (useNewRenderer != value) {
-					useNewRenderer = value;
-					OnPropertyChanged(nameof(UseNewRenderer));
-					OnModified();
-				}
-			}
-		}
-		bool useNewRenderer = false;
 
 		public AnalyzerSettings Clone() => CopyTo(new AnalyzerSettings());
 
@@ -88,7 +70,6 @@ namespace dnSpy.Analyzer {
 			other.SyntaxHighlight = SyntaxHighlight;
 			other.ShowToken = ShowToken;
 			other.SingleClickExpandsChildren = SingleClickExpandsChildren;
-			other.UseNewRenderer = UseNewRenderer;
 			return other;
 		}
 	}
@@ -103,24 +84,18 @@ namespace dnSpy.Analyzer {
 		AnalyzerSettingsImpl(ISettingsService settingsService) {
 			this.settingsService = settingsService;
 
-			disableSave = true;
 			var sect = settingsService.GetOrCreateSection(SETTINGS_GUID);
 			SyntaxHighlight = sect.Attribute<bool?>(nameof(SyntaxHighlight)) ?? SyntaxHighlight;
 			ShowToken = sect.Attribute<bool?>(nameof(ShowToken)) ?? ShowToken;
 			SingleClickExpandsChildren = sect.Attribute<bool?>(nameof(SingleClickExpandsChildren)) ?? SingleClickExpandsChildren;
-			UseNewRenderer = sect.Attribute<bool?>(nameof(UseNewRenderer)) ?? UseNewRenderer;
-			disableSave = false;
+			PropertyChanged += AnalyzerSettingsImpl_PropertyChanged;
 		}
-		readonly bool disableSave;
 
-		protected override void OnModified() {
-			if (disableSave)
-				return;
+		void AnalyzerSettingsImpl_PropertyChanged(object? sender, PropertyChangedEventArgs e) {
 			var sect = settingsService.RecreateSection(SETTINGS_GUID);
 			sect.Attribute(nameof(SyntaxHighlight), SyntaxHighlight);
 			sect.Attribute(nameof(ShowToken), ShowToken);
 			sect.Attribute(nameof(SingleClickExpandsChildren), SingleClickExpandsChildren);
-			sect.Attribute(nameof(UseNewRenderer), UseNewRenderer);
 		}
 	}
 }

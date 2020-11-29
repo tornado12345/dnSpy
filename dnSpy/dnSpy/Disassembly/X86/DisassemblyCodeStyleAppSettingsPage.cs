@@ -33,21 +33,21 @@ namespace dnSpy.Disassembly.X86 {
 
 		protected readonly DisassemblySettings _global_x86DisassemblySettings;
 		protected readonly DisassemblySettings x86DisassemblySettings;
-		readonly StringBuilderFormatterOutput x86Output;
+		readonly StringOutput x86Output;
 		readonly Formatter formatter;
 		readonly List<DisasmBooleanSetting> boolSettings;
 
 		public IX86DisassemblySettings Settings => x86DisassemblySettings;
 		public sealed override Guid ParentGuid => new Guid(AppSettingsConstants.GUID_DISASSEMBLER_CODESTYLE);
-		public sealed override object UIObject => this;
+		public sealed override object? UIObject => this;
 
 		public DisasmBooleanSetting UseHexNumbers { get; }
-		public DisasmBooleanSetting UpperCasePrefixes { get; }
-		public DisasmBooleanSetting UpperCaseMnemonics { get; }
-		public DisasmBooleanSetting UpperCaseRegisters { get; }
-		public DisasmBooleanSetting UpperCaseKeywords { get; }
-		public DisasmBooleanSetting UpperCaseHex { get; }
-		public DisasmBooleanSetting UpperCaseAll { get; }
+		public DisasmBooleanSetting UppercasePrefixes { get; }
+		public DisasmBooleanSetting UppercaseMnemonics { get; }
+		public DisasmBooleanSetting UppercaseRegisters { get; }
+		public DisasmBooleanSetting UppercaseKeywords { get; }
+		public DisasmBooleanSetting UppercaseHex { get; }
+		public DisasmBooleanSetting UppercaseAll { get; }
 		public DisasmBooleanSetting SpaceAfterOperandSeparator { get; }
 		public DisasmBooleanSetting SpaceAfterMemoryBracket { get; }
 		public DisasmBooleanSetting SpaceBetweenMemoryAddOperators { get; }
@@ -67,6 +67,9 @@ namespace dnSpy.Disassembly.X86 {
 		public DisasmBooleanSetting ShowBranchSize { get; }
 		public DisasmBooleanSetting UsePseudoOps { get; }
 		public DisasmBooleanSetting ShowSymbolAddress { get; }
+		public DisasmBooleanSetting GasNakedRegisters { get; }
+		public DisasmBooleanSetting GasShowMnemonicSizeSuffix { get; }
+		public DisasmBooleanSetting GasSpaceAfterMemoryOperandComma { get; }
 
 		public Int32VM OperandColumnVM { get; }
 
@@ -107,9 +110,9 @@ namespace dnSpy.Disassembly.X86 {
 			public static readonly Iced.Intel.ISymbolResolver Instance = new SymbolResolver();
 			SymbolResolver() { }
 
-			public bool TryGetSymbol(int operand, int instructionOperand, ref Instruction instruction, ulong address, int addressSize, out SymbolResult symbol) {
+			public bool TryGetSymbol(in Instruction instruction, int operand, int instructionOperand, ulong address, int addressSize, out SymbolResult symbol) {
 				if (address == SYMBOLADDR) {
-					symbol = new SymbolResult(SYMBOLADDR, new TextInfo(SYMBOLNAME, FormatterOutputTextKind.Data), SymbolFlags.None);
+					symbol = new SymbolResult(SYMBOLADDR, new TextInfo(SYMBOLNAME, FormatterTextKind.Data), SymbolFlags.None);
 					return true;
 				}
 				symbol = default;
@@ -120,7 +123,7 @@ namespace dnSpy.Disassembly.X86 {
 		protected DisassemblyCodeStyleAppSettingsPage(DisassemblySettings global_x86DisassemblySettings, DisassemblySettings x86DisassemblySettings, Formatter formatter) {
 			_global_x86DisassemblySettings = global_x86DisassemblySettings ?? throw new ArgumentNullException(nameof(global_x86DisassemblySettings));
 			this.x86DisassemblySettings = x86DisassemblySettings ?? throw new ArgumentNullException(nameof(x86DisassemblySettings));
-			x86Output = new StringBuilderFormatterOutput();
+			x86Output = new StringOutput();
 			this.formatter = formatter ?? throw new ArgumentNullException(nameof(formatter));
 			boolSettings = new List<DisasmBooleanSetting>();
 
@@ -128,12 +131,12 @@ namespace dnSpy.Disassembly.X86 {
 				() => Settings.NumberBase == Contracts.Disassembly.NumberBase.Hexadecimal,
 				value => Settings.NumberBase = value ? Contracts.Disassembly.NumberBase.Hexadecimal : Contracts.Disassembly.NumberBase.Decimal,
 				Instruction.Create(Code.Mov_r64_imm64, Register.RDX, 0x123456789ABCDEF0));
-			UpperCasePrefixes = AddDisasmBoolSetting(() => Settings.UpperCasePrefixes, value => Settings.UpperCasePrefixes = value, Instruction.CreateMovsb(64, repPrefix: RepPrefixKind.Rep));
-			UpperCaseMnemonics = AddDisasmBoolSetting(() => Settings.UpperCaseMnemonics, value => Settings.UpperCaseMnemonics = value, Instruction.Create(Code.Xchg_r64_RAX, Register.RSI, Register.RAX));
-			UpperCaseRegisters = AddDisasmBoolSetting(() => Settings.UpperCaseRegisters, value => Settings.UpperCaseRegisters = value, Instruction.Create(Code.Xchg_r64_RAX, Register.RSI, Register.RAX));
-			UpperCaseKeywords = AddDisasmBoolSetting(() => Settings.UpperCaseKeywords, value => Settings.UpperCaseKeywords = value, Instruction.Create(Code.Mov_rm8_imm8, new MemoryOperand(Register.RCX, 4, 1), 0x5A));
-			UpperCaseHex = AddDisasmBoolSetting(() => Settings.UpperCaseHex, value => Settings.UpperCaseHex = value, Instruction.Create(Code.Mov_r64_imm64, Register.RDX, 0x123456789ABCDEF0));
-			UpperCaseAll = AddDisasmBoolSetting(() => Settings.UpperCaseAll, value => Settings.UpperCaseAll = value, Instruction.CreateMovsb(64, repPrefix: RepPrefixKind.Rep));
+			UppercasePrefixes = AddDisasmBoolSetting(() => Settings.UppercasePrefixes, value => Settings.UppercasePrefixes = value, Instruction.CreateMovsb(64, repPrefix: RepPrefixKind.Repe));
+			UppercaseMnemonics = AddDisasmBoolSetting(() => Settings.UppercaseMnemonics, value => Settings.UppercaseMnemonics = value, Instruction.Create(Code.Xchg_r64_RAX, Register.RSI, Register.RAX));
+			UppercaseRegisters = AddDisasmBoolSetting(() => Settings.UppercaseRegisters, value => Settings.UppercaseRegisters = value, Instruction.Create(Code.Xchg_r64_RAX, Register.RSI, Register.RAX));
+			UppercaseKeywords = AddDisasmBoolSetting(() => Settings.UppercaseKeywords, value => Settings.UppercaseKeywords = value, Instruction.Create(Code.Mov_rm8_imm8, new MemoryOperand(Register.RCX, 4, 1), 0x5A));
+			UppercaseHex = AddDisasmBoolSetting(() => Settings.UppercaseHex, value => Settings.UppercaseHex = value, Instruction.Create(Code.Mov_r64_imm64, Register.RDX, 0x123456789ABCDEF0));
+			UppercaseAll = AddDisasmBoolSetting(() => Settings.UppercaseAll, value => Settings.UppercaseAll = value, Instruction.CreateMovsb(64, repPrefix: RepPrefixKind.Repe));
 			SpaceAfterOperandSeparator = AddDisasmBoolSetting(() => Settings.SpaceAfterOperandSeparator, value => Settings.SpaceAfterOperandSeparator = value, Instruction.Create(Code.Shld_rm16_r16_CL, Register.DX, Register.AX, Register.CL));
 			SpaceAfterMemoryBracket = AddDisasmBoolSetting(() => Settings.SpaceAfterMemoryBracket, value => Settings.SpaceAfterMemoryBracket = value, Instruction.Create(Code.Push_rm64, new MemoryOperand(Register.RBP, Register.RDI, 4, -0x12345678, 8, false, Register.None)));
 			SpaceBetweenMemoryAddOperators = AddDisasmBoolSetting(() => Settings.SpaceBetweenMemoryAddOperators, value => Settings.SpaceBetweenMemoryAddOperators = value, Instruction.Create(Code.Push_rm64, new MemoryOperand(Register.RBP, Register.RDI, 4, -0x12345678, 8, false, Register.None)));
@@ -151,11 +154,14 @@ namespace dnSpy.Disassembly.X86 {
 			AlwaysShowMemorySize = AddDisasmBoolSetting(() => Settings.MemorySizeOptions == Contracts.Disassembly.MemorySizeOptions.Always, value => Settings.MemorySizeOptions = value ? Contracts.Disassembly.MemorySizeOptions.Always : Contracts.Disassembly.MemorySizeOptions.Default, Instruction.Create(Code.Mov_rm64_r64, new MemoryOperand(Register.RAX, 0, 0), Register.RCX));
 			RipRelativeAddresses = AddDisasmBoolSetting(() => Settings.RipRelativeAddresses, value => Settings.RipRelativeAddresses = value, Instruction.Create(Code.Inc_rm64, new MemoryOperand(Register.RIP, Register.None, 1, -0x12345678, 8)));
 			ShowBranchSize = AddDisasmBoolSetting(() => Settings.ShowBranchSize, value => Settings.ShowBranchSize = value, Instruction.CreateBranch(Code.Je_rel8_64, X86_RIP + 5));
-			UsePseudoOps = AddDisasmBoolSetting(() => Settings.UsePseudoOps, value => Settings.UsePseudoOps = value, Instruction.Create(Code.EVEX_Vcmpps_k_k1_ymm_ymmm256b32_imm8, Register.K3, Register.YMM2, Register.YMM27, 7));
+			UsePseudoOps = AddDisasmBoolSetting(() => Settings.UsePseudoOps, value => Settings.UsePseudoOps = value, Instruction.Create(Code.EVEX_Vcmpps_kr_k1_ymm_ymmm256b32_imm8, Register.K3, Register.YMM2, Register.YMM27, 7));
 			ShowSymbolAddress = AddDisasmBoolSetting(() => Settings.ShowSymbolAddress, value => Settings.ShowSymbolAddress = value, Instruction.Create(Code.Mov_r64_imm64, Register.RCX, SYMBOLADDR));
+			GasNakedRegisters = AddDisasmBoolSetting(() => Settings.GasNakedRegisters, value => Settings.GasNakedRegisters = value, Instruction.Create(Code.Xchg_r64_RAX, Register.RSI, Register.RAX));
+			GasShowMnemonicSizeSuffix = AddDisasmBoolSetting(() => Settings.GasShowMnemonicSizeSuffix, value => Settings.GasShowMnemonicSizeSuffix = value, Instruction.Create(Code.Xchg_r64_RAX, Register.RSI, Register.RAX));
+			GasSpaceAfterMemoryOperandComma = AddDisasmBoolSetting(() => Settings.GasSpaceAfterMemoryOperandComma, value => Settings.GasSpaceAfterMemoryOperandComma = value, Instruction.Create(Code.Mov_rm64_r64, new MemoryOperand(Register.RAX, Register.RDI, 4, 0x12345678, 8), Register.RCX));
 
 			OperandColumnVM = new Int32VM(x86DisassemblySettings.FirstOperandCharIndex + 1, a => {
-				if (!OperandColumnVM.HasError)
+				if (!OperandColumnVM!.HasError)
 					this.x86DisassemblySettings.FirstOperandCharIndex = OperandColumnVM.Value - 1;
 			}, useDecimal: true) { Min = 1, Max = 100 };
 
@@ -171,7 +177,7 @@ namespace dnSpy.Disassembly.X86 {
 			return boolSetting;
 		}
 
-		void DisasmBooleanSetting_PropertyChanged(object sender, PropertyChangedEventArgs e) {
+		void DisasmBooleanSetting_PropertyChanged(object? sender, PropertyChangedEventArgs e) {
 			if (e.PropertyName == nameof(DisasmBooleanSetting.Disassembly))
 				return;
 			RefreshDisassembly();
@@ -184,14 +190,12 @@ namespace dnSpy.Disassembly.X86 {
 		}
 
 		void InitializeFormatterOptions(FormatterOptions options) {
-			InitializeFormatterOptionsCore(options);
-
-			options.UpperCasePrefixes = x86DisassemblySettings.UpperCasePrefixes;
-			options.UpperCaseMnemonics = x86DisassemblySettings.UpperCaseMnemonics;
-			options.UpperCaseRegisters = x86DisassemblySettings.UpperCaseRegisters;
-			options.UpperCaseKeywords = x86DisassemblySettings.UpperCaseKeywords;
-			options.UpperCaseDecorators = x86DisassemblySettings.UpperCaseDecorators;
-			options.UpperCaseAll = x86DisassemblySettings.UpperCaseAll;
+			options.UppercasePrefixes = x86DisassemblySettings.UppercasePrefixes;
+			options.UppercaseMnemonics = x86DisassemblySettings.UppercaseMnemonics;
+			options.UppercaseRegisters = x86DisassemblySettings.UppercaseRegisters;
+			options.UppercaseKeywords = x86DisassemblySettings.UppercaseKeywords;
+			options.UppercaseDecorators = x86DisassemblySettings.UppercaseDecorators;
+			options.UppercaseAll = x86DisassemblySettings.UppercaseAll;
 			options.FirstOperandCharIndex = x86DisassemblySettings.FirstOperandCharIndex;
 			options.TabSize = x86DisassemblySettings.TabSize;
 			options.SpaceAfterOperandSeparator = x86DisassemblySettings.SpaceAfterOperandSeparator;
@@ -216,25 +220,30 @@ namespace dnSpy.Disassembly.X86 {
 			options.BinaryDigitGroupSize = x86DisassemblySettings.BinaryDigitGroupSize;
 			options.DigitSeparator = x86DisassemblySettings.DigitSeparator;
 			options.LeadingZeroes = x86DisassemblySettings.LeadingZeroes;
-			options.UpperCaseHex = x86DisassemblySettings.UpperCaseHex;
+			options.UppercaseHex = x86DisassemblySettings.UppercaseHex;
 			options.SmallHexNumbersInDecimal = x86DisassemblySettings.SmallHexNumbersInDecimal;
 			options.AddLeadingZeroToHexNumbers = x86DisassemblySettings.AddLeadingZeroToHexNumbers;
 			options.NumberBase = UseHexNumbers.Value ? Iced.Intel.NumberBase.Hexadecimal : Iced.Intel.NumberBase.Decimal;
 			options.BranchLeadingZeroes = x86DisassemblySettings.BranchLeadingZeroes;
 			options.SignedImmediateOperands = x86DisassemblySettings.SignedImmediateOperands;
 			options.SignedMemoryDisplacements = x86DisassemblySettings.SignedMemoryDisplacements;
-			options.SignExtendMemoryDisplacements = x86DisassemblySettings.SignExtendMemoryDisplacements;
+			options.DisplacementLeadingZeroes = x86DisassemblySettings.DisplacementLeadingZeroes;
 			options.MemorySizeOptions = DisassemblySettingsUtils.ToMemorySizeOptions(x86DisassemblySettings.MemorySizeOptions);
 			options.RipRelativeAddresses = x86DisassemblySettings.RipRelativeAddresses;
 			options.ShowBranchSize = x86DisassemblySettings.ShowBranchSize;
 			options.UsePseudoOps = x86DisassemblySettings.UsePseudoOps;
 			options.ShowSymbolAddress = x86DisassemblySettings.ShowSymbolAddress;
+			options.GasNakedRegisters = x86DisassemblySettings.GasNakedRegisters;
+			options.GasShowMnemonicSizeSuffix = x86DisassemblySettings.GasShowMnemonicSizeSuffix;
+			options.GasSpaceAfterMemoryOperandComma = x86DisassemblySettings.GasSpaceAfterMemoryOperandComma;
+			options.MasmAddDsPrefix32 = x86DisassemblySettings.MasmAddDsPrefix32;
+			options.MasmDisplInBrackets = x86DisassemblySettings.MasmDisplInBrackets;
+			options.MasmSymbolDisplInBrackets = x86DisassemblySettings.MasmSymbolDisplInBrackets;
+			options.NasmShowSignExtendedImmediateSize = x86DisassemblySettings.NasmShowSignExtendedImmediateSize;
 
 			// The options are only used to show an example so ignore these properties
 			options.TabSize = 0;
 			options.FirstOperandCharIndex = 0;
 		}
-
-		protected abstract void InitializeFormatterOptionsCore(FormatterOptions options);
 	}
 }

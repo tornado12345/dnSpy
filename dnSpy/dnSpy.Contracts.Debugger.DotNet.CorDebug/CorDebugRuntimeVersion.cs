@@ -31,7 +31,7 @@ namespace dnSpy.Contracts.Debugger.DotNet.CorDebug {
 
 		/// <summary>
 		/// Gets the version string, eg. "v2.0.50727" or "v4.0.30319" if it's .NET Framework.
-		/// If it's .NET Core, this is currently an empty string.
+		/// If it's .NET, this is currently an empty string.
 		/// </summary>
 		public string Version { get; }
 
@@ -50,7 +50,7 @@ namespace dnSpy.Contracts.Debugger.DotNet.CorDebug {
 		public static bool operator !=(CorDebugRuntimeVersion left, CorDebugRuntimeVersion right) => !left.Equals(right);
 
 		public bool Equals(CorDebugRuntimeVersion other) => Kind == other.Kind && StringComparer.Ordinal.Equals(Version, other.Version);
-		public override bool Equals(object obj) => obj is CorDebugRuntimeVersion && Equals((CorDebugRuntimeVersion)obj);
+		public override bool Equals(object? obj) => obj is CorDebugRuntimeVersion && Equals((CorDebugRuntimeVersion)obj);
 		public override int GetHashCode() => (int)Kind ^ StringComparer.Ordinal.GetHashCode(Version ?? string.Empty);
 		public override string ToString() => $"{Kind} {Version}";
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member

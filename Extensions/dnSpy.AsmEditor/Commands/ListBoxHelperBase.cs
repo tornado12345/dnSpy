@@ -32,7 +32,7 @@ namespace dnSpy.AsmEditor.Commands {
 	abstract class ListBoxHelperBase<T> where T : class, IIndexedItem {
 		protected readonly ListBox listBox;
 		protected IndexObservableCollection<T> coll;
-		List<ContextMenuHandler> contextMenuHandlers = new List<ContextMenuHandler>();
+		List<ContextMenuHandler?> contextMenuHandlers = new List<ContextMenuHandler?>();
 
 		static int classCopiedDataId;
 		readonly int copiedDataId;
@@ -54,14 +54,14 @@ namespace dnSpy.AsmEditor.Commands {
 				this.cmd = cmd;
 			}
 
-			public bool CanExecute(object parameter) => cmd.CanExecute(owner.GetSelectedItems());
+			public bool CanExecute(object? parameter) => cmd.CanExecute(owner.GetSelectedItems());
 
-			public event EventHandler CanExecuteChanged {
+			public event EventHandler? CanExecuteChanged {
 				add => CommandManager.RequerySuggested += value;
 				remove => CommandManager.RequerySuggested -= value;
 			}
 
-			public void Execute(object parameter) => cmd.Execute(owner.GetSelectedItems());
+			public void Execute(object? parameter) => cmd.Execute(owner.GetSelectedItems());
 		}
 
 		protected abstract T[] GetSelectedItems();
@@ -70,6 +70,7 @@ namespace dnSpy.AsmEditor.Commands {
 		protected virtual bool CopyItemsAsTextCanExecute(T[] items) => items.Length > 0;
 
 		protected ListBoxHelperBase(ListBox listBox) {
+			coll = null!;
 			this.listBox = listBox;
 			this.listBox.ContextMenu = new ContextMenu();
 			this.listBox.ContextMenuOpening += (s, e) => ShowContextMenu(e, listBox, contextMenuHandlers, GetSelectedItems());
@@ -170,7 +171,7 @@ namespace dnSpy.AsmEditor.Commands {
 		protected void AddCopyHandlers() {
 			Add(new ContextMenuHandler {
 				Header = "res:CopyAsTextCommand",
-				Command = new RelayCommand(a => CopyItemsAsText((T[])a), a => CopyItemsAsTextCanExecute((T[])a)),
+				Command = new RelayCommand(a => CopyItemsAsText((T[])a!), a => CopyItemsAsTextCanExecute((T[])a!)),
 				Icon = DsImages.Copy,
 				InputGestureText = "res:ShortCutKeyCtrlT",
 				Modifiers = ModifierKeys.Control,
@@ -178,7 +179,7 @@ namespace dnSpy.AsmEditor.Commands {
 			});
 			Add(new ContextMenuHandler {
 				Header = "res:CutCommand",
-				Command = new RelayCommand(a => CutItems((T[])a), a => CutItemsCanExecute((T[])a)),
+				Command = new RelayCommand(a => CutItems((T[])a!), a => CutItemsCanExecute((T[])a!)),
 				Icon = DsImages.Cut,
 				InputGestureText = "res:ShortCutKeyCtrlX",
 				Modifiers = ModifierKeys.Control,
@@ -186,7 +187,7 @@ namespace dnSpy.AsmEditor.Commands {
 			});
 			Add(new ContextMenuHandler {
 				Header = "res:CopyCommand",
-				Command = new RelayCommand(a => CopyItems((T[])a), a => CopyItemsCanExecute((T[])a)),
+				Command = new RelayCommand(a => CopyItems((T[])a!), a => CopyItemsCanExecute((T[])a!)),
 				Icon = DsImages.Copy,
 				InputGestureText = "res:ShortCutKeyCtrlC",
 				Modifiers = ModifierKeys.Control,
@@ -211,7 +212,7 @@ namespace dnSpy.AsmEditor.Commands {
 		}
 
 		public void OnDataContextChanged(object dataContext) {
-			if (coll != null)
+			if (coll is not null)
 				throw new InvalidOperationException("DataContext changed more than once");
 
 			// Can't add M, N etc as shortcuts so must use a key down handler
@@ -220,7 +221,7 @@ namespace dnSpy.AsmEditor.Commands {
 			OnDataContextChangedInternal(dataContext);
 
 			foreach (var handler in contextMenuHandlers) {
-				if (handler == null)
+				if (handler is null)
 					continue;
 				if (handler.Modifiers == ModifierKeys.None &&
 					(Key.A <= handler.Key && handler.Key <= Key.Z))
@@ -230,7 +231,7 @@ namespace dnSpy.AsmEditor.Commands {
 			}
 		}
 
-		void listBox_KeyDown(object sender, KeyEventArgs e) {
+		void listBox_KeyDown(object? sender, KeyEventArgs e) {
 			if (e.OriginalSource is TextBox || e.OriginalSource is ComboBox || e.OriginalSource is ComboBoxItem)
 				return;
 
@@ -238,7 +239,7 @@ namespace dnSpy.AsmEditor.Commands {
 				return;
 
 			foreach (var handler in contextMenuHandlers) {
-				if (handler == null)
+				if (handler is null)
 					continue;
 				if (handler.Modifiers != Keyboard.Modifiers)
 					continue;
@@ -264,13 +265,13 @@ namespace dnSpy.AsmEditor.Commands {
 				image.Opacity = 0.3;
 		}
 
-		static void ShowContextMenu(ContextMenuEventArgs e, ListBox listBox, IList<ContextMenuHandler> handlers, object parameter) {
+		static void ShowContextMenu(ContextMenuEventArgs e, ListBox listBox, IList<ContextMenuHandler?> handlers, object parameter) {
 			var ctxMenu = new ContextMenu();
 			ctxMenu.SetResourceReference(DsImage.BackgroundBrushProperty, "ContextMenuRectangleFill");
 
 			bool addSep = false;
 			foreach (var handler in handlers) {
-				if (handler == null) {
+				if (handler is null) {
 					addSep = true;
 					continue;
 				}
@@ -280,9 +281,9 @@ namespace dnSpy.AsmEditor.Commands {
 				menuItem.Header = ResourceHelper.GetString(handler, listBox.SelectedItems.Count > 1 ? handler.HeaderPlural ?? handler.Header : handler.Header);
 				var tmpHandler = handler;
 				menuItem.Click += (s, e2) => tmpHandler.Command.Execute(parameter);
-				if (handler.Icon != null)
+				if (handler.Icon is not null)
 					Add16x16Image(menuItem, handler.Icon.Value, menuItem.IsEnabled);
-				if (handler.InputGestureText != null)
+				if (handler.InputGestureText is not null)
 					menuItem.InputGestureText = ResourceHelper.GetString(handler, handler.InputGestureText);
 
 				if (addSep) {
@@ -333,9 +334,9 @@ namespace dnSpy.AsmEditor.Commands {
 			return index;
 		}
 
-		ClipboardData GetClipboardData() {
+		ClipboardData? GetClipboardData() {
 			var cpData = ClipboardDataHolder.TryGet<ClipboardData>();
-			if (cpData == null)
+			if (cpData is null)
 				return null;
 			if (!CanUseClipboardData(cpData.Data, cpData.Id == copiedDataId))
 				return null;
@@ -348,7 +349,7 @@ namespace dnSpy.AsmEditor.Commands {
 
 		void PasteItems(int relIndex) {
 			var cpData = GetClipboardData();
-			if (cpData == null)
+			if (cpData is null)
 				return;
 			var copiedData = cpData.Data;
 
@@ -361,8 +362,8 @@ namespace dnSpy.AsmEditor.Commands {
 		}
 
 		void PasteItems() => PasteItems(0);
-		bool PasteItemsCanExecute() => GetClipboardData() != null;
+		bool PasteItemsCanExecute() => GetClipboardData() is not null;
 		void PasteAfterItems() => PasteItems(1);
-		bool PasteAfterItemsCanExecute() => listBox.SelectedIndex >= 0 && GetClipboardData() != null;
+		bool PasteAfterItemsCanExecute() => listBox.SelectedIndex >= 0 && GetClipboardData() is not null;
 	}
 }

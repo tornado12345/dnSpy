@@ -44,8 +44,8 @@ namespace dnSpy.Analyzer.TreeNodes {
 
 			foreach (EventDef eventDef in type.Events) {
 				if (TypesHierarchyHelpers.IsBaseEvent(analyzedEvent, eventDef)) {
-					MethodDef anyAccessor = eventDef.AddMethod ?? eventDef.RemoveMethod;
-					if (anyAccessor == null)
+					MethodDef anyAccessor = eventDef.AddMethod ?? eventDef.RemoveMethod ?? eventDef.InvokeMethod;
+					if (anyAccessor is null)
 						continue;
 					bool hidesParent = !anyAccessor.IsVirtual ^ anyAccessor.IsNewSlot;
 					yield return new EventNode(eventDef, hidesParent) { Context = Context };
@@ -53,9 +53,9 @@ namespace dnSpy.Analyzer.TreeNodes {
 			}
 		}
 
-		public static bool CanShow(EventDef property) {
-			var accessor = property.AddMethod ?? property.RemoveMethod;
-			return accessor != null && accessor.IsVirtual && !accessor.IsFinal && !accessor.DeclaringType.IsInterface;
+		public static bool CanShow(EventDef @event) {
+			var accessor = @event.AddMethod ?? @event.RemoveMethod ?? @event.InvokeMethod;
+			return accessor is not null && accessor.IsVirtual && !accessor.IsFinal && !accessor.DeclaringType.IsInterface;
 		}
 	}
 }

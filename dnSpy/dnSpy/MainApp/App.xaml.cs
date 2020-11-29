@@ -45,6 +45,7 @@ using dnSpy.Contracts.Settings;
 using dnSpy.Controls;
 using dnSpy.Culture;
 using dnSpy.Documents.Tabs.Dialogs;
+using dnSpy.Documents.TreeView;
 using dnSpy.Extension;
 using dnSpy.Images;
 using dnSpy.Roslyn.Text.Classification;
@@ -73,25 +74,29 @@ namespace dnSpy.MainApp {
 			}
 		}
 
-		static void ShowException(Exception ex) {
+		static void ShowException(Exception? ex) {
 			string msg = ex?.ToString() ?? "Unknown exception";
 			MessageBox.Show(msg, Constants.DnSpy, MessageBoxButton.OK, MessageBoxImage.Error);
 		}
 
 		readonly ResourceManagerTokenCacheImpl resourceManagerTokenCacheImpl;
 		long resourceManagerTokensOffset;
-		volatile Assembly[] mefAssemblies;
-		AppWindow appWindow;
-		ExtensionService extensionService;
-		IDsLoaderService dsLoaderService;
+		volatile Assembly[]? mefAssemblies;
+		AppWindow? appWindow;
+		ExtensionService? extensionService;
+		IDsLoaderService? dsLoaderService;
 		readonly List<LoadedExtension> loadedExtensions = new List<LoadedExtension>();
 		readonly IAppCommandLineArgs args;
-		ExportProvider exportProvider;
+		ExportProvider? exportProvider;
+#if NET
+		readonly DotNetAssemblyLoader dotNetAssemblyLoader = new DotNetAssemblyLoader(System.Runtime.Loader.AssemblyLoadContext.Default);
+#endif
 
 		Task<ExportProvider> initializeMEFTask;
-		Stopwatch startupStopwatch;
+		Stopwatch? startupStopwatch;
 		public App(bool readSettings, Stopwatch startupStopwatch) {
 			resourceManagerTokenCacheImpl = new ResourceManagerTokenCacheImpl();
+			args = new AppCommandLineArgs();
 
 			// PERF: Init MEF on a BG thread. Results in slightly faster startup, eg. InitializeComponent() becomes a 'free' call on this UI thread
 			initializeMEFTask = Task.Run(() => InitializeMEF(readSettings, useCache: readSettings));
@@ -99,7 +104,6 @@ namespace dnSpy.MainApp {
 
 			resourceManagerTokenCacheImpl.TokensUpdated += ResourceManagerTokenCacheImpl_TokensUpdated;
 			ResourceHelper.SetResourceManagerTokenCache(resourceManagerTokenCacheImpl);
-			args = new AppCommandLineArgs();
 			AppDirectories.SetSettingsFilename(args.SettingsFilename);
 
 			AddAppContextFixes();
@@ -114,17 +118,6 @@ namespace dnSpy.MainApp {
 			// This prevents a thin line between the tab item and its content when dpi is eg. 144.
 			// It's hard to miss if you check the Options dialog box.
 			AppContext.SetSwitch("Switch.MS.Internal.DoNotApplyLayoutRoundingToMarginsAndBorderThickness", true);
-
-#if NETFRAMEWORK
-			// Workaround for a bug
-			//		Switch.System.Windows.Controls.Grid.StarDefinitionsCanExceedAvailableSpace=true
-			//		https://docs.microsoft.com/en-us/dotnet/framework/migration-guide/runtime/4.7-4.7.1#resizing-a-grid-can-hang
-			// Repro: DPI=120%, .NET Framework 4.7.1, open the File, View, or Window menus
-			//		https://github.com/0xd4d/dnSpy/issues/734
-			//		https://github.com/0xd4d/dnSpy/issues/735
-			// This has been fixed in .NET Core 3.0 and .NET Framework 4.8
-			AppContext.SetSwitch("Switch.System.Windows.Controls.Grid.StarDefinitionsCanExceedAvailableSpace", true);
-#endif
 		}
 
 		ExportProvider InitializeMEF(bool readSettings, bool useCache) {
@@ -152,7 +145,7 @@ namespace dnSpy.MainApp {
 			return Path.Combine(profileDir, Constants.DnSpyFile + "-mef-info.bin");
 		}
 
-		IExportProviderFactory TryCreateExportProviderFactoryCached(Resolver resolver, bool useCache, out long resourceManagerTokensOffset) {
+		IExportProviderFactory? TryCreateExportProviderFactoryCached(Resolver resolver, bool useCache, out long resourceManagerTokensOffset) {
 			resourceManagerTokensOffset = -1;
 			if (!useCache)
 				return null;
@@ -165,13 +158,14 @@ namespace dnSpy.MainApp {
 			}
 		}
 
-		IExportProviderFactory TryCreateExportProviderFactoryCachedCore(Resolver resolver, out long resourceManagerTokensOffset) {
+		IExportProviderFactory? TryCreateExportProviderFactoryCachedCore(Resolver resolver, out long resourceManagerTokensOffset) {
+			Debug2.Assert(mefAssemblies is not null);
 			resourceManagerTokensOffset = -1;
 			var filename = GetCachedCompositionConfigurationFilename();
 			if (!File.Exists(filename))
 				return null;
 
-			Stream cachedStream = null;
+			Stream? cachedStream = null;
 			try {
 				try {
 					cachedStream = File.OpenRead(filename);
@@ -192,7 +186,7 @@ namespace dnSpy.MainApp {
 				cachedStream?.Dispose();
 			}
 
-			bool IsFileIOException(Exception ex) => ex is IOException || ex is UnauthorizedAccessException || ex is SecurityException;
+			static bool IsFileIOException(Exception ex) => ex is IOException || ex is UnauthorizedAccessException || ex is SecurityException;
 		}
 
 		IExportProviderFactory CreateExportProviderFactorySlow(Resolver resolver) {
@@ -202,12 +196,15 @@ namespace dnSpy.MainApp {
 
 			var catalog = ComposableCatalog.Create(resolver).AddParts(parts);
 			var config = CompositionConfiguration.Create(catalog);
+			// If this fails/throws, one of the following is probably true:
+			//	- you didn't build all projects or all files aren't in the same output dir
+			//	- netcoreapp: dnSpy isn't the startup project (eg. dnSpy-x86 is)
 			Debug.Assert(config.ThrowOnErrors() == config);
 
 			writingCachedMefFile = true;
 			Task.Run(() => SaveMefStateAsync(config)).ContinueWith(t => {
 				var ex = t.Exception;
-				Debug.Assert(ex == null);
+				Debug2.Assert(ex is null);
 				writingCachedMefFile = false;
 			}, CancellationToken.None);
 
@@ -216,6 +213,7 @@ namespace dnSpy.MainApp {
 
 		bool writingCachedMefFile;
 		async Task SaveMefStateAsync(CompositionConfiguration config) {
+			Debug2.Assert(mefAssemblies is not null);
 			string filename = GetCachedCompositionConfigurationFilename();
 			bool fileCreated = false;
 			bool deleteFile = true;
@@ -245,7 +243,7 @@ namespace dnSpy.MainApp {
 			}
 		}
 
-		void ResourceManagerTokenCacheImpl_TokensUpdated(object sender, EventArgs e) => OnTokensUpdated();
+		void ResourceManagerTokenCacheImpl_TokensUpdated(object? sender, EventArgs e) => OnTokensUpdated();
 
 		void OnTokensUpdated() {
 			if (writingCachedMefFile)
@@ -255,6 +253,7 @@ namespace dnSpy.MainApp {
 		}
 
 		void UpdateResourceManagerTokens() {
+			Debug2.Assert(mefAssemblies is not null);
 			var tokensOffset = resourceManagerTokensOffset;
 			if (tokensOffset < 0)
 				return;
@@ -283,8 +282,8 @@ namespace dnSpy.MainApp {
 		}
 
 		Assembly[] GetAssemblies() {
-#if NETCOREAPP
-			netCoreAssemblyLoader.AddSearchPath(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location));
+#if NET
+			dotNetAssemblyLoader.AddSearchPath(AppDirectories.BinDirectory);
 #endif
 			var list = new List<Assembly>();
 			list.Add(GetType().Assembly);
@@ -310,14 +309,18 @@ namespace dnSpy.MainApp {
 		}
 
 		Assembly[] LoadExtensionAssemblies() {
-			var dir = Path.GetDirectoryName(GetType().Assembly.Location);
+			var dir = AppDirectories.BinDirectory;
+			var unsortedFiles = GetExtensionFiles(dir);
+			if (!string.IsNullOrEmpty(args.ExtraExtensionDirectory))
+				unsortedFiles = unsortedFiles.Concat(GetExtensionFiles(args.ExtraExtensionDirectory));
+
 			// Load the modules in a predictable order or multicore-JIT could stop recording. See
 			// "Understanding Background JIT compilation -> What can go wrong with background JIT compilation"
 			// in the PerfView docs for more info.
-			var files = GetExtensionFiles(dir).OrderBy(a => a, StringComparer.OrdinalIgnoreCase).ToArray();
-#if NETCOREAPP
+			var files = unsortedFiles.OrderBy(a => a, StringComparer.OrdinalIgnoreCase).ToArray();
+#if NET
 			foreach (var file in files)
-				netCoreAssemblyLoader.AddSearchPath(Path.GetDirectoryName(file));
+				dotNetAssemblyLoader.AddSearchPath(Path.GetDirectoryName(file)!);
 #endif
 			var asms = new List<Assembly>();
 			foreach (var file in files) {
@@ -380,7 +383,7 @@ namespace dnSpy.MainApp {
 			var config = ExtensionConfigReader.Read(xmlFile);
 			return config.IsSupportedOSversion(Environment.OSVersion.Version) &&
 				config.IsSupportedFrameworkVersion(Environment.Version) &&
-				config.IsSupportedAppVersion(GetType().Assembly.GetName().Version);
+				config.IsSupportedAppVersion(GetType().Assembly.GetName().Version!);
 		}
 
 		bool CanLoadExtension(Assembly asm) {
@@ -395,8 +398,8 @@ namespace dnSpy.MainApp {
 			return true;
 		}
 
-		static bool Equals(byte[] a, byte[] b) {
-			if (a == null || b == null || a.Length != b.Length)
+		static bool Equals(byte[]? a, byte[]? b) {
+			if (a is null || b is null || a.Length != b.Length)
 				return false;
 			for (int i = 0; i < a.Length; i++) {
 				if (a[i] != b[i])
@@ -471,21 +474,22 @@ namespace dnSpy.MainApp {
 			return COPYDATASTRUCT_result;
 		}
 
-		void MainWindow_SourceInitialized(object sender, EventArgs e) {
+		void MainWindow_SourceInitialized(object? sender, EventArgs e) {
+			Debug2.Assert(appWindow is not null);
 			appWindow.MainWindow.SourceInitialized -= MainWindow_SourceInitialized;
 
 			var hwndSource = PresentationSource.FromVisual(appWindow.MainWindow) as HwndSource;
-			Debug.Assert(hwndSource != null);
-			if (hwndSource != null)
+			Debug2.Assert(hwndSource is not null);
+			if (hwndSource is not null)
 				hwndSource.AddHook(WndProc);
 		}
 
-		void App_Exit(object sender, ExitEventArgs e) {
+		void App_Exit(object? sender, ExitEventArgs e) {
 			extensionService?.OnAppExit();
 			dsLoaderService?.Save();
 			try {
 				var settingsService = exportProvider?.GetExportedValue<SettingsService>();
-				if (settingsService != null)
+				if (settingsService is not null)
 					new XmlSettingsWriter(settingsService).Write();
 			}
 			catch {
@@ -504,13 +508,13 @@ namespace dnSpy.MainApp {
 		void FixEditorContextMenuStyle() {
 			var module = typeof(ContextMenu).Module;
 			var type = module.GetType("System.Windows.Documents.TextEditorContextMenu+EditorContextMenu", false, false);
-			Debug.Assert(type != null);
-			if (type == null)
+			Debug2.Assert(type is not null);
+			if (type is null)
 				return;
 			const string styleKey = "EditorContextMenuStyle";
 			var style = Resources[styleKey];
-			Debug.Assert(style != null);
-			if (style == null)
+			Debug2.Assert(style is not null);
+			if (style is null)
 				return;
 			Resources.Remove(styleKey);
 			Resources.Add(type, style);
@@ -548,8 +552,8 @@ namespace dnSpy.MainApp {
 			win.Show();
 		}
 
-		void DsLoaderService_OnAppLoaded(object sender, EventArgs e) {
-			startupStopwatch.Stop();
+		void DsLoaderService_OnAppLoaded(object? sender, EventArgs e) {
+			startupStopwatch!.Stop();
 			DnSpyEventSource.Log.StartupStop();
 			var sw = startupStopwatch;
 			startupStopwatch = null;
@@ -557,9 +561,9 @@ namespace dnSpy.MainApp {
 			if (args.ShowStartupTime)
 				ShowElapsedTime(sw);
 
-			dsLoaderService.OnAppLoaded -= DsLoaderService_OnAppLoaded;
-			appWindow.AppLoaded = true;
-			extensionService.OnAppLoaded();
+			dsLoaderService!.OnAppLoaded -= DsLoaderService_OnAppLoaded;
+			appWindow!.AppLoaded = true;
+			extensionService!.OnAppLoaded();
 			HandleAppArgs(args);
 		}
 
@@ -567,22 +571,26 @@ namespace dnSpy.MainApp {
 		static void ShowElapsedTime(Stopwatch sw) => MsgBox.Instance.Show($"{sw.ElapsedMilliseconds} ms, {sw.ElapsedTicks} ticks");
 
 		void HandleAppArgs(IAppCommandLineArgs appArgs) {
+			Debug2.Assert(exportProvider is not null);
+			Debug2.Assert(appWindow is not null);
 			if (appArgs.Activate && appWindow.MainWindow.WindowState == WindowState.Minimized)
 				WindowUtils.SetState(appWindow.MainWindow, WindowState.Normal);
 
 			var decompiler = GetDecompiler(appArgs.Language);
-			if (decompiler != null)
+			if (decompiler is not null)
 				exportProvider.GetExportedValue<IDecompilerService>().Decompiler = decompiler;
 
-			if (appArgs.FullScreen != null)
+			if (appArgs.FullScreen is not null)
 				appWindow.MainWindow.IsFullScreen = appArgs.FullScreen.Value;
 
 			if (appArgs.NewTab)
 				exportProvider.GetExportedValue<IDocumentTabService>().OpenEmptyTab();
 
 			var files = appArgs.Filenames.ToArray();
-			if (files.Length > 0)
-				OpenDocumentsHelper.OpenDocuments(exportProvider.GetExportedValue<IDocumentTabService>().DocumentTreeView, appWindow.MainWindow, files, false);
+			if (files.Length > 0) {
+				var mruList = exportProvider.GetExportedValue<AssemblyExplorerMostRecentlyUsedList>();
+				OpenDocumentsHelper.OpenDocuments(exportProvider.GetExportedValue<IDocumentTabService>().DocumentTreeView, appWindow.MainWindow, mruList, files, false);
+			}
 
 			// The files were lazily added to the treeview. Make sure they've been added to the TV
 			// before we process the remaining command line args.
@@ -593,18 +601,20 @@ namespace dnSpy.MainApp {
 		}
 
 		void HandleAppArgs2(IAppCommandLineArgs appArgs) {
+			Debug2.Assert(exportProvider is not null);
 			foreach (var handler in exportProvider.GetExports<IAppCommandLineArgsHandler>().OrderBy(a => a.Value.Order))
 				handler.Value.OnNewArgs(appArgs);
 		}
 
-		IDecompiler GetDecompiler(string language) {
+		IDecompiler? GetDecompiler(string language) {
+			Debug2.Assert(exportProvider is not null);
 			if (string.IsNullOrEmpty(language))
 				return null;
 
 			var decompilerService = exportProvider.GetExportedValue<IDecompilerService>();
 			if (Guid.TryParse(language, out var guid)) {
 				var lang = decompilerService.Find(guid);
-				if (lang != null)
+				if (lang is not null)
 					return lang;
 			}
 

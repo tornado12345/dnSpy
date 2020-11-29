@@ -76,11 +76,11 @@ namespace dnSpy.Debugger.DotNet.CorDebug.Utilities {
 			return false;
 		}
 
-		public static bool IsGuiApp(string file) {
+		public static bool IsGuiApp(string? file) {
 			if (!File.Exists(file))
 				return false;
 			try {
-				using (var f = File.OpenRead(file)) {
+				using (var f = File.OpenRead(file!)) {
 					var r = new BinaryReader(f);
 					if (r.ReadUInt16() != 0x5A4D)
 						return false;

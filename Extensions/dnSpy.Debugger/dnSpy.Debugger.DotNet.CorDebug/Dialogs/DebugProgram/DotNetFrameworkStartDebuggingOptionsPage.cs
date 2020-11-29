@@ -27,7 +27,7 @@ using dnSpy.Contracts.MVVM;
 using dnSpy.Debugger.DotNet.CorDebug.Utilities;
 
 namespace dnSpy.Debugger.DotNet.CorDebug.Dialogs.DebugProgram {
-	sealed class DotNetFrameworkStartDebuggingOptionsPage : DotNetStartDebuggingOptionsPage {
+	sealed class DotNetFrameworkStartDebuggingOptionsPage : DotNetCommonStartDebuggingOptionsPage {
 		// This guid is also used by DebugProgramVM
 		public override Guid Guid => new Guid("3FB8FCB5-AECE-443A-ABDE-601F2C23F1C1");
 		public override double DisplayOrder => PredefinedStartDebuggingOptionsPageDisplayOrders.DotNetFramework;
@@ -40,7 +40,7 @@ namespace dnSpy.Debugger.DotNet.CorDebug.Dialogs.DebugProgram {
 
 		protected override void PickNewFilename() {
 			var newFilename = pickFilename.GetFilename(Filename, "exe", PickFilenameConstants.DotNetExecutableFilter);
-			if (newFilename == null)
+			if (newFilename is null)
 				return;
 
 			Filename = newFilename;
@@ -48,15 +48,15 @@ namespace dnSpy.Debugger.DotNet.CorDebug.Dialogs.DebugProgram {
 
 		public override void InitializePreviousOptions(StartDebuggingOptions options) {
 			var dnfOptions = options as DotNetFrameworkStartDebuggingOptions;
-			if (dnfOptions == null)
+			if (dnfOptions is null)
 				return;
 			Initialize(dnfOptions);
 		}
 
-		public override void InitializeDefaultOptions(string filename, string breakKind, StartDebuggingOptions options) =>
+		public override void InitializeDefaultOptions(string filename, string breakKind, StartDebuggingOptions? options) =>
 			Initialize(GetDefaultOptions(filename, breakKind, options));
 
-		DotNetFrameworkStartDebuggingOptions GetDefaultOptions(string filename, string breakKind, StartDebuggingOptions options) {
+		DotNetFrameworkStartDebuggingOptions GetDefaultOptions(string filename, string breakKind, StartDebuggingOptions? options) {
 			bool isExe = PortableExecutableFileHelpers.IsExecutable(filename);
 			if (isExe) {
 				var dnfOptions = CreateOptions(breakKind);

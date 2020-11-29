@@ -31,7 +31,7 @@ namespace dnSpy.Text.Operations {
 	sealed class TextStructureNavigatorSelectorService : ITextStructureNavigatorSelectorService {
 		readonly IContentTypeRegistryService contentTypeRegistryService;
 		readonly Lazy<ITextStructureNavigatorProvider, IContentTypeMetadata>[] textStructureNavigatorProviders;
-		ProviderSelector<ITextStructureNavigatorProvider, IContentTypeMetadata> providerSelector;
+		ProviderSelector<ITextStructureNavigatorProvider, IContentTypeMetadata>? providerSelector;
 
 		[ImportingConstructor]
 		TextStructureNavigatorSelectorService(IContentTypeRegistryService contentTypeRegistryService, [ImportMany] IEnumerable<Lazy<ITextStructureNavigatorProvider, IContentTypeMetadata>> textStructureNavigatorProviders) {
@@ -40,7 +40,7 @@ namespace dnSpy.Text.Operations {
 		}
 
 		public ITextStructureNavigator GetTextStructureNavigator(ITextBuffer textBuffer) {
-			if (textBuffer == null)
+			if (textBuffer is null)
 				throw new ArgumentNullException(nameof(textBuffer));
 			return textBuffer.Properties.GetOrCreateSingletonProperty(typeof(ITextStructureNavigator), () => {
 				var nav = CreateTextStructureNavigator(textBuffer, textBuffer.ContentType);
@@ -49,24 +49,24 @@ namespace dnSpy.Text.Operations {
 			});
 		}
 
-		static void TextBuffer_ContentTypeChanged(object sender, ContentTypeChangedEventArgs e) {
-			var textBuffer = (ITextBuffer)sender;
+		static void TextBuffer_ContentTypeChanged(object? sender, ContentTypeChangedEventArgs e) {
+			var textBuffer = (ITextBuffer)sender!;
 			textBuffer.ContentTypeChanged -= TextBuffer_ContentTypeChanged;
 			bool b = textBuffer.Properties.RemoveProperty(typeof(ITextStructureNavigator));
 			Debug.Assert(b);
 		}
 
 		public ITextStructureNavigator CreateTextStructureNavigator(ITextBuffer textBuffer, IContentType contentType) {
-			if (textBuffer == null)
+			if (textBuffer is null)
 				throw new ArgumentNullException(nameof(textBuffer));
-			if (contentType == null)
+			if (contentType is null)
 				throw new ArgumentNullException(nameof(contentType));
 
-			if (providerSelector == null)
+			if (providerSelector is null)
 				providerSelector = new ProviderSelector<ITextStructureNavigatorProvider, IContentTypeMetadata>(contentTypeRegistryService, textStructureNavigatorProviders);
 			foreach (var p in providerSelector.GetProviders(contentType)) {
 				var nav = p.Value.CreateTextStructureNavigator(textBuffer);
-				if (nav != null)
+				if (nav is not null)
 					return nav;
 			}
 			Debug.Fail($"Couldn't find a {nameof(ITextStructureNavigatorProvider)}");

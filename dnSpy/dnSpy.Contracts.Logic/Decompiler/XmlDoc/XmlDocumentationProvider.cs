@@ -40,17 +40,17 @@ namespace dnSpy.Contracts.Decompiler.XmlDoc {
 		#region Cache
 		sealed class XmlDocumentationCache
 		{
-			readonly KeyValuePair<string, string>[] entries;
+			readonly KeyValuePair<string, string?>[] entries;
 			int pos;
 			
 			public XmlDocumentationCache(int size = 50)
 			{
 				if (size <= 0)
 					throw new ArgumentOutOfRangeException(nameof(size), size, "Value must be positive");
-				entries = new KeyValuePair<string, string>[size];
+				entries = new KeyValuePair<string, string?>[size];
 			}
 			
-			internal bool TryGet(string key, out string value)
+			internal bool TryGet(string key, out string? value)
 			{
 				foreach (var pair in entries) {
 					if (pair.Key == key) {
@@ -62,9 +62,9 @@ namespace dnSpy.Contracts.Decompiler.XmlDoc {
 				return false;
 			}
 			
-			internal void Add(string key, string value)
+			internal void Add(string key, string? value)
 			{
-				entries[pos++] = new KeyValuePair<string, string>(key, value);
+				entries[pos++] = new KeyValuePair<string, string?>(key, value);
 				if (pos == entries.Length)
 					pos = 0;
 			}
@@ -105,9 +105,9 @@ namespace dnSpy.Contracts.Decompiler.XmlDoc {
 		/// </summary>
 		/// <param name="fileName">Name of the .xml file.</param>
 		/// <returns>null if we couldn't create it</returns>
-		public static XmlDocumentationProvider Create(string fileName)
+		public static XmlDocumentationProvider? Create(string fileName)
 		{
-			if (fileName == null)
+			if (fileName is null)
 				return null;
 			try {
 				return new XmlDocumentationProvider(fileName);
@@ -135,39 +135,41 @@ namespace dnSpy.Contracts.Decompiler.XmlDoc {
 		/// <exception cref="XmlException">Invalid XML file</exception>
 		public XmlDocumentationProvider(string fileName)
 		{
-			if (fileName == null)
+			if (fileName is null)
 				throw new ArgumentNullException(nameof(fileName));
-			
+
+			index = new IndexEntry[0];
 			using (FileStream fs = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read | FileShare.Delete)) {
 				using (XmlTextReader xmlReader = new XmlTextReader(fs)) {
 					xmlReader.XmlResolver = null; // no DTD resolving
 					xmlReader.MoveToContent();
-					if (string.IsNullOrEmpty(xmlReader.GetAttribute("redirect"))) {
+					var redirectAttr = (string?)xmlReader.GetAttribute("redirect");
+					if (string2.IsNullOrEmpty(redirectAttr)) {
 						this.fileName = fileName;
-						encoding = GetEncoding(xmlReader.Encoding);
+						encoding = GetEncoding(xmlReader.Encoding ?? throw new InvalidOperationException());
 						ReadXmlDoc(xmlReader);
 					} else {
-						string redirectionTarget = GetRedirectionTarget(fileName, xmlReader.GetAttribute("redirect"));
-						if (redirectionTarget != null) {
+						var redirectionTarget = GetRedirectionTarget(fileName, redirectAttr);
+						if (redirectionTarget is not null) {
 							//Debug.WriteLine("XmlDoc " + fileName + " is redirecting to " + redirectionTarget);
 							using (FileStream redirectedFs = new FileStream(redirectionTarget, FileMode.Open, FileAccess.Read, FileShare.Read | FileShare.Delete)) {
 								using (XmlTextReader redirectedXmlReader = new XmlTextReader(redirectedFs)) {
 									redirectedXmlReader.XmlResolver = null; // no DTD resolving
 									redirectedXmlReader.MoveToContent();
 									this.fileName = redirectionTarget;
-									encoding = GetEncoding(redirectedXmlReader.Encoding);
+									encoding = GetEncoding(redirectedXmlReader.Encoding ?? throw new InvalidOperationException());
 									ReadXmlDoc(redirectedXmlReader);
 								}
 							}
 						} else {
-							throw new XmlException("XmlDoc " + fileName + " is redirecting to " + xmlReader.GetAttribute("redirect") + ", but that file was not found.");
+							throw new XmlException("XmlDoc " + fileName + " is redirecting to " + redirectAttr + ", but that file was not found.");
 						}
 					}
 				}
 			}
 		}
 		
-		static string GetRedirectionTarget(string xmlFileName, string target)
+		static string? GetRedirectionTarget(string xmlFileName, string target)
 		{
 			var programFilesDir = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86);
 			if (string.IsNullOrEmpty(programFilesDir))
@@ -180,7 +182,7 @@ namespace dnSpy.Contracts.Decompiler.XmlDoc {
 			var fileName = target.Replace ("%PROGRAMFILESDIR%", programFilesDir)
 				.Replace ("%CORSYSDIR%", corSysDir);
 			if (!Path.IsPathRooted (fileName))
-				fileName = Path.Combine (Path.GetDirectoryName (xmlFileName), fileName);
+				fileName = Path.Combine (Path.GetDirectoryName (xmlFileName)!, fileName);
 			return LookupLocalizedXmlDoc(fileName);
 		}
 		
@@ -196,7 +198,7 @@ namespace dnSpy.Contracts.Decompiler.XmlDoc {
 		/// Given the assembly file name, looks up the XML documentation file name.
 		/// Returns null if no XML documentation file is found.
 		/// </summary>
-		public static string LookupLocalizedXmlDoc(string fileName)
+		public static string? LookupLocalizedXmlDoc(string fileName)
 		{
 			string xmlFileName = Path.ChangeExtension(fileName, ".xml");
 			string currentCulture = System.Threading.Thread.CurrentThread.CurrentUICulture.TwoLetterISOLanguageName;
@@ -222,7 +224,7 @@ namespace dnSpy.Contracts.Decompiler.XmlDoc {
 		
 		static string GetLocalizedName(string fileName, string language)
 		{
-			string localizedXmlDocFile = Path.GetDirectoryName(fileName);
+			string localizedXmlDocFile = Path.GetDirectoryName(fileName)!;
 			localizedXmlDocFile = Path.Combine(localizedXmlDocFile, language);
 			localizedXmlDocFile = Path.Combine(localizedXmlDocFile, Path.GetFileName(fileName));
 			return localizedXmlDocFile;
@@ -300,8 +302,8 @@ namespace dnSpy.Contracts.Decompiler.XmlDoc {
 					case XmlNodeType.Element:
 						if (reader.LocalName == "member") {
 							int pos = linePosMapper.GetPositionForLine(reader.LineNumber) + Math.Max(reader.LinePosition - 2, 0);
-							string memberAttr = reader.GetAttribute("name");
-							if (memberAttr != null)
+							var memberAttr = (string?)reader.GetAttribute("name");
+							if (memberAttr is not null)
 								indexList.Add(new IndexEntry(GetHashCode(memberAttr), pos));
 							reader.Skip();
 						}
@@ -332,9 +334,9 @@ namespace dnSpy.Contracts.Decompiler.XmlDoc {
 		/// <summary>
 		/// Get the documentation for the member with the specified documentation key.
 		/// </summary>
-		public string GetDocumentation(string key)
+		public string? GetDocumentation(string key)
 		{
-			if (key == null)
+			if (key is null)
 				return null;
 			return GetDocumentation(key, true);
 		}
@@ -342,15 +344,15 @@ namespace dnSpy.Contracts.Decompiler.XmlDoc {
 		/// <summary>
 		/// Get the documentation for the member with the specified documentation key.
 		/// </summary>
-		public string GetDocumentation(StringBuilder key)
+		public string? GetDocumentation(StringBuilder? key)
 		{
-			if (key == null)
+			if (key is null)
 				return null;
 			//TODO: Try to prevent ToString()
 			return GetDocumentation(key.ToString(), true);
 		}
 		
-		string GetDocumentation(string key, bool allowReload)
+		string? GetDocumentation(string key, bool allowReload)
 		{
 			int hashcode = GetHashCode(key);
 			var index = this.index; // read volatile field
@@ -365,12 +367,12 @@ namespace dnSpy.Contracts.Decompiler.XmlDoc {
 			
 			XmlDocumentationCache cache = this.cache;
 			lock (cache) {
-				if (!cache.TryGet(key, out string val)) {
+				if (!cache.TryGet(key, out string? val)) {
 					try {
 						// go through all items that have the correct hash
 						while (++m < index.Length && index[m].HashCode == hashcode) {
 							val = LoadDocumentation(key, index[m].PositionInFile);
-							if (val != null)
+							if (val is not null)
 								break;
 						}
 						// cache the result (even if it is null)
@@ -387,7 +389,7 @@ namespace dnSpy.Contracts.Decompiler.XmlDoc {
 			}
 		}
 		
-		string ReloadAndGetDocumentation(string key)
+		string? ReloadAndGetDocumentation(string key)
 		{
 			try {
 				// Reload the index
@@ -411,7 +413,7 @@ namespace dnSpy.Contracts.Decompiler.XmlDoc {
 		#endregion
 		
 		#region Load / Read XML
-		string LoadDocumentation(string key, int positionInFile)
+		string? LoadDocumentation(string key, int positionInFile)
 		{
 			using (FileStream fs = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read | FileShare.Delete)) {
 				fs.Position = positionInFile;
@@ -420,7 +422,7 @@ namespace dnSpy.Contracts.Decompiler.XmlDoc {
 					r.XmlResolver = null; // no DTD resolving
 					while (r.Read()) {
 						if (r.NodeType == XmlNodeType.Element) {
-							string memberAttr = r.GetAttribute("name");
+							var memberAttr = (string?)r.GetAttribute("name");
 							if (memberAttr == key) {
 								return r.ReadInnerXml();
 							} else {
@@ -435,6 +437,6 @@ namespace dnSpy.Contracts.Decompiler.XmlDoc {
 		#endregion
 
 		/// <inheritdoc/>
-		public virtual void OnDeserialization(object sender) => cache = new XmlDocumentationCache();
+		public virtual void OnDeserialization(object? sender) => cache = new XmlDocumentationCache();
 	}
 }

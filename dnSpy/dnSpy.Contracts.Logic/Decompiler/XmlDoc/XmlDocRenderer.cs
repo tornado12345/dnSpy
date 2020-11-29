@@ -16,6 +16,7 @@
 // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
+using System;
 using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -73,8 +74,8 @@ namespace dnSpy.Contracts.Decompiler.XmlDoc {
 		/// <param name="output">Output</param>
 		/// <param name="xmlDocumentation">XML documentation</param>
 		/// <returns></returns>
-		public static bool WriteXmlDoc(IXmlDocOutput output, string xmlDocumentation) {
-			if (xmlDocumentation == null)
+		public static bool WriteXmlDoc(IXmlDocOutput output, string? xmlDocumentation) {
+			if (xmlDocumentation is null)
 				return false;
 			try {
 				XmlTextReader r = new XmlTextReader(new StringReader("<docroot>" + xmlDocumentation + "</docroot>"));
@@ -185,8 +186,8 @@ namespace dnSpy.Contracts.Decompiler.XmlDoc {
 		/// </summary>
 		/// <param name="cref"></param>
 		/// <returns></returns>
-		public static string GetCref(string cref) {
-			if (string.IsNullOrWhiteSpace(cref))
+		public static string GetCref(string? cref) {
+			if (string2.IsNullOrWhiteSpace(cref))
 				return string.Empty;
 			if (cref.Length < 2) {
 				return cref.Trim();

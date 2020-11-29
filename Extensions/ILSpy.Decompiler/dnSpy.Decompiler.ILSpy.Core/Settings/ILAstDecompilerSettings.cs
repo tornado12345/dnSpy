@@ -25,7 +25,7 @@ using dnSpy.Contracts.Decompiler;
 namespace dnSpy.Decompiler.ILSpy.Core.Settings {
 	sealed class ILAstDecompilerSettings : DecompilerSettingsBase {
 		public override int Version => 0;
-		public override event EventHandler VersionChanged { add { } remove { } }
+		public override event EventHandler? VersionChanged { add { } remove { } }
 
 		public ILAstDecompilerSettings() {
 		}
@@ -39,7 +39,7 @@ namespace dnSpy.Decompiler.ILSpy.Core.Settings {
 			get { yield break; }
 		}
 
-		public override bool Equals(object obj) => obj is ILAstDecompilerSettings;
+		public override bool Equals(object? obj) => obj is ILAstDecompilerSettings;
 		public override int GetHashCode() => 0;
 	}
 }

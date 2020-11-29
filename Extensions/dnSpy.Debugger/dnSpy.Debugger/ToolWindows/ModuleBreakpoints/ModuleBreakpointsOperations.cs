@@ -21,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel.Composition;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -128,6 +129,10 @@ namespace dnSpy.Debugger.ToolWindows.ModuleBreakpoints {
 						formatter.WriteInMemory(output, vm.ModuleBreakpoint);
 						break;
 
+					case ModuleBreakpointsWindowColumnIds.LoadModule:
+						formatter.WriteLoadModule(output, vm.ModuleBreakpoint);
+						break;
+
 					case ModuleBreakpointsWindowColumnIds.Order:
 						formatter.WriteOrder(output, vm.ModuleBreakpoint);
 						break;
@@ -168,6 +173,7 @@ namespace dnSpy.Debugger.ToolWindows.ModuleBreakpoints {
 		public override void AddModuleBreakpoint() {
 			var settings = new DbgModuleBreakpointSettings {
 				IsEnabled = true,
+				IsLoaded = true,
 				ModuleName = "*mymodule*",
 			};
 			dbgModuleBreakpointsService.Value.Add(settings);
@@ -265,7 +271,7 @@ namespace dnSpy.Debugger.ToolWindows.ModuleBreakpoints {
 			if (!vms.Any())
 				return;
 			var filename = pickSaveFilename.GetFilename(null, "xml", PickFilenameConstants.XmlFilenameFilter);
-			if (filename == null)
+			if (filename is null)
 				return;
 			var settingsService = settingsServiceFactory.Value.Create();
 			new BreakpointsSerializer(settingsService).Save(vms.Select(a => a.ModuleBreakpoint).ToArray());
@@ -282,6 +288,7 @@ namespace dnSpy.Debugger.ToolWindows.ModuleBreakpoints {
 			var filename = pickFilename.GetFilename(null, "xml", PickFilenameConstants.XmlFilenameFilter);
 			if (!File.Exists(filename))
 				return;
+			Debug2.Assert(filename is not null);
 			var settingsService = settingsServiceFactory.Value.Create();
 			try {
 				settingsService.Open(filename);

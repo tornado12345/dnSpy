@@ -17,6 +17,7 @@
     along with dnSpy.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+using System.Diagnostics.CodeAnalysis;
 using dnSpy.Contracts.Debugger.AntiAntiDebug;
 using Iced.Intel;
 using II = Iced.Intel;
@@ -25,8 +26,8 @@ namespace dnSpy.Debugger.AntiAntiDebug {
 	sealed class IsDebuggerPresentPatcherX86 : PatcherX86 {
 		public IsDebuggerPresentPatcherX86(DbgNativeFunctionHookContext context) : base(context) { }
 
-		public bool TryPatchX86(out string errorMessage) {
-			var function = functionProvider.GetFunction(IsDebuggerPresentConstants.DllName, IsDebuggerPresentConstants.FuncName);
+		public bool TryPatchX86(string dllName, [NotNullWhen(false)] out string? errorMessage) {
+			var function = functionProvider.GetFunction(dllName, IsDebuggerPresentConstants.FuncName);
 
 			/*
 				Generate the following code:
@@ -40,7 +41,7 @@ namespace dnSpy.Debugger.AntiAntiDebug {
 			instructions.Add(Instruction.Create(II.Code.Retnd));
 
 			var block = new InstructionBlock(new CodeWriterImpl(function), instructions, function.NewCodeAddress);
-			if (!BlockEncoder.TryEncode(process.Bitness, block, out var encErrMsg)) {
+			if (!BlockEncoder.TryEncode(process.Bitness, block, out var encErrMsg, out _)) {
 				errorMessage = $"Failed to encode: {encErrMsg}";
 				return false;
 			}
@@ -49,8 +50,8 @@ namespace dnSpy.Debugger.AntiAntiDebug {
 			return true;
 		}
 
-		public bool TryPatchX64(out string errorMessage) {
-			var function = functionProvider.GetFunction(IsDebuggerPresentConstants.DllName, IsDebuggerPresentConstants.FuncName);
+		public bool TryPatchX64(string dllName, [NotNullWhen(false)] out string? errorMessage) {
+			var function = functionProvider.GetFunction(dllName, IsDebuggerPresentConstants.FuncName);
 
 			/*
 				Generate the following code:
@@ -64,7 +65,7 @@ namespace dnSpy.Debugger.AntiAntiDebug {
 			instructions.Add(Instruction.Create(II.Code.Retnq));
 
 			var block = new InstructionBlock(new CodeWriterImpl(function), instructions, function.NewCodeAddress);
-			if (!BlockEncoder.TryEncode(process.Bitness, block, out var encErrMsg)) {
+			if (!BlockEncoder.TryEncode(process.Bitness, block, out var encErrMsg, out _)) {
 				errorMessage = $"Failed to encode: {encErrMsg}";
 				return false;
 			}

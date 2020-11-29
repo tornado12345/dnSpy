@@ -52,7 +52,7 @@ namespace dnSpy.Contracts.Hex {
 		/// <summary>
 		/// Raised when a span of data got modified by other code
 		/// </summary>
-		public abstract event EventHandler<HexBufferStreamSpanInvalidatedEventArgs> BufferStreamSpanInvalidated;
+		public abstract event EventHandler<HexBufferStreamSpanInvalidatedEventArgs>? BufferStreamSpanInvalidated;
 
 		/// <summary>
 		/// Clears the cache if it uses a cache
@@ -247,7 +247,7 @@ namespace dnSpy.Contracts.Hex {
 		/// <param name="position">Position</param>
 		/// <param name="source">Data</param>
 		public void Write(HexPosition position, byte[] source) {
-			if (source == null)
+			if (source is null)
 				throw new ArgumentNullException(nameof(source));
 			Write(position, source, 0, source.LongLength);
 		}
@@ -264,7 +264,7 @@ namespace dnSpy.Contracts.Hex {
 		/// <summary>
 		/// Raised after it is disposed
 		/// </summary>
-		public event EventHandler Disposed;
+		public event EventHandler? Disposed;
 
 		/// <summary>
 		/// true if the instance has been disposed

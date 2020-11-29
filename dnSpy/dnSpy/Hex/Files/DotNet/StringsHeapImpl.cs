@@ -26,9 +26,9 @@ using dnSpy.Contracts.Hex.Files.DotNet;
 
 namespace dnSpy.Hex.Files.DotNet {
 	sealed class StringsHeapImpl : StringsHeap, IDotNetHeap {
-		public override DotNetMetadataHeaders Metadata => metadata;
-		DotNetMetadataHeaders metadata;
-		KnownStringInfo[] knownStringInfos;
+		public override DotNetMetadataHeaders Metadata => metadata!;
+		DotNetMetadataHeaders? metadata;
+		KnownStringInfo[]? knownStringInfos;
 
 		readonly struct KnownStringInfo {
 			public HexSpan Span { get; }
@@ -63,9 +63,9 @@ namespace dnSpy.Hex.Files.DotNet {
 			}
 		}
 
-		public override ComplexData GetStructure(HexPosition position) {
+		public override ComplexData? GetStructure(HexPosition position) {
 			var info = GetStringInfo(position);
-			if (info != null)
+			if (info is not null)
 				return new StringsHeapRecordData(Span.Buffer, info.Value.String.StringSpan, info.Value.String.HasTerminator, this, info.Value.Tokens);
 
 			return null;
@@ -77,6 +77,7 @@ namespace dnSpy.Hex.Files.DotNet {
 			var index = GetIndex(position);
 			if (index < 0)
 				return null;
+			Debug2.Assert(knownStringInfos is not null);
 
 			var pos = knownStringInfos[index].Span.Start;
 			var end = HexPosition.Min(Span.Span.End, pos + 0x1000);
@@ -108,15 +109,15 @@ namespace dnSpy.Hex.Files.DotNet {
 		}
 
 		void Initialize() {
-			if (knownStringInfos != null)
+			if (knownStringInfos is not null)
 				return;
-			if (metadata == null)
+			if (metadata is null)
 				return;
 			knownStringInfos = CreateKnownStringInfos(metadata.TablesStream);
 		}
 
-		KnownStringInfo[] CreateKnownStringInfos(TablesHeap tables) {
-			if (tables == null)
+		KnownStringInfo[] CreateKnownStringInfos(TablesHeap? tables) {
+			if (tables is null)
 				return Array.Empty<KnownStringInfo>();
 
 			var dict = new Dictionary<uint, List<uint>>();
@@ -221,7 +222,7 @@ namespace dnSpy.Hex.Files.DotNet {
 			uint recSize = mdTable.RowSize;
 			bool bigStrings = colInfo1.Size == 4;
 			uint tokenBase = new MDToken(mdTable.Table, 0).Raw;
-			List<uint> list;
+			List<uint>? list;
 			for (uint rid = 1; rid <= rows; rid++, recPos += recSize) {
 				uint offs1, offs2;
 				if (bigStrings) {
@@ -249,10 +250,10 @@ namespace dnSpy.Hex.Files.DotNet {
 
 		int GetIndex(HexPosition position) {
 			var array = knownStringInfos;
-			if (array == null) {
+			if (array is null) {
 				Initialize();
 				array = knownStringInfos;
-				if (array == null)
+				if (array is null)
 					return -1;
 			}
 			int lo = 0, hi = array.Length - 1;

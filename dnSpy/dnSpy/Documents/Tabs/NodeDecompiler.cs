@@ -61,15 +61,16 @@ namespace dnSpy.Documents.Tabs {
 		readonly IDecompilerOutput output;
 		readonly IDecompiler decompiler;
 		readonly DecompilationContext decompilationContext;
-		readonly IDecompileNodeContext decompileNodeContext;
+		readonly IDecompileNodeContext? decompileNodeContext;
 
-		public NodeDecompiler(Func<Func<object>, object> execInThread, IDecompilerOutput output, IDecompiler decompiler, DecompilationContext decompilationContext, IDecompileNodeContext decompileNodeContext = null) {
+		public NodeDecompiler(Func<Func<object>, object> execInThread, IDecompilerOutput output, IDecompiler decompiler, DecompilationContext decompilationContext, IDecompileNodeContext? decompileNodeContext = null) {
 			this.execInThread = execInThread;
 			this.output = output;
 			this.decompiler = decompiler;
 			this.decompilationContext = decompilationContext;
 			this.decompileNodeContext = decompileNodeContext;
-			this.decompileNodeContext.ContentTypeString = decompiler.ContentTypeString;
+			if (this.decompileNodeContext is not null)
+				this.decompileNodeContext.ContentTypeString = decompiler.ContentTypeString;
 		}
 
 		static readonly object lockObj = new object();
@@ -83,11 +84,11 @@ namespace dnSpy.Documents.Tabs {
 				break;
 
 			case NodeType.Assembly:
-				decompiler.Decompile(((AssemblyDocumentNode)node).Document.AssemblyDef, output, decompilationContext);
+				decompiler.Decompile(((AssemblyDocumentNode)node).Document.AssemblyDef!, output, decompilationContext);
 				break;
 
 			case NodeType.Module:
-				decompiler.Decompile(((ModuleDocumentNode)node).Document.ModuleDef, output, decompilationContext);
+				decompiler.Decompile(((ModuleDocumentNode)node).Document.ModuleDef!, output, decompilationContext);
 				break;
 
 			case NodeType.Type:
@@ -185,14 +186,14 @@ namespace dnSpy.Documents.Tabs {
 		}
 
 		void DecompileUnknown(DocumentTreeNodeData node) {
-			if (node is IDecompileSelf decompileSelf && decompileNodeContext != null) {
+			if (node is IDecompileSelf decompileSelf && decompileNodeContext is not null) {
 				if (decompileSelf.Decompile(decompileNodeContext))
 					return;
 			}
 			decompiler.WriteCommentLine(output, NameUtilities.CleanName(node.ToString(decompiler)));
 		}
 
-		void Decompile(AssemblyReferenceNode node) => decompiler.WriteCommentLine(output, NameUtilities.CleanName(node.AssemblyRef.ToString()));
+		void Decompile(AssemblyReferenceNode node) => decompiler.WriteCommentLine(output, NameUtilities.CleanName(node.AssemblyRef.ToString()!));
 
 		void Decompile(BaseTypeFolderNode node) {
 			foreach (var child in GetChildren(node).OfType<BaseTypeNode>())
@@ -207,7 +208,7 @@ namespace dnSpy.Documents.Tabs {
 				Decompile(child);
 		}
 
-		void Decompile(ModuleReferenceNode node) => decompiler.WriteCommentLine(output, NameUtilities.CleanName(node.ModuleRef.ToString()));
+		void Decompile(ModuleReferenceNode node) => decompiler.WriteCommentLine(output, NameUtilities.CleanName(node.ModuleRef.ToString()!));
 
 		void Decompile(NamespaceNode node) {
 			var children = GetChildren(node).OfType<TypeNode>().Select(a => a.TypeDef).ToArray();
@@ -217,7 +218,7 @@ namespace dnSpy.Documents.Tabs {
 		void Decompile(PEDocumentNode node) {
 			decompiler.WriteCommentLine(output, node.Document.Filename);
 			var peImage = node.Document.PEImage;
-			if (peImage != null) {
+			if (peImage is not null) {
 				var timestampLine = dnSpy_Resources.Decompile_Timestamp + " ";
 				uint ts = peImage.ImageNTHeaders.FileHeader.TimeDateStamp;
 				if ((int)ts > 0) {
@@ -247,7 +248,7 @@ namespace dnSpy.Documents.Tabs {
 				if (child is ResourceNode)
 					Decompile((ResourceNode)child);
 				else
-					DecompileUnknown(child);
+					Decompile(child);
 			}
 		}
 
@@ -268,7 +269,7 @@ namespace dnSpy.Documents.Tabs {
 				if (child is ResourceElementNode)
 					Decompile((ResourceElementNode)child);
 				else
-					DecompileUnknown(child);
+					Decompile(child);
 			}
 		}
 

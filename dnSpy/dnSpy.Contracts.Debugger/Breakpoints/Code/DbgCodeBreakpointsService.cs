@@ -45,7 +45,7 @@ namespace dnSpy.Contracts.Debugger.Breakpoints.Code {
 		/// <summary>
 		/// Raised when breakpoints are modified
 		/// </summary>
-		public abstract event EventHandler<DbgBreakpointsModifiedEventArgs> BreakpointsModified;
+		public abstract event EventHandler<DbgBreakpointsModifiedEventArgs>? BreakpointsModified;
 
 		/// <summary>
 		/// Gets all breakpoints
@@ -60,14 +60,14 @@ namespace dnSpy.Contracts.Debugger.Breakpoints.Code {
 		/// <summary>
 		/// Raised when <see cref="Breakpoints"/> is changed
 		/// </summary>
-		public abstract event EventHandler<DbgCollectionChangedEventArgs<DbgCodeBreakpoint>> BreakpointsChanged;
+		public abstract event EventHandler<DbgCollectionChangedEventArgs<DbgCodeBreakpoint>>? BreakpointsChanged;
 
 		/// <summary>
 		/// Adds a breakpoint. If the breakpoint already exists, null is returned.
 		/// </summary>
 		/// <param name="breakpoint">Breakpoint info</param>
 		/// <returns></returns>
-		public DbgCodeBreakpoint Add(DbgCodeBreakpointInfo breakpoint) => Add(new[] { breakpoint }).FirstOrDefault();
+		public DbgCodeBreakpoint? Add(DbgCodeBreakpointInfo breakpoint) => Add(new[] { breakpoint }).FirstOrDefault();
 
 		/// <summary>
 		/// Adds breakpoints. Duplicate breakpoints are ignored.
@@ -93,7 +93,7 @@ namespace dnSpy.Contracts.Debugger.Breakpoints.Code {
 		/// </summary>
 		/// <param name="location">Location</param>
 		/// <returns></returns>
-		public abstract DbgCodeBreakpoint TryGetBreakpoint(DbgCodeLocation location);
+		public abstract DbgCodeBreakpoint? TryGetBreakpoint(DbgCodeLocation location);
 
 		/// <summary>
 		/// Removes all visible breakpoints
@@ -103,7 +103,7 @@ namespace dnSpy.Contracts.Debugger.Breakpoints.Code {
 		/// <summary>
 		/// Raised when <see cref="DbgCodeBreakpoint.BoundBreakpointsMessage"/> is changed
 		/// </summary>
-		public abstract event EventHandler<DbgBoundBreakpointsMessageChangedEventArgs> BoundBreakpointsMessageChanged;
+		public abstract event EventHandler<DbgBoundBreakpointsMessageChangedEventArgs>? BoundBreakpointsMessageChanged;
 	}
 
 	/// <summary>

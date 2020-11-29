@@ -30,10 +30,10 @@ namespace dnSpy.Events {
 
 		abstract class Info {
 			public abstract bool IsAlive { get; }
-			public abstract void Execute(object source, TEventArgs e);
+			public abstract void Execute(object? source, TEventArgs e);
 			public abstract bool Equals(EventHandler<TEventArgs> h);
 			public static Info Create(EventHandler<TEventArgs> h) {
-				if (h.Target == null)
+				if (h.Target is null)
 					return new HardRefInfo(h);
 
 				// Need to add check for cases when there's no 'this' pointer in h.Target
@@ -48,7 +48,7 @@ namespace dnSpy.Events {
 
 		sealed class HardRefInfo : Info {
 			public override bool IsAlive => true;
-			public override void Execute(object source, TEventArgs e) => handler(source, e);
+			public override void Execute(object? source, TEventArgs e) => handler(source, e);
 			public override bool Equals(EventHandler<TEventArgs> h) => handler == h;
 
 			readonly EventHandler<TEventArgs> handler;
@@ -57,12 +57,11 @@ namespace dnSpy.Events {
 		}
 
 		sealed class InstanceInfo : Info {
-			public override bool IsAlive => target.Target != null;
+			public override bool IsAlive => target.Target is not null;
 
-			public override void Execute(object source, TEventArgs e) {
-				var self = target.Target;
-				if (self != null)
-					methodInfo.Invoke(self, new object[] { source, e });
+			public override void Execute(object? source, TEventArgs e) {
+				if (target.Target is object self)
+					methodInfo.Invoke(self, new object?[] { source, e });
 			}
 
 			public override bool Equals(EventHandler<TEventArgs> h) =>
@@ -72,7 +71,7 @@ namespace dnSpy.Events {
 			readonly MethodInfo methodInfo;
 
 			public InstanceInfo(EventHandler<TEventArgs> handler) {
-				Debug.Assert(handler.Target != null);
+				Debug2.Assert(handler.Target is not null);
 				Debug.Assert(handler.GetInvocationList().Length == 1);
 				target = new WeakReference(handler.Target);
 				methodInfo = handler.Method;
@@ -82,13 +81,13 @@ namespace dnSpy.Events {
 		public WeakEventList() => handlers = new List<Info>();
 
 		public void Add(EventHandler<TEventArgs> h) {
-			if (h == null)
+			if (h is null)
 				throw new ArgumentNullException(nameof(h));
 			handlers.Add(Info.Create(h));
 		}
 
 		public void Remove(EventHandler<TEventArgs> h) {
-			if (h == null)
+			if (h is null)
 				throw new ArgumentNullException(nameof(h));
 			for (int i = 0; i < handlers.Count; i++) {
 				if (handlers[i].Equals(h)) {
@@ -98,7 +97,7 @@ namespace dnSpy.Events {
 			}
 		}
 
-		public void Raise(object sender, TEventArgs e) {
+		public void Raise(object? sender, TEventArgs e) {
 			if (handlers.Count == 0)
 				return;
 			var newList = new List<Info>(handlers.Count);

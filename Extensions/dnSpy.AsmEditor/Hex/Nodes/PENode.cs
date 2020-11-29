@@ -20,6 +20,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using dnSpy.AsmEditor.Hex.PE;
 using dnSpy.AsmEditor.Properties;
@@ -48,15 +49,15 @@ namespace dnSpy.AsmEditor.Hex.Nodes {
 		public override FilterType GetFilterType(IDocumentTreeNodeFilter filter) => filter.GetResultOther(this).FilterType;
 
 		public override IEnumerable<TreeNodeData> CreateChildren() {
-			Debug.Assert(TreeNode.Children.Count == 0 && weakDocListener == null);
-			if (weakDocListener != null)
+			Debug2.Assert(TreeNode.Children.Count == 0 && weakDocListener is null);
+			if (weakDocListener is not null)
 				yield break;
 
 			var file = createBufferFile();
-			if (file == null)
+			if (file is null)
 				yield break;
 			var peStructureProvider = peStructureProviderFactory.TryGetProvider(file);
-			if (peStructureProvider == null)
+			if (peStructureProvider is null)
 				yield break;
 
 			weakDocListener = new WeakDocumentListener(this, file.Buffer);
@@ -70,20 +71,20 @@ namespace dnSpy.AsmEditor.Hex.Nodes {
 			for (int i = 0; i < peStructureProvider.Sections.Length; i++)
 				yield return new ImageSectionHeaderNode(peStructureProvider.Sections[i], i);
 			var cor20Hdr = ImageCor20HeaderNode.Create(peStructureProvider.ImageCor20Header);
-			if (cor20Hdr != null)
+			if (cor20Hdr is not null)
 				yield return cor20Hdr;
-			if (cor20Hdr != null && peStructureProvider.StorageSignature != null) {
+			if (cor20Hdr is not null && peStructureProvider.StorageSignature is not null) {
 				yield return new StorageSignatureNode(peStructureProvider.StorageSignature);
-				yield return new StorageHeaderNode(peStructureProvider.StorageHeader);
+				yield return new StorageHeaderNode(peStructureProvider.StorageHeader!);
 				foreach (var storageStream in peStructureProvider.StorageStreams) {
 					if (storageStream.HeapKind == DotNetHeapKind.Tables)
-						yield return new TablesStorageStreamNode(storageStream, peStructureProvider.TablesStream);
+						yield return new TablesStorageStreamNode(storageStream, peStructureProvider.TablesStream!);
 					else
 						yield return new StorageStreamNode(storageStream);
 				}
 			}
 		}
-		WeakDocumentListener weakDocListener;
+		WeakDocumentListener? weakDocListener;
 
 		sealed class WeakDocumentListener {
 			readonly WeakReference nodeWeakRef;
@@ -93,18 +94,17 @@ namespace dnSpy.AsmEditor.Hex.Nodes {
 				buffer.Changed += Buffer_Changed;
 			}
 
-			void Buffer_Changed(object sender, HexContentChangedEventArgs e) {
-				var node = (PENode)nodeWeakRef.Target;
-				if (node != null)
+			void Buffer_Changed(object? sender, HexContentChangedEventArgs e) {
+				if (nodeWeakRef.Target is PENode node)
 					node.Buffer_Changed(sender, e);
 				else {
-					var buffer = (HexBuffer)sender;
+					var buffer = (HexBuffer)sender!;
 					buffer.Changed -= Buffer_Changed;
 				}
 			}
 		}
 
-		void Buffer_Changed(object sender, HexContentChangedEventArgs e) {
+		void Buffer_Changed(object? sender, HexContentChangedEventArgs e) {
 			// Descendants() shouldn't be used since some of the nodes could have thousands of
 			// children and it's better if the parent can quickly check whether any of its children
 			// need to get notified.
@@ -127,32 +127,38 @@ namespace dnSpy.AsmEditor.Hex.Nodes {
 			return true;
 		}
 
-		public MetadataTableRecordNode FindTokenNode(uint token) {
+		public MetadataTableRecordNode? FindTokenNode(uint token) {
 			if ((token & 0x00FFFFFF) == 0)
 				return null;
 			TreeNode.EnsureChildrenLoaded();
-			var stgStreamNode = (StorageStreamNode)TreeNode.DataChildren.FirstOrDefault(a => a is StorageStreamNode && ((StorageStreamNode)a).HeapKind == DotNetHeapKind.Tables);
+			var stgStreamNode = (StorageStreamNode?)TreeNode.DataChildren.FirstOrDefault(a => a is StorageStreamNode && ((StorageStreamNode)a).HeapKind == DotNetHeapKind.Tables);
 			return stgStreamNode?.FindTokenNode(token);
 		}
 
-		public HexNode FindNode(HexVM structure, HexField field) {
+		public HexNode? FindNode(HexVM structure, HexField field) {
 			if (structure is MetadataTableRecordVM mdTblRecord)
 				return FindTokenNode(mdTblRecord.Token.Raw);
 
 			TreeNode.EnsureChildrenLoaded();
 			foreach (var child in TreeNode.DataChildren.OfType<HexNode>()) {
 				var node = child.FindNode(structure, field);
-				if (node != null)
+				if (node is not null)
 					return node;
 			}
 			return null;
 		}
 
-		protected override void WriteCore(ITextColorWriter output, IDecompiler decompiler, DocumentNodeWriteOptions options) =>
+		protected override void WriteCore(ITextColorWriter output, IDecompiler decompiler, DocumentNodeWriteOptions options) {
 			output.Write(BoxedTextColor.Text, dnSpy_AsmEditor_Resources.HexNode_PE);
+			if ((options & DocumentNodeWriteOptions.ToolTip) != 0) {
+				output.WriteLine();
+				WriteFilename(output);
+			}
+		}
+
 		public override Guid Guid => new Guid(DocumentTreeViewConstants.PE_NODE_GUID);
 		public override NodePathName NodePathName => new NodePathName(Guid);
-		public override ITreeNodeGroup TreeNodeGroup => PETreeNodeGroup.Instance;
+		public override ITreeNodeGroup? TreeNodeGroup => PETreeNodeGroup.Instance;
 	}
 
 	sealed class PETreeNodeGroup : ITreeNodeGroup {
@@ -162,12 +168,12 @@ namespace dnSpy.AsmEditor.Hex.Nodes {
 
 		public double Order { get; }
 
-		public int Compare(TreeNodeData x, TreeNodeData y) {
+		public int Compare([AllowNull] TreeNodeData x, [AllowNull] TreeNodeData y) {
 			if (x == y) return 0;
 			var a = x as PENode;
 			var b = y as PENode;
-			if (a == null) return -1;
-			if (b == null) return 1;
+			if (a is null) return -1;
+			if (b is null) return 1;
 			return 0;
 		}
 	}

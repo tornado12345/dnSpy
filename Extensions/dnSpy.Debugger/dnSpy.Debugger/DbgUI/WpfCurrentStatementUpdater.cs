@@ -34,8 +34,8 @@ namespace dnSpy.Debugger.DbgUI {
 		readonly Lazy<IAppWindow> appWindow;
 
 		[ImportingConstructor]
-		WpfCurrentStatementUpdater(UIDispatcher uiDispatcher, Lazy<IAppWindow> appWindow, DbgCallStackService dbgCallStackService, Lazy<ReferenceNavigatorService> referenceNavigatorService)
-			: base(dbgCallStackService, referenceNavigatorService) {
+		WpfCurrentStatementUpdater(UIDispatcher uiDispatcher, Lazy<IAppWindow> appWindow, DbgCallStackService dbgCallStackService, Lazy<ReferenceNavigatorService> referenceNavigatorService, Lazy<DebuggerSettings> debuggerSettings)
+			: base(dbgCallStackService, referenceNavigatorService, debuggerSettings) {
 			this.uiDispatcher = uiDispatcher;
 			this.appWindow = appWindow;
 		}
@@ -46,6 +46,9 @@ namespace dnSpy.Debugger.DbgUI {
 			uiDispatcher.VerifyAccess();
 			if (mainWindowHandle == IntPtr.Zero)
 				mainWindowHandle = new WindowInteropHelper(appWindow.Value.MainWindow).Handle;
+
+			// SetForegroundWindow() must be called first or we won't get focus...
+			NativeMethods.SetForegroundWindow(mainWindowHandle);
 			NativeMethods.SetWindowPos(mainWindowHandle, IntPtr.Zero, 0, 0, 0, 0, 3);
 			appWindow.Value.MainWindow.Activate();
 		}

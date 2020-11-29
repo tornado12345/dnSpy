@@ -35,8 +35,8 @@ namespace dnSpy.MainApp {
 		public SavedWindowState(MetroWindow window) {
 			Bounds = window.RestoreBounds;
 			var source = PresentationSource.FromVisual(window);
-			Debug.Assert(source != null);
-			if (source != null) {
+			Debug2.Assert(source is not null);
+			if (source is not null) {
 				var t = Bounds;
 				t = Rect.Transform(Bounds, source.CompositionTarget.TransformToDevice);
 				Bounds = new Rect(t.TopLeft, Bounds.Size);
@@ -73,14 +73,14 @@ namespace dnSpy.MainApp {
 			window.ContentRendered += Window_ContentRendered;
 		}
 
-		void Window_ContentRendered(object sender, EventArgs e) {
+		void Window_ContentRendered(object? sender, EventArgs e) {
 			window.ContentRendered -= Window_ContentRendered;
 			if (!settings.IsFullScreen)
 				WindowUtils.SetState(window, settings.WindowState);
 			window.IsFullScreen = settings.IsFullScreen;
 		}
 
-		void Window_SourceInitialized(object sender, EventArgs e) {
+		void Window_SourceInitialized(object? sender, EventArgs e) {
 			window.SourceInitialized -= Window_SourceInitialized;
 			if (settings.Bounds == Rect.Empty) {
 				window.Height = defaultWindowLocation.Height;

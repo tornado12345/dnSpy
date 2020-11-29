@@ -55,6 +55,15 @@ namespace dnSpy.Debugger.ToolWindows.ModuleBreakpoints {
 			}
 		}
 
+		public bool? IsLoaded {
+			get => settings.IsLoaded;
+			set {
+				if (settings.IsLoaded == value)
+					return;
+				ModuleBreakpoint.IsLoaded = value;
+			}
+		}
+
 		public IModuleBreakpointContext Context { get; }
 		public DbgModuleBreakpoint ModuleBreakpoint { get; }
 		public object ModuleNameObject => new FormatterObject<ModuleBreakpointVM>(this, PredefinedTextClassifierTags.ModuleBreakpointsWindowModuleName);
@@ -89,8 +98,8 @@ namespace dnSpy.Debugger.ToolWindows.ModuleBreakpoints {
 			settings = ModuleBreakpoint.Settings;
 		}
 
-		string ConvertEditedString(string s) {
-			if (string.IsNullOrWhiteSpace(s))
+		string? ConvertEditedString(string? s) {
+			if (string2.IsNullOrWhiteSpace(s))
 				return null;
 			return s.Trim();
 		}
@@ -101,12 +110,12 @@ namespace dnSpy.Debugger.ToolWindows.ModuleBreakpoints {
 			return writer.ToString();
 		}
 
-		void WriteOrder(string value) {
-			if (string.IsNullOrWhiteSpace(value))
+		void WriteOrder(string? value) {
+			if (string2.IsNullOrWhiteSpace(value))
 				ModuleBreakpoint.Order = null;
 			else {
 				var order = SimpleTypeConverter.ParseInt32(value, int.MinValue, int.MaxValue, out var error);
-				if (error == null)
+				if (error is null)
 					ModuleBreakpoint.Order = order;
 				else {
 					// Keep original value
@@ -136,6 +145,8 @@ namespace dnSpy.Debugger.ToolWindows.ModuleBreakpoints {
 				OnPropertyChanged(nameof(IsDynamic));
 			if (oldSettings.IsInMemory != newSettings.IsInMemory)
 				OnPropertyChanged(nameof(IsInMemory));
+			if (oldSettings.IsLoaded != newSettings.IsLoaded)
+				OnPropertyChanged(nameof(IsLoaded));
 			if (oldSettings.Order != newSettings.Order)
 				OnPropertyChanged(nameof(OrderObject));
 			if (oldSettings.ProcessName != newSettings.ProcessName)

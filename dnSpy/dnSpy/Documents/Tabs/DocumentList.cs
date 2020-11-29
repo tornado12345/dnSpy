@@ -47,7 +47,7 @@ namespace dnSpy.Documents.Tabs {
 			var documentList = new DocumentList(section.Attribute<string>(DOCUMENTLIST_NAME_ATTR));
 			foreach (var documentSect in section.SectionsWithName(DOCUMENT_SECTION)) {
 				var info = DsDocumentInfoSerializer.TryLoad(documentSect);
-				if (info != null)
+				if (info is not null)
 					documentList.Documents.Add(info.Value);
 			}
 			return documentList;
@@ -65,12 +65,11 @@ namespace dnSpy.Documents.Tabs {
 				if (d.IsAutoLoaded)
 					continue;
 				var info = d.SerializedDocument;
-				if (info != null)
+				if (info is not null)
 					Documents.Add(info.Value);
 			}
 		}
 
-		void AddGacDocument(string asmFullName) => Documents.Add(DsDocumentInfo.CreateGacDocument(asmFullName));
 		void AddDocument(Assembly asm) => Documents.Add(DsDocumentInfo.CreateDocument(asm.Location));
 
 		public void AddDefaultDocuments() {

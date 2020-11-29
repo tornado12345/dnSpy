@@ -1524,4 +1524,10 @@ Sind Sie sicher, dass Sie es ausklappen möchten?</value>
   <data name="Processes_Search_ToolTip" xml:space="preserve">
     <value>Nach einem Prozess suchen</value>
   </data>
+  <data name="DbgSettings_FocusDebuggerWhenProcessBreaks" xml:space="preserve">
+    <value>Hole dnSpy in den Vordergrund, wenn der Debugger hält</value>
+  </data>
+  <data name="Column_LoadModule" xml:space="preserve">
+    <value>Lade</value>
+  </data>
 </root>

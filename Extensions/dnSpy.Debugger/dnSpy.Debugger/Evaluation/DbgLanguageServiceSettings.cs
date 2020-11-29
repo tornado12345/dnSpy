@@ -37,14 +37,14 @@ namespace dnSpy.Debugger.Evaluation {
 			dbgLanguageService.LanguageChanged += DbgLanguageService_LanguageChanged;
 		}
 
-		void DbgLanguageService_LanguageChanged(object sender, DbgLanguageChangedEventArgs e) => Save((DbgLanguageService2)sender);
+		void DbgLanguageService_LanguageChanged(object? sender, DbgLanguageChangedEventArgs e) => Save((DbgLanguageService2)sender!);
 
 		void Load(DbgLanguageService2 dbgLanguageService) {
 			var rootSect = settingsService.GetOrCreateSection(SETTINGS_GUID);
 			foreach (var sect in rootSect.SectionsWithName("Language")) {
 				var guid = sect.Attribute<Guid?>("Guid");
 				var languageName = sect.Attribute<string>("Language");
-				if (guid == null || languageName == null)
+				if (guid is null || languageName is null)
 					continue;
 				dbgLanguageService.SetDefaultLanguageName(guid.Value, languageName);
 			}

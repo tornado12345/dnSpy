@@ -62,7 +62,14 @@ namespace dnSpy.AsmEditor.Hex.Nodes {
 			}
 		}
 
-		protected override void WriteCore(ITextColorWriter output, IDecompiler decompiler, DocumentNodeWriteOptions options) => WriteCore(output, options);
+		protected override void WriteCore(ITextColorWriter output, IDecompiler decompiler, DocumentNodeWriteOptions options) {
+			WriteCore(output, options);
+			if ((options & DocumentNodeWriteOptions.ToolTip) != 0) {
+				output.WriteLine();
+				WriteFilename(output);
+			}
+		}
+
 		protected abstract void WriteCore(ITextColorWriter output, DocumentNodeWriteOptions options);
 
 		public virtual void OnBufferChanged(NormalizedHexChangeCollection changes) {
@@ -73,7 +80,7 @@ namespace dnSpy.AsmEditor.Hex.Nodes {
 				vm.OnBufferChanged(changes);
 		}
 
-		public HexNode FindNode(HexVM structure, HexField field) {
+		public HexNode? FindNode(HexVM structure, HexField field) {
 			Debug.Assert(!(structure is MetadataTableRecordVM), "Use " + nameof(PENode) + "'s method instead");
 			bool found = false;
 			foreach (var span in Spans) {
@@ -95,7 +102,7 @@ namespace dnSpy.AsmEditor.Hex.Nodes {
 			TreeNode.EnsureChildrenLoaded();
 			foreach (var child in TreeNode.DataChildren.OfType<HexNode>()) {
 				var node = child.FindNode(structure, field);
-				if (node != null)
+				if (node is not null)
 					return node;
 			}
 

@@ -17,12 +17,6 @@
     along with dnSpy.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-// .NET Core 3.0:
-// 'UnmanagedType.IDispatch' is obsolete: 'Marshalling as IDispatch may be unavailable in future releases.'
-// 'UnmanagedType.SafeArray' is obsolete: 'Marshalling as SafeArray may be unavailable in future releases.'
-// 'VarEnum' is obsolete: 'Marshalling VARIANTs may be unavailable in future releases.'
-#pragma warning disable CS0618
-
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -35,18 +29,18 @@ namespace dnSpy.Debugger.DotNet.Metadata.Impl {
 		readonly DmdDataStream reader;
 		readonly IList<DmdType> genericTypeArguments;
 
-		public static DmdMarshalType Read(DmdModule module, DmdDataStream reader, IList<DmdType> genericTypeArguments) {
+		public static DmdMarshalType? Read(DmdModule module, DmdDataStream reader, IList<DmdType>? genericTypeArguments) {
 			using (var marshalReader = new DmdMarshalBlobReader(module, reader, genericTypeArguments))
 				return marshalReader.Read();
 		}
 
-		DmdMarshalBlobReader(DmdModule module, DmdDataStream reader, IList<DmdType> genericTypeArguments) {
+		DmdMarshalBlobReader(DmdModule module, DmdDataStream reader, IList<DmdType>? genericTypeArguments) {
 			this.module = module;
 			this.reader = reader;
 			this.genericTypeArguments = genericTypeArguments ?? Array.Empty<DmdType>();
 		}
 
-		DmdMarshalType Read() {
+		DmdMarshalType? Read() {
 			const int DEFAULT = 0;
 			try {
 				var nativeType = (UnmanagedType)reader.ReadByte();
@@ -60,7 +54,7 @@ namespace dnSpy.Debugger.DotNet.Metadata.Impl {
 				case UnmanagedType.SafeArray:
 					var vt = CanRead ? (VarEnum)reader.ReadCompressedUInt32() : DEFAULT;
 					var udtName = CanRead ? ReadUTF8String() : null;
-					var udtRef = udtName == null ? null : DmdTypeNameParser.Parse(module, udtName, genericTypeArguments);
+					var udtRef = udtName is null ? null : DmdTypeNameParser.Parse(module, udtName, genericTypeArguments);
 					return DmdMarshalType.CreateSafeArray(vt, udtRef);
 
 				case UnmanagedType.ByValArray:

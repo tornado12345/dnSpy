@@ -69,7 +69,7 @@ namespace dnSpy.Contracts.Debugger {
 		/// <summary>
 		/// Raised when <see cref="AppDomains"/> is changed
 		/// </summary>
-		public abstract event EventHandler<DbgCollectionChangedEventArgs<DbgAppDomain>> AppDomainsChanged;
+		public abstract event EventHandler<DbgCollectionChangedEventArgs<DbgAppDomain>>? AppDomainsChanged;
 
 		/// <summary>
 		/// Gets all modules
@@ -79,7 +79,7 @@ namespace dnSpy.Contracts.Debugger {
 		/// <summary>
 		/// Raised when <see cref="Modules"/> is changed
 		/// </summary>
-		public abstract event EventHandler<DbgCollectionChangedEventArgs<DbgModule>> ModulesChanged;
+		public abstract event EventHandler<DbgCollectionChangedEventArgs<DbgModule>>? ModulesChanged;
 
 		/// <summary>
 		/// Gets all threads
@@ -89,7 +89,7 @@ namespace dnSpy.Contracts.Debugger {
 		/// <summary>
 		/// Raised when <see cref="Threads"/> is changed
 		/// </summary>
-		public abstract event EventHandler<DbgCollectionChangedEventArgs<DbgThread>> ThreadsChanged;
+		public abstract event EventHandler<DbgCollectionChangedEventArgs<DbgThread>>? ThreadsChanged;
 
 		/// <summary>
 		/// Gets the break infos, it gets updated when the runtime breaks and cleared when it continues.
@@ -165,14 +165,14 @@ namespace dnSpy.Contracts.Debugger {
 		/// <summary>
 		/// Gets the data, see <see cref="DbgBreakInfoKind"/> for more info
 		/// </summary>
-		public object Data { get; }
+		public object? Data { get; }
 
 		/// <summary>
 		/// Constructor
 		/// </summary>
 		/// <param name="kind">Kind</param>
 		/// <param name="data">Data</param>
-		public DbgBreakInfo(DbgBreakInfoKind kind, object data) {
+		public DbgBreakInfo(DbgBreakInfoKind kind, object? data) {
 			Kind = kind;
 			Data = data;
 		}
@@ -198,7 +198,7 @@ namespace dnSpy.Contracts.Debugger {
 				return Kind.ToString();
 
 			case DbgBreakInfoKind.Message:
-				return $"Debug message: {((DbgMessageEventArgs)Data).Kind}";
+				return $"Debug message: {((DbgMessageEventArgs)Data!).Kind}";
 			}
 		}
 	}

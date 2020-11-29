@@ -39,7 +39,7 @@ namespace dnSpy.Debugger.Exceptions {
 
 		void IDbgManagerStartListener.OnStart(DbgManager dbgManager) => dbgManager.MessageExceptionThrown += DbgManager_MessageExceptionThrown;
 
-		void DbgManager_MessageExceptionThrown(object sender, DbgMessageExceptionThrownEventArgs e) =>
+		void DbgManager_MessageExceptionThrown(object? sender, DbgMessageExceptionThrownEventArgs e) =>
 			e.Pause = ShouldBreak(e.Exception);
 
 		bool ShouldBreak(DbgException exception) {
@@ -74,8 +74,8 @@ namespace dnSpy.Debugger.Exceptions {
 		}
 
 		bool CheckConditions(DbgExceptionConditionSettings settings, DbgException exception) {
-			Debug.Assert(settings.Condition != null);
-			if (settings.Condition == null)
+			Debug2.Assert(settings.Condition is not null);
+			if (settings.Condition is null)
 				return false;
 
 			switch (settings.ConditionType) {
@@ -94,8 +94,8 @@ namespace dnSpy.Debugger.Exceptions {
 		bool ModuleNameEquals(DbgExceptionConditionSettings settings, DbgException exception) =>
 			CompareStrings(exception.Module?.Name, settings.Condition);
 
-		bool CompareStrings(string s, string wildcardString) {
-			if (s == null || wildcardString == null)
+		bool CompareStrings(string? s, string? wildcardString) {
+			if (s is null || wildcardString is null)
 				return false;
 			return WildcardsUtils.CreateRegex(wildcardString).IsMatch(s);
 		}

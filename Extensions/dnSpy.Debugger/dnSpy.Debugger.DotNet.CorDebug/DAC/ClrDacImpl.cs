@@ -47,18 +47,18 @@ namespace dnSpy.Debugger.DotNet.CorDebug.DAC {
 			toClrThreadInitd = false;
 		}
 
-		void ClrDacDebugger_ClrDacPaused(object sender, EventArgs e) => Flush();
-		void ClrDacDebugger_ClrDacRunning(object sender, EventArgs e) => Flush();
+		void ClrDacDebugger_ClrDacPaused(object? sender, EventArgs e) => Flush();
+		void ClrDacDebugger_ClrDacRunning(object? sender, EventArgs e) => Flush();
 
-		void ClrDacDebugger_ClrDacTerminated(object sender, EventArgs e) {
+		void ClrDacDebugger_ClrDacTerminated(object? sender, EventArgs e) {
 			clrDacDebugger.ClrDacPaused -= ClrDacDebugger_ClrDacPaused;
 			clrDacDebugger.ClrDacRunning -= ClrDacDebugger_ClrDacRunning;
 			clrDacDebugger.ClrDacTerminated -= ClrDacDebugger_ClrDacTerminated;
 			Flush();
 			dataTarget.Dispose();
-			dataTarget = null;
-			clrRuntime = null;
-			clrDacDebugger = null;
+			dataTarget = null!;
+			clrRuntime = null!;
+			clrDacDebugger = null!;
 		}
 
 		public override ClrDacThreadInfo? GetThreadInfo(int tid) {
@@ -113,24 +113,24 @@ namespace dnSpy.Debugger.DotNet.CorDebug.DAC {
 			string name;
 
 			name = clrRuntime.GetJitHelperFunctionName(address);
-			if (name != null) {
+			if (name is not null) {
 				result = new SymbolResolverResult(SymbolKind.Function, name, address);
 				return true;
 			}
 
 			name = clrRuntime.GetMethodTableName(address);
-			if (name != null) {
+			if (name is not null) {
 				result = new SymbolResolverResult(SymbolKind.Data, "methodtable(" + name + ")", address);
 				return true;
 			}
 
 			var method = clrRuntime.GetMethodByAddress(address);
-			if (method == null && (address & ((uint)clrRuntime.PointerSize - 1)) == 0) {
+			if (method is null && (address & ((uint)clrRuntime.PointerSize - 1)) == 0) {
 				if (clrRuntime.ReadPointer(address, out ulong newAddress) && newAddress >= MIN_ADDR)
 					method = clrRuntime.GetMethodByAddress(newAddress);
 			}
-			if (method != null) {
-				result = new SymbolResolverResult(SymbolKind.Function, method.ToString(), address);
+			if (method is not null) {
+				result = new SymbolResolverResult(SymbolKind.Function, method.ToString()!, address);
 				return true;
 			}
 

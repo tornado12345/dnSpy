@@ -41,7 +41,7 @@ namespace dnSpy.Documents.Tabs.DocViewer {
 			appWindow.MainWindow.KeyDown += MainWindow_KeyDown;
 		}
 
-		void MainWindow_KeyDown(object sender, KeyEventArgs e) {
+		void MainWindow_KeyDown(object? sender, KeyEventArgs e) {
 			if (!waitingForSecondKey && e.KeyboardDevice.Modifiers == ModifierKeys.Control && e.Key == Key.E) {
 				waitingForSecondKey = true;
 				e.Handled = true;
@@ -91,7 +91,7 @@ namespace dnSpy.Documents.Tabs.DocViewer {
 			if (context.CreatorObject.Guid != new Guid(MenuConstants.GUIDOBJ_DOCUMENTVIEWERCONTROL_GUID))
 				return false;
 			var uiContext = context.Find<IDocumentViewer>();
-			return uiContext != null && !uiContext.Selection.IsEmpty;
+			return uiContext is not null && !uiContext.Selection.IsEmpty;
 		}
 	}
 
@@ -99,15 +99,15 @@ namespace dnSpy.Documents.Tabs.DocViewer {
 	sealed class FindInCodeCommand : MenuItemBase {
 		public override void Execute(IMenuItemContext context) {
 			var elem = GetInputElement();
-			if (elem != null)
+			if (elem is not null)
 				ApplicationCommands.Find.Execute(null, elem);
 		}
 
-		public override bool IsEnabled(IMenuItemContext context) => GetInputElement() != null;
+		public override bool IsEnabled(IMenuItemContext context) => GetInputElement() is not null;
 
-		IInputElement GetInputElement() {
+		IInputElement? GetInputElement() {
 			var elem = Keyboard.FocusedElement;
-			return elem != null && ApplicationCommands.Find.CanExecute(null, elem) ? elem : null;
+			return elem is not null && ApplicationCommands.Find.CanExecute(null, elem) ? elem : null;
 		}
 	}
 
@@ -116,7 +116,7 @@ namespace dnSpy.Documents.Tabs.DocViewer {
 			: base(cmdId) {
 		}
 
-		protected override ICommandTarget GetCommandTarget(IMenuItemContext context) {
+		protected override ICommandTarget? GetCommandTarget(IMenuItemContext context) {
 			if (context.CreatorObject.Guid != new Guid(MenuConstants.GUIDOBJ_DOCUMENTVIEWERCONTROL_GUID))
 				return null;
 			return context.Find<IDocumentViewer>()?.TextView.CommandTarget;

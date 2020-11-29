@@ -40,7 +40,7 @@ namespace dnSpy.Roslyn.Intellisense.Completions {
 	sealed class CompletionToolTipProvider : IUIElementProvider<Completion, ICompletionSession> {
 		readonly IContentType contentType;
 		readonly ITaggedTextElementProviderService taggedTextElementProviderService;
-		WeakReference lastAsyncToolTipContentWeakReference;
+		WeakReference? lastAsyncToolTipContentWeakReference;
 
 		[ImportingConstructor]
 		CompletionToolTipProvider(IContentTypeRegistryService contentTypeRegistryService, ITaggedTextElementProviderService taggedTextElementProviderService) {
@@ -48,22 +48,21 @@ namespace dnSpy.Roslyn.Intellisense.Completions {
 			this.taggedTextElementProviderService = taggedTextElementProviderService;
 		}
 
-		public UIElement GetUIElement(Completion itemToRender, ICompletionSession context, UIElementType elementType) {
+		public UIElement? GetUIElement(Completion itemToRender, ICompletionSession context, UIElementType elementType) {
 			if (elementType != UIElementType.Tooltip)
 				return null;
 
-			var lastAsyncToolTipContent = lastAsyncToolTipContentWeakReference?.Target as AsyncToolTipContent;
-			if (lastAsyncToolTipContent?.Session == context) {
+			if (lastAsyncToolTipContentWeakReference?.Target is AsyncToolTipContent lastAsyncToolTipContent && lastAsyncToolTipContent.Session == context) {
 				lastAsyncToolTipContent.Cancel();
 				lastAsyncToolTipContentWeakReference = null;
 			}
 
 			var roslynCompletion = itemToRender as RoslynCompletion;
-			if (roslynCompletion == null)
+			if (roslynCompletion is null)
 				return null;
 			var roslynCollection = context.SelectedCompletionSet as RoslynCompletionSet;
-			Debug.Assert(roslynCollection != null);
-			if (roslynCollection == null)
+			Debug2.Assert(roslynCollection is not null);
+			if (roslynCollection is null)
 				return null;
 
 			const bool colorize = true;
@@ -97,7 +96,7 @@ namespace dnSpy.Roslyn.Intellisense.Completions {
 
 			async Task GetDescriptionAsync(RoslynCompletionSet completionSet, RoslynCompletion completion, CancellationToken cancellationToken) {
 				var description = await completionSet.GetDescriptionAsync(completion, cancellationToken);
-				if (description == null || description.TaggedParts.IsDefault || description.TaggedParts.Length == 0)
+				if (description is null || description.TaggedParts.IsDefault || description.TaggedParts.Length == 0)
 					InitializeDefaultDocumentation();
 				else
 					Content = CreateContent(description);
@@ -109,8 +108,8 @@ namespace dnSpy.Roslyn.Intellisense.Completions {
 			}
 
 			void InitializeDefaultDocumentation() => Visibility = Visibility.Collapsed;
-			void AsyncToolTipContent_Unloaded(object sender, RoutedEventArgs e) => Cancel();
-			void Session_Dismissed(object sender, EventArgs e) => Cancel();
+			void AsyncToolTipContent_Unloaded(object? sender, RoutedEventArgs e) => Cancel();
+			void Session_Dismissed(object? sender, EventArgs e) => Cancel();
 
 			public void Cancel() {
 				if (disposed)
